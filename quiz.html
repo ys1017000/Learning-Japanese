@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Quiz – Casual Japanese</title>
+<meta name="theme-color" content="#e0517a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<header><a class="logo" href="index.html">🌸 Casual Japanese</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
+
+<main class="container">
+  <div class="chip-row" id="modeRow" role="group" aria-label="Quiz type"></div>
+  <div class="counter"><span class="muted" id="counter"></span><span class="muted" id="scoreNow"></span></div>
+  <div class="progress"><div id="progFill"></div></div>
+  <div class="card" id="qBox"></div>
+</main>
+
+<nav>
+  <a href="index.html"><span class="ni">🏠</span>Home</a>
+  <a href="cards.html"><span class="ni">🃏</span>Cards</a>
+  <a href="endings.html"><span class="ni">💬</span>Endings</a>
+  <a href="quiz.html" class="active"><span class="ni">❓</span>Quiz</a>
+</nav>
+
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+  const D = window.CJ_DATA, $ = id => document.getElementById(id), esc = CJ.esc;
+  const ROUND = 10;
+  const MODES = [['who', '👥 Who are you talking to?'], ['endings', '💬 Endings'], ['mistakes', '🎯 My mistakes']];
+  const cardById = {}; D.CARDS.forEach(c => { cardById[c.id] = c; });
+  const endById = {}; D.ENDING_QUIZ.forEach(q => { endById[q.id] = q; });
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+
+  let mode = new URLSearchParams(location.search).get('mode');
+  if (!MODES.some(m => m[0] === mode)) mode = 'who';
+  let qs = [], qi = 0, score = 0, answered = false;
+
+  /* ---- 問題を作る ---- */
+  // 「誰と話している？」：相手に合う言い方（ていねい／ふつう）を選ぶ。reg を省略すると相手をランダムに選ぶ
+  function whoQuestion(c, reg) {
+    const casualPeople = ['yoh', 'friend'];
+    if (!reg) reg = c.pw.length && Math.random() < 0.5 ? 'polite' : 'casual';
+    if (reg === 'polite' && !c.pw.length) reg = 'casual';
+    const who = reg === 'polite' ? pick(c.pw) : pick(casualPeople);
+    const P = D.PEOPLE[who];
+    const right = reg === 'polite' ? c.p : c.c, other = reg === 'polite' ? c.c : c.p;
+    const others = CJ.shuffle(D.CARDS.filter(x => x.id !== c.id && x.c[0] !== right[0]));
+    const d1 = reg === 'polite' ? others[0].p : others[0].c;   // 同じていねいさ・違う意味
+    const d2 = reg === 'polite' ? others[1].c : others[1].p;   // 違うていねいさ・違う意味
+    return {
+      id: 'c:' + c.id + ':' + reg, kind: 'who',
+      head: '<div class="q-who">' + P.icon + '</div><div class="q-text">You are talking to ' + esc(P.label) + '.</div>' +
+        '<div class="q-say">You want to say: <b>“' + esc(c.en) + '”</b></div>',
+      opts: CJ.shuffle([{ t: right, ok: true }, { t: other }, { t: d1 }, { t: d2 }]),
+      answer: right[0],
+      why: (reg === 'polite'
+        ? 'With ' + P.label + ' → <span class="reg polite">POLITE</span> (です・ます style).'
+        : 'With ' + P.label + ' → <span class="reg casual">CASUAL</span> (no です・ます).') +
+        '<div style="margin-top:0.4rem;" class="ja">' + esc(c.p[0]) + ' ⇔ ' + esc(c.c[0]) + '</div>' +
+        (c.note ? '<div class="muted" style="margin-top:0.3rem;">💡 ' + esc(c.note) + '</div>' : '')
+    };
+  }
+  function endQuestion(q) {
+    return {
+      id: 'e:' + q.id, kind: 'end',
+      head: '<div class="q-who">💬</div><div class="q-text">' + esc(q.q) + '</div><div class="q-say">Which one sounds right?</div>',
+      opts: CJ.shuffle([{ t: q.a, ok: true }].concat(q.w.map(w => ({ t: w })))),
+      answer: q.a[0],
+      why: esc(q.why)
+    };
+  }
+  function fromId(id) {
+    const m = id.split(':');
+    if (m[0] === 'c' && cardById[m[1]]) return whoQuestion(cardById[m[1]], m[2]);
+    if (m[0] === 'e' && endById[m[1]]) return endQuestion(endById[m[1]]);
+    return null;
+  }
+  function mistakeIds() { return Object.keys(CJ.getData().wrong).filter(id => fromId(id)); }
+
+  function start() {
+    if (mode === 'who') qs = CJ.shuffle(D.CARDS).slice(0, ROUND).map(c => whoQuestion(c));
+    else if (mode === 'endings') qs = CJ.shuffle(D.ENDING_QUIZ).slice(0, ROUND).map(endQuestion);
+    else qs = CJ.shuffle(mistakeIds()).slice(0, ROUND).map(fromId);
+    qi = 0; score = 0; answered = false;
+    render();
+  }
+
+  function renderModes() {
+    const n = mistakeIds().length;
+    $('modeRow').innerHTML = MODES.map(m => '<button class="chip' + (m[0] === mode ? ' active' : '') + '" data-m="' + m[0] + '">' +
+      esc(m[1]) + (m[0] === 'mistakes' ? ' (' + n + ')' : '') + '</button>').join('');
+  }
+
+  function render() {
+    renderModes();
+    const box = $('qBox');
+    if (!qs.length) {
+      $('counter').textContent = ''; $('scoreNow').textContent = ''; $('progFill').style.width = '0%';
+      box.innerHTML = '<p>🎉 No mistakes to review right now!</p><p class="muted" style="margin-top:0.4rem;">Questions you get wrong will appear here, so you can try them again.</p>' +
+        '<button class="btn" data-act="mode" data-m="who" style="margin-top:1rem;">👥 Play “Who are you talking to?”</button>';
+      return;
+    }
+    if (qi >= qs.length) return renderEnd();
+    const q = qs[qi];
+    $('counter').textContent = 'Question ' + (qi + 1) + ' / ' + qs.length;
+    $('scoreNow').textContent = '⭕ ' + score;
+    $('progFill').style.width = (qi / qs.length * 100) + '%';
+    box.innerHTML = q.head + '<div class="options">' + q.opts.map((o, k) =>
+      '<button class="option-btn" data-k="' + k + '"><span class="k ja">' + esc(o.t[0]) + '</span><span class="romaji">' + esc(o.t[1]) + '</span></button>').join('') + '</div>' +
+      '<div class="feedback" id="fb"></div>';
+    answered = false;
+  }
+
+  function answer(k) {
+    if (answered) return;
+    answered = true;
+    const q = qs[qi], o = q.opts[k], ok = !!o.ok;
+    if (ok) score++;
+    CJ.recordQuiz(q.id, ok);
+    document.querySelectorAll('.option-btn').forEach((b, j) => {
+      b.disabled = true;
+      if (q.opts[j].ok) b.classList.add('correct');
+      else if (j === k) b.classList.add('wrong');
+    });
+    const fb = $('fb');
+    fb.className = 'feedback ' + (ok ? 'correct' : 'wrong');
+    fb.innerHTML = '<b>' + (ok ? pick(['⭕ Perfect!', '⭕ Yes!', '⭕ That\'s it!', '⭕ すごい！ (sugoi!)']) : '❌ Not quite.') + '</b>' + q.why +
+      '<div style="margin-top:0.5rem;">' + CJ.sayBtns(q.answer) + '</div>' +
+      '<button class="btn" data-act="next" style="margin-top:0.7rem;">' + (qi + 1 < qs.length ? 'Next →' : 'See my score') + '</button>';
+    $('scoreNow').textContent = '⭕ ' + score;
+    // 答えの説明と「Next」が画面の下に隠れないようにスクロール
+    const nb = fb.querySelector('[data-act="next"]');
+    const navH = (document.querySelector('nav') || {}).offsetHeight || 60;
+    const over = nb.getBoundingClientRect().bottom - (window.innerHeight - navH - 12);
+    if (over > 0) window.scrollBy({ top: over, behavior: 'smooth' });
+    CJ.autoSpeak(q.answer);
+  }
+
+  function renderEnd() {
+    $('counter').textContent = 'Finished!'; $('progFill').style.width = '100%';
+    const pct = score / qs.length;
+    const msg = pct === 1 ? 'Perfect! 🎉 Yoh-chan will be impressed.' : pct >= 0.7 ? 'Great job! 👏' : pct >= 0.4 ? 'Nice try! Practice makes perfect. 💪' : 'Keep going — you\'ll get there! 🌱';
+    const n = mistakeIds().length;
+    $('qBox').innerHTML = '<div class="score-big">' + score + ' / ' + qs.length + '</div><p style="text-align:center; margin:0.4rem 0 1rem;">' + msg + '</p>' +
+      '<button class="btn" data-act="again">🔁 Play again</button>' +
+      (n ? '<button class="btn" data-act="mode" data-m="mistakes" style="margin-top:0.6rem; background:#be123c;">🎯 Review my mistakes (' + n + ')</button>' : '') +
+      '<a class="btn btn-secondary" href="cards.html" style="margin-top:0.6rem;">🃏 Back to the cards</a>';
+    renderModes();
+  }
+
+  $('modeRow').addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b) return; mode = b.dataset.m; start(); });
+  $('qBox').addEventListener('click', e => {
+    const opt = e.target.closest('.option-btn');
+    if (opt) { answer(Number(opt.dataset.k)); return; }
+    const a = e.target.closest('[data-act]'); if (!a) return;
+    if (a.dataset.act === 'next') { qi++; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    else if (a.dataset.act === 'again') start();
+    else if (a.dataset.act === 'mode') { mode = a.dataset.m; start(); }
+  });
+
+  start();
+})();
+</script>
+</body>
+</html>

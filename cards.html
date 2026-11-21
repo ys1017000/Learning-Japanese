@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Polite ⇔ Casual – Casual Japanese</title>
+<meta name="theme-color" content="#e0517a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<header><a class="logo" href="index.html">🌸 Casual Japanese</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
+
+<main class="container">
+  <div class="chip-row" id="filterRow" role="group" aria-label="Choose cards"></div>
+  <div class="chip-row" style="margin-top:-0.3rem;">
+    <button class="chip" id="dirBtn"></button>
+    <button class="chip" id="shuffleBtn">🔀 Shuffle</button>
+  </div>
+
+  <div class="counter"><span class="muted" id="counter"></span><span class="learned-mark" id="learnedMark"></span></div>
+  <div class="progress"><div id="progFill"></div></div>
+
+  <div class="card flash" id="flash"></div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" id="prevBtn" aria-label="Previous card">←</button>
+    <button class="btn btn-ok" id="learnBtn" style="flex:3;"></button>
+    <button class="btn btn-secondary" id="nextBtn" aria-label="Next card">→</button>
+  </div>
+  <p class="muted" style="text-align:center; margin-top:0.8rem;">Say it out loud before you check! 🗣️</p>
+</main>
+
+<nav>
+  <a href="index.html"><span class="ni">🏠</span>Home</a>
+  <a href="cards.html" class="active"><span class="ni">🃏</span>Cards</a>
+  <a href="endings.html"><span class="ni">💬</span>Endings</a>
+  <a href="quiz.html"><span class="ni">❓</span>Quiz</a>
+</nav>
+
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+  const D = window.CJ_DATA, $ = id => document.getElementById(id), esc = CJ.esc;
+  const SIDE = {
+    p: { cls: 'polite', label: 'POLITE', who: 'teachers, your boss, shops' },
+    c: { cls: 'casual', label: 'CASUAL', who: 'Yoh-chan, friends' }
+  };
+  let filter = 'all', dir = 'pc', deck = [], i = 0, shown = false;
+
+  function buildDeck(keepId) {
+    const learned = new Set(CJ.getData().learned);
+    deck = D.CARDS.filter(c => filter === 'all' ? true : filter === 'todo' ? !learned.has(c.id) : c.s === filter);
+    i = 0;
+    if (keepId) { const k = deck.findIndex(c => c.id === keepId); if (k >= 0) i = k; }
+    shown = false;
+  }
+
+  function renderFilters() {
+    const learned = new Set(CJ.getData().learned);
+    const todo = D.CARDS.filter(c => !learned.has(c.id)).length;
+    const list = [['all', '✨ All (' + D.CARDS.length + ')'], ['todo', '📝 Not learned (' + todo + ')']].concat(D.SCENES.map(s => [s.id, s.label]));
+    $('filterRow').innerHTML = list.map(f => '<button class="chip' + (f[0] === filter ? ' active' : '') + '" data-f="' + f[0] + '">' + esc(f[1]) + '</button>').join('');
+    $('dirBtn').textContent = dir === 'pc' ? '↔️ Polite → Casual' : '↔️ Casual → Polite';
+  }
+
+  function sideHtml(c, k) {
+    const s = SIDE[k], t = c[k];
+    return '<div class="side"><span class="reg ' + s.cls + '">' + s.label + '</span><span class="reg-who">for ' + s.who + '</span>' +
+      '<div class="big-ja ja">' + esc(t[0]) + '</div><div class="romaji">' + esc(t[1]) + '</div>' +
+      '<div>' + CJ.sayBtns(t[0]) + '</div></div>';
+  }
+
+  function render() {
+    renderFilters();
+    const box = $('flash');
+    if (!deck.length) {
+      box.innerHTML = '<p>' + (filter === 'todo' ? '🎉 You learned all the cards! Try the quiz next.' : 'No cards here.') + '</p>' +
+        (filter === 'todo' ? '<a class="btn" href="quiz.html" style="margin-top:1rem;">❓ Go to the quiz</a>' : '');
+      $('counter').textContent = ''; $('learnedMark').textContent = ''; $('progFill').style.width = '0%';
+      ['prevBtn', 'nextBtn', 'learnBtn'].forEach(id => $(id).disabled = true);
+      $('learnBtn').textContent = '✓ I know this';
+      return;
+    }
+    ['prevBtn', 'nextBtn', 'learnBtn'].forEach(id => $(id).disabled = false);
+    const c = deck[i], a = dir === 'pc' ? 'p' : 'c', b = dir === 'pc' ? 'c' : 'p';
+    const learned = CJ.isLearned(c.id);
+    $('counter').textContent = (i + 1) + ' / ' + deck.length;
+    $('learnedMark').textContent = learned ? '✓ learned' : '';
+    $('progFill').style.width = ((i + 1) / deck.length * 100) + '%';
+    $('learnBtn').textContent = learned ? '↩︎ Not learned yet' : '✓ I know this';
+    $('learnBtn').className = 'btn ' + (learned ? 'btn-secondary' : 'btn-ok');
+
+    let html = '<div class="en">“' + esc(c.en) + '”</div>' + sideHtml(c, a);
+    if (!shown) {
+      html += '<button class="btn reveal-btn" id="revealBtn">Show ' + SIDE[b].label.toLowerCase() + ' ↓</button>';
+    } else {
+      html += sideHtml(c, b);
+      if (c.note) html += '<div class="note">💡 ' + esc(c.note) + '</div>';
+      if (c.r && c.r.length) {
+        html += '<div class="replies"><div class="t">💬 How to answer (casual)</div>' + c.r.map(r =>
+          '<div class="reply-row"><div><div class="k ja">' + esc(r[0]) + '</div><div class="romaji">' + esc(r[1]) + '</div><div class="e">' + esc(r[2]) + '</div></div>' + CJ.sayBtns(r[0]) + '</div>').join('') + '</div>';
+      }
+    }
+    box.innerHTML = html;
+    const rb = $('revealBtn');
+    if (rb) rb.addEventListener('click', reveal);
+  }
+
+  function reveal() {
+    if (!deck.length) return;
+    shown = true; render();
+    const c = deck[i];
+    CJ.autoSpeak((dir === 'pc' ? c.c : c.p)[0]);
+    CJ.markStudied();
+  }
+  function move(n) { if (!deck.length) return; i = (i + n + deck.length) % deck.length; shown = false; render(); }
+
+  $('filterRow').addEventListener('click', e => {
+    const b = e.target.closest('[data-f]'); if (!b) return;
+    filter = b.dataset.f; buildDeck(); render();
+  });
+  $('dirBtn').addEventListener('click', () => { dir = dir === 'pc' ? 'cp' : 'pc'; shown = false; render(); });
+  $('shuffleBtn').addEventListener('click', () => { deck = CJ.shuffle(deck); i = 0; shown = false; render(); CJ.toast('Shuffled 🔀'); });
+  $('prevBtn').addEventListener('click', () => move(-1));
+  $('nextBtn').addEventListener('click', () => move(1));
+  $('learnBtn').addEventListener('click', () => {
+    const c = deck[i]; if (!c) return;
+    const on = CJ.toggleLearned(c.id);
+    CJ.toast(on ? '✓ Nice! Marked as learned' : 'OK, it will come back');
+    if (filter === 'todo' && on) { deck.splice(i, 1); if (i >= deck.length) i = 0; shown = false; render(); }
+    else if (on) move(1); else render();
+  });
+
+  // ?card=ID で特定のカードを開く
+  const want = new URLSearchParams(location.search).get('card');
+  buildDeck(want); render();
+})();
+</script>
+</body>
+</html>

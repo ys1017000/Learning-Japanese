@@ -1,0 +1,212 @@
+/* Casual Japanese - 学習データ（カード・語尾・クイズ）
+   日本語は ひらがな のみ（漢字なし）。読みやすいように単語の間にスペースを入れている。
+   読み上げのときはスペースと「〜」を取り除いて読む。 */
+(function () {
+  "use strict";
+
+  /* 場面（カードの絞り込み用） */
+  const SCENES = [
+    { id: 'meet', label: '📍 Meeting up' },
+    { id: 'food', label: '🍜 Food' },
+    { id: 'date', label: '✨ Dates' },
+    { id: 'msg', label: '💬 LINE / DM' },
+    { id: 'care', label: '🤍 Caring' },
+    { id: 'daily', label: '☀️ Everyday' }
+  ];
+
+  /* 話す相手（クイズ用）。reg: 'casual' = ふつう（タメ口） / 'polite' = ていねい */
+  const PEOPLE = {
+    yoh: { icon: '💕', label: 'Yoh-chan (your boyfriend)', reg: 'casual' },
+    friend: { icon: '🧋', label: 'a close friend', reg: 'casual' },
+    boss: { icon: '👔', label: 'your boss at school', reg: 'polite' },
+    teacher: { icon: '📚', label: 'your Japanese teacher', reg: 'polite' },
+    shop: { icon: '🛍️', label: 'a shop or restaurant staff member', reg: 'polite' },
+    new: { icon: '🤝', label: 'someone you just met', reg: 'polite' }
+  };
+
+  /* Polite ⇔ Casual カード
+     id, s: 場面, p: [ていねい, ローマ字], c: [ふつう, ローマ字], en: 英語の意味,
+     note: 使い方のメモ（英語）, r: 答え方 [[ひらがな, ローマ字, 英語], ...],
+     pw: ていねいに言う相手（クイズで使う）。空なら「ふつう」の場面だけ出題 */
+  const CARDS = [
+    { id: 'genki', s: 'daily', p: ['げんき ですか？', 'genki desu ka?'], c: ['げんき？', 'genki?'], en: 'How are you?',
+      note: 'In Japanese, this is mostly for when you haven\'t seen someone for a while. When you see Yoh-chan often, try きょう どう だった？ (How was your day?) instead.',
+      r: [['げんき だよ！', 'genki da yo!', 'I\'m good!'], ['まあまあ かな', 'maamaa ka na', 'So-so, I guess.'], ['ちょっと つかれた', 'chotto tsukareta', 'A little tired.']],
+      pw: ['boss', 'teacher', 'new'] },
+    { id: 'doudatta', s: 'daily', p: ['きょう は どう でした か？', 'kyou wa dou deshita ka?'], c: ['きょう どう だった？', 'kyou dou datta?'], en: 'How was your day?',
+      note: 'A great everyday question for Yoh-chan — much more natural than げんき？ every day.',
+      r: [['たのしかった よ！', 'tanoshikatta yo!', 'It was fun!'], ['いそがしかった〜', 'isogashikatta~', 'It was busy~'], ['ふつう かな', 'futsuu ka na', 'Normal, I guess.']],
+      pw: ['boss', 'teacher'] },
+    { id: 'iku', s: 'date', p: ['いきます か？', 'ikimasu ka?'], c: ['いく？', 'iku?'], en: 'Are you going? / Shall we go?',
+      note: 'In casual Japanese, a question is often just the word with a rising voice ↗. You don\'t need か.',
+      r: [['いく！', 'iku!', 'Yes, I\'ll go!'], ['うん、いこう！', 'un, ikou!', 'Yeah, let\'s go!'], ['きょう は やめとく', 'kyou wa yametoku', 'I\'ll skip it today.']],
+      pw: ['boss', 'teacher', 'new'] },
+    { id: 'doko', s: 'meet', p: ['いま どこ です か？', 'ima doko desu ka?'], c: ['いま どこ？', 'ima doko?'], en: 'Where are you now?',
+      note: 'The #1 message before meeting up!',
+      r: [['ついた よ！', 'tsuita yo!', 'I\'m here!'], ['もう すぐ つく よ', 'mou sugu tsuku yo', 'I\'m almost there.'], ['でんしゃ の なか だよ', 'densha no naka da yo', 'I\'m on the train.']],
+      pw: ['boss', 'teacher'] },
+    { id: 'tsuita', s: 'meet', p: ['つきました', 'tsukimashita'], c: ['ついた よ！', 'tsuita yo!'], en: 'I\'ve arrived!',
+      note: 'よ tells the other person news they don\'t know yet: "I\'m here — just so you know!"',
+      pw: ['boss', 'teacher'] },
+    { id: 'matte', s: 'meet', p: ['ちょっと まって ください', 'chotto matte kudasai'], c: ['ちょっと まって！', 'chotto matte!'], en: 'Wait a moment, please.',
+      note: 'ください (kudasai) makes a request polite. With friends, just まって (matte).',
+      pw: ['boss', 'teacher', 'shop', 'new'] },
+    { id: 'okurete', s: 'meet', p: ['おくれて すみません', 'okurete sumimasen'], c: ['おくれて ごめん！', 'okurete gomen!'], en: 'Sorry I\'m late!',
+      note: 'ごめん (gomen) = sorry, casual. ごめん ね (gomen ne) sounds even softer and sweeter.',
+      pw: ['boss', 'teacher', 'new'] },
+    { id: 'taberu', s: 'food', p: ['なに を たべます か？', 'nani o tabemasu ka?'], c: ['なに たべる？', 'nani taberu?'], en: 'What shall we eat?',
+      note: 'Casual talk often drops small words like を (o).',
+      r: [['おすし が いい！', 'osushi ga ii!', 'Sushi, please!'], ['なんでも いい よ', 'nandemo ii yo', 'Anything is fine.'], ['うどん かな', 'udon ka na', 'Udon, maybe?']],
+      pw: ['boss', 'teacher'] },
+    { id: 'tabetai', s: 'food', p: ['たべたい です', 'tabetai desu'], c: ['たべたい！', 'tabetai!'], en: 'I want to eat it!',
+      note: 'Point at the menu and say これ たべたい！ (kore tabetai!) — "I want this!"',
+      pw: ['boss', 'teacher'] },
+    { id: 'oishii', s: 'food', p: ['おいしい です', 'oishii desu'], c: ['おいしい！', 'oishii!'], en: 'It\'s delicious!',
+      note: 'Say おいしい ね！ (oishii ne!) to share the feeling with Yoh-chan: "It\'s good, isn\'t it?"',
+      pw: ['boss', 'teacher', 'shop', 'new'] },
+    { id: 'onaka', s: 'food', p: ['おなか が すきました', 'onaka ga sukimashita'], c: ['おなか すいた〜', 'onaka suita~'], en: 'I\'m hungry.',
+      note: 'Again, casual Japanese drops が (ga). The long 〜 makes it sound a little cute.',
+      pw: ['boss', 'teacher'] },
+    { id: 'gochisou', s: 'food', p: ['ごちそうさま でした', 'gochisousama deshita'], c: ['ごちそうさま！', 'gochisousama!'], en: 'Thank you for the meal! (after eating)',
+      note: 'Say it to the restaurant staff when you leave — they will be happy. To Yoh-chan when he cooks or pays, too!',
+      pw: ['boss', 'teacher', 'shop', 'new'] },
+    { id: 'kirei', s: 'date', p: ['きれい です ね', 'kirei desu ne'], c: ['きれい だね！', 'kirei da ne!'], en: 'It\'s beautiful, isn\'t it?',
+      note: 'Perfect for looking at the Christmas lights together. ね = "isn\'t it?" — you share the feeling.',
+      pw: ['boss', 'teacher', 'new'] },
+    { id: 'tanoshikatta', s: 'date', p: ['たのしかった です', 'tanoshikatta desu'], c: ['たのしかった！', 'tanoshikatta!'], en: 'That was fun!',
+      note: 'After a date: きょう たのしかった ね！ (kyou tanoshikatta ne!) = "Today was fun, wasn\'t it?"',
+      pw: ['boss', 'teacher', 'new'] },
+    { id: 'samui', s: 'date', p: ['さむい です ね', 'samui desu ne'], c: ['さむい ね〜', 'samui ne~'], en: 'It\'s cold, isn\'t it?',
+      note: 'The weather is the easiest small talk in Japan — with anyone!',
+      r: [['うん、さむい！', 'un, samui!', 'Yeah, so cold!'], ['て つなご？', 'te tsunago?', 'Shall we hold hands?']],
+      pw: ['boss', 'teacher', 'shop', 'new'] },
+    { id: 'aitai', s: 'msg', p: ['あいたい です', 'aitai desu'], c: ['あいたい な', 'aitai na'], en: 'I want to see you. / I miss you.',
+      note: 'な at the end = a soft feeling, like you are saying it to yourself. Very common in LINE messages.',
+      pw: [] },
+    { id: 'kaetta', s: 'msg', p: ['いま かえりました', 'ima kaerimashita'], c: ['いま かえった よ', 'ima kaetta yo'], en: 'I just got home.',
+      note: 'A sweet message to send after a date.',
+      r: [['おかえり！', 'okaeri!', 'Welcome home!'], ['おつかれさま！', 'otsukaresama!', 'Good job today! / You must be tired!']],
+      pw: [] },
+    { id: 'nanishiteru', s: 'msg', p: ['いま なに を して います か？', 'ima nani o shite imasu ka?'], c: ['いま なに してる？', 'ima nani shiteru?'], en: 'What are you doing now?',
+      note: 'してる (shiteru) is the short, spoken form of して いる (shite iru).',
+      r: [['べんきょう してる よ', 'benkyou shiteru yo', 'I\'m studying.'], ['ごろごろ してる〜', 'gorogoro shiteru~', 'Just relaxing at home~']],
+      pw: [] },
+    { id: 'ohayou', s: 'msg', p: ['おはよう ございます', 'ohayou gozaimasu'], c: ['おはよう！', 'ohayou!'], en: 'Good morning!',
+      note: 'At work, people say おはよう ございます all morning — even to coworkers.',
+      pw: ['boss', 'teacher', 'new'] },
+    { id: 'oyasumi', s: 'msg', p: ['おやすみ なさい', 'oyasumi nasai'], c: ['おやすみ〜', 'oyasumi~'], en: 'Good night.',
+      r: [['おやすみ！ また あした ね', 'oyasumi! mata ashita ne', 'Good night! See you tomorrow.']],
+      pw: ['boss', 'teacher'] },
+    { id: 'matane', s: 'msg', p: ['では、また', 'dewa, mata'], c: ['またね！', 'mata ne!'], en: 'See you!',
+      note: 'When you leave work before your boss, say おさきに しつれい します (osaki ni shitsurei shimasu) — "Excuse me for leaving first."',
+      pw: ['teacher', 'new'] },
+    { id: 'daijoubu', s: 'care', p: ['だいじょうぶ です か？', 'daijoubu desu ka?'], c: ['だいじょうぶ？', 'daijoubu?'], en: 'Are you OK?',
+      r: [['だいじょうぶ だよ', 'daijoubu da yo', 'I\'m OK.'], ['ありがとう、へいき だよ', 'arigatou, heiki da yo', 'Thanks, I\'m fine.'], ['ちょっと つかれた', 'chotto tsukareta', 'A little tired.']],
+      pw: ['boss', 'teacher', 'shop', 'new'] },
+    { id: 'muri', s: 'care', p: ['むり しないで ください', 'muri shinaide kudasai'], c: ['むり しないで ね', 'muri shinaide ne'], en: 'Don\'t push yourself too hard.',
+      note: 'A kind message when Yoh-chan is busy with work.',
+      pw: ['boss', 'teacher'] },
+    { id: 'ganbatte', s: 'care', p: ['がんばって ください', 'ganbatte kudasai'], c: ['がんばって ね！', 'ganbatte ne!'], en: 'Good luck! / You can do it!',
+      note: 'To your boss, がんばって can sound a little strange (like you are above them). With friends and Yoh-chan, it\'s perfect.',
+      pw: ['teacher', 'new'] },
+    { id: 'arigatou', s: 'daily', p: ['ありがとう ございます', 'arigatou gozaimasu'], c: ['ありがとう！', 'arigatou!'], en: 'Thank you!',
+      pw: ['boss', 'teacher', 'shop', 'new'] },
+    { id: 'gomen', s: 'daily', p: ['すみません', 'sumimasen'], c: ['ごめん ね', 'gomen ne'], en: 'I\'m sorry.',
+      note: 'すみません also means "Excuse me" — use it to call the staff in a restaurant.',
+      pw: ['boss', 'teacher', 'shop', 'new'] },
+    { id: 'wakatta', s: 'daily', p: ['わかりました', 'wakarimashita'], c: ['わかった！', 'wakatta!'], en: 'Got it! / OK!',
+      note: 'うん、わかった (un, wakatta) sounds very natural with Yoh-chan.',
+      pw: ['boss', 'teacher', 'shop', 'new'] },
+    { id: 'souda', s: 'daily', p: ['そう です ね', 'sou desu ne'], c: ['そう だね', 'sou da ne'], en: 'That\'s right. / I agree.',
+      pw: ['boss', 'teacher', 'new'] },
+    { id: 'honto', s: 'daily', p: ['ほんとう です か？', 'hontou desu ka?'], c: ['ほんと？', 'honto?'], en: 'Really?',
+      note: 'ほんと？ with a surprised voice ↗ = "No way, really?!"',
+      pw: ['boss', 'teacher', 'new'] },
+    { id: 'iiyo', s: 'daily', p: ['いい です よ', 'ii desu yo'], c: ['いい よ！', 'ii yo!'], en: 'Sure! / That\'s fine!',
+      pw: ['boss', 'teacher', 'new'] }
+  ];
+
+  /* 語尾（Sentence endings）。ex: [ひらがな, ローマ字, 英語, ニュアンス] */
+  const ENDINGS = [
+    { id: 'yo', mark: '〜よ', romaji: '~yo', title: 'Telling news',
+      meaning: '"Just so you know!" — you tell the other person something new they don\'t know yet.',
+      ex: [['ついた よ！', 'tsuita yo!', 'I\'m here!', 'He doesn\'t know you arrived — you tell him.'],
+        ['これ おいしい よ', 'kore oishii yo', 'This is tasty!', 'He hasn\'t tried it yet — "you should try it!"'],
+        ['もう すぐ つく よ', 'mou sugu tsuku yo', 'I\'ll be there soon.', 'New info for him.']],
+      tip: 'Too many よ can sound pushy, like "I\'m telling you!". Use it for real news.' },
+    { id: 'ne', mark: '〜ね', romaji: '~ne', title: 'Sharing a feeling',
+      meaning: '"…isn\'t it?" / "…right?" — you both see it or feel it. It makes you sound warm and friendly.',
+      ex: [['きれい だね', 'kirei da ne', 'It\'s beautiful, isn\'t it?', 'You are both looking at the lights.'],
+        ['さむい ね', 'samui ne', 'It\'s cold, isn\'t it?', 'You both feel the cold.'],
+        ['また あした ね', 'mata ashita ne', 'See you tomorrow, OK?', 'A soft, warm goodbye.']],
+      tip: 'If you are not sure which ending to use, ね is often the safest and kindest choice.' },
+    { id: 'dayo', mark: '〜だよ', romaji: '~da yo', title: 'Soft statement (after a noun)',
+      meaning: 'Same as よ, but after a noun or a "na-word" (げんき, だいじょうぶ, きれい…) you add だ first.',
+      ex: [['げんき だよ', 'genki da yo', 'I\'m good!', 'げんき is a na-word → だよ'],
+        ['だいじょうぶ だよ', 'daijoubu da yo', 'I\'m OK. / It\'s OK.', 'To calm him down.'],
+        ['いま えき だよ', 'ima eki da yo', 'I\'m at the station now.', 'えき (station) is a noun → だよ']],
+      tip: 'After words ending in -い like おいしい or さむい, use only よ: おいしい よ ✓ / おいしい だよ ✗' },
+    { id: 'kana', mark: '〜かな', romaji: '~ka na', title: 'Wondering',
+      meaning: '"I wonder…" / "Maybe…" — you are thinking out loud and you are not sure.',
+      ex: [['まにあう かな', 'maniau ka na', 'I wonder if I\'ll make it in time.', 'You\'re worried about being late.'],
+        ['なに たべよう かな', 'nani tabeyou ka na', 'Hmm, what should I eat?', 'Looking at the menu.'],
+        ['あした はれる かな', 'ashita hareru ka na', 'I wonder if it\'ll be sunny tomorrow.', 'Before a date day.']],
+      tip: 'Also good for a soft answer: まあまあ かな = "So-so, I guess."' },
+    { id: 'no', mark: '〜の？', romaji: '~no?', title: 'Soft question',
+      meaning: 'A gentle, curious question. Very common between couples and friends.',
+      ex: [['どこ いく の？', 'doko iku no?', 'Where are you going?', 'Curious, not strict.'],
+        ['つかれてる の？', 'tsukareteru no?', 'Are you tired?', 'You notice he looks tired.'],
+        ['ほんと なの？', 'honto na no?', 'Is that really true?', 'After a noun or na-word → なの？']],
+      tip: 'Say it with a rising voice ↗. After a noun or na-word, use なの？ (げんき なの？).' },
+    { id: 'na', mark: '〜な', romaji: '~na', title: 'Soft wish (to yourself)',
+      meaning: 'A soft feeling, like you are saying it to yourself. Great for wishes in messages.',
+      ex: [['あいたい な', 'aitai na', 'I want to see you…', 'A sweet LINE message.'],
+        ['いきたい な', 'ikitai na', 'I\'d love to go…', 'A soft hint.'],
+        ['いい な〜', 'ii na~', 'Lucky you! / That\'s nice~', 'When he tells you good news.']],
+      tip: 'Some men use な a lot when talking to themselves. For wishes like あいたい な, anyone can use it.' }
+  ];
+
+  /* 同じ言葉で、語尾だけ変える比較 */
+  const COMPARE = [
+    { base: 'いく (iku) = go', rows: [
+      ['いく よ', 'iku yo', 'I\'m going! (telling you)'],
+      ['いく ね', 'iku ne', 'I\'ll go, OK? (soft)'],
+      ['いく かな', 'iku ka na', 'Will I go? Hmm…'],
+      ['いく の？', 'iku no?', 'Are you going? (asking)']] },
+    { base: 'さむい (samui) = cold', rows: [
+      ['さむい よ', 'samui yo', 'It\'s cold! (you\'ll need a coat)'],
+      ['さむい ね', 'samui ne', 'It\'s cold, isn\'t it? (we both feel it)'],
+      ['さむい かな', 'samui ka na', 'I wonder if it will be cold.'],
+      ['さむい の？', 'samui no?', 'Are you cold? (asking him)']] }
+  ];
+
+  /* 語尾クイズ。opts の最初が正解（表示のときにシャッフルする） */
+  const ENDING_QUIZ = [
+    { id: 'e1', q: 'You tell Yoh-chan news he doesn\'t know: you have arrived.', a: ['ついた よ！', 'tsuita yo!'], w: [['ついた ね', 'tsuita ne'], ['ついた かな', 'tsuita ka na'], ['ついた の？', 'tsuita no?']],
+      why: 'よ = you give new information. He doesn\'t know you are there yet.' },
+    { id: 'e2', q: 'You are looking at the Christmas lights together. You share the feeling.', a: ['きれい だね', 'kirei da ne'], w: [['きれい だよ', 'kirei da yo'], ['きれい かな', 'kirei ka na'], ['きれい なの？', 'kirei na no?']],
+      why: 'ね = you both see it and feel it.' },
+    { id: 'e3', q: 'The train is slow. You are not sure you will be on time.', a: ['まにあう かな', 'maniau ka na'], w: [['まにあう よ', 'maniau yo'], ['まにあう ね', 'maniau ne'], ['まにあう の？', 'maniau no?']],
+      why: 'かな = "I wonder…" You are not sure.' },
+    { id: 'e4', q: 'Gently ask Yoh-chan where he is going.', a: ['どこ いく の？', 'doko iku no?'], w: [['どこ いく よ', 'doko iku yo'], ['どこ いく ね', 'doko iku ne'], ['どこ いく だよ', 'doko iku da yo']],
+      why: 'の？ = a soft, curious question.' },
+    { id: 'e5', q: 'Yoh-chan hasn\'t tried this cake yet. Tell him it\'s tasty.', a: ['これ おいしい よ', 'kore oishii yo'], w: [['これ おいしい だよ', 'kore oishii da yo'], ['これ おいしい かな', 'kore oishii ka na'], ['これ おいしい の？', 'kore oishii no?']],
+      why: 'New info → よ. After -い words like おいしい, don\'t add だ: おいしい だよ is wrong.' },
+    { id: 'e6', q: 'Yoh-chan is worried about you. Tell him you are fine.', a: ['だいじょうぶ だよ', 'daijoubu da yo'], w: [['だいじょうぶ かな', 'daijoubu ka na'], ['だいじょうぶ の？', 'daijoubu no?'], ['だいじょうぶ だね', 'daijoubu da ne']],
+      why: 'You tell him something he doesn\'t know (you are OK) → だよ. だいじょうぶ is a na-word, so だ comes first.' },
+    { id: 'e7', q: 'You are both shivering on the street.', a: ['さむい ね', 'samui ne'], w: [['さむい よ', 'samui yo'], ['さむい かな', 'samui ka na'], ['さむい の？', 'samui no?']],
+      why: 'You both feel it → ね.' },
+    { id: 'e8', q: 'Looking at the menu, thinking out loud.', a: ['なに たべよう かな', 'nani tabeyou ka na'], w: [['なに たべよう よ', 'nani tabeyou yo'], ['なに たべよう ね', 'nani tabeyou ne'], ['なに たべよう だよ', 'nani tabeyou da yo']],
+      why: 'かな = thinking to yourself, "Hmm, what should I…"' },
+    { id: 'e9', q: 'Yoh-chan looks tired. Ask him softly.', a: ['つかれてる の？', 'tsukareteru no?'], w: [['つかれてる よ', 'tsukareteru yo'], ['つかれてる かな', 'tsukareteru ka na'], ['つかれてる だよ', 'tsukareteru da yo']],
+      why: 'の？ = a gentle question when you notice something.' },
+    { id: 'e10', q: 'Saying goodbye warmly: "See you tomorrow!"', a: ['また あした ね', 'mata ashita ne'], w: [['また あした かな', 'mata ashita ka na'], ['また あした の？', 'mata ashita no?'], ['また あした だよ', 'mata ashita da yo']],
+      why: 'ね makes a goodbye soft and warm.' },
+    { id: 'e11', q: 'Send a LINE message: you miss him (a soft wish).', a: ['あいたい な', 'aitai na'], w: [['あいたい だよ', 'aitai da yo'], ['あいたい の？', 'aitai no?'], ['あいたい かな', 'aitai ka na']],
+      why: 'な = a soft feeling to yourself. あいたい ends in -い, so no だ.' },
+    { id: 'e12', q: 'Yoh-chan asks "げんき？". Answer that you are good.', a: ['げんき だよ！', 'genki da yo!'], w: [['げんき よ！', 'genki yo!'], ['げんき かな', 'genki ka na'], ['げんき の？', 'genki no?']],
+      why: 'げんき is a na-word → だよ. (げんき よ sounds like an old-fashioned lady.)' }
+  ];
+
+  window.CJ_DATA = { SCENES, PEOPLE, CARDS, ENDINGS, COMPARE, ENDING_QUIZ };
+})();
