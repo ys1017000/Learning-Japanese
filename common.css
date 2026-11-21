@@ -300,3 +300,7 @@ body.hide-furi #detail rt, body.hide-furi #detail .romaji, body.hide-furi .wd-li
 .setting-row { flex-wrap: wrap; }
 .seg button { white-space: nowrap; }
 #voiceSel { max-width: 100% !important; }
+
+/* ● ＝ ようちゃん の こえ がある 🔊（小さな点） */
+.icon-btn.has-voice { position: relative; }
+.icon-btn.has-voice::after { content: ''; position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 2px #fff; }

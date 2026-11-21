@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Yoh-chan's voice – マルちゃんのペースでいいよ</title>
+<meta name="theme-color" content="#e0517a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<header><a class="logo" href="index.html">🌸 マルちゃんのペースでいいよ</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
+
+<main class="container">
+  <div class="card">
+    <h2 data-i18n="rec.title"></h2>
+    <p class="muted" data-i18n="rec.intro"></p>
+  </div>
+
+  <select class="pick" id="groupSel" aria-label="Sentences"></select>
+  <div class="tool-row">
+    <label class="kj-toggle"><input type="checkbox" id="onlyTodo" checked> <span data-i18n="rec.onlyTodo"></span></label>
+  </div>
+  <div class="counter"><span class="muted" id="countText"></span></div>
+  <div id="list"></div>
+  <button class="tiny-btn" id="moreBtn" style="margin:0.4rem auto;"></button>
+
+  <div class="card" style="margin-top:1rem;">
+    <h2 data-i18n="rec.sendTitle"></h2>
+    <div class="muted" id="localCount" style="margin-bottom:0.5rem;"></div>
+    <button class="btn" id="exportBtn" data-i18n="rec.export"></button>
+    <ol class="tips-list" style="margin-top:0.7rem;" id="howList"></ol>
+  </div>
+</main>
+
+<nav>
+  <a href="index.html" class="active"><span class="ni">🏠</span><span data-i18n="nav.home">Home</span></a>
+  <a href="practice.html"><span class="ni">🔥</span><span data-i18n="nav.today">Today</span></a>
+  <a href="cards.html"><span class="ni">📚</span><span data-i18n="nav.learn">Learn</span></a>
+  <a href="kanji.html"><span class="ni">✍️</span><span data-i18n="nav.kanji">Kanji</span></a>
+  <a href="read.html"><span class="ni">🗣️</span><span data-i18n="nav.read">Read</span></a>
+  <a href="quiz.html"><span class="ni">❓</span><span data-i18n="nav.quiz">Quiz</span></a>
+</nav>
+
+<script src="i18n.js"></script>
+<script src="data.js"></script>
+<script src="grammar-data.js"></script>
+<script src="read-data.js"></script>
+<script src="examples-data.js"></script>
+<script src="kanji-data.js"></script>
+<script src="words-data.js"></script>
+<script src="pref-data.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
+  const D = window.CJ_DATA, G = window.CJ_GRAMMAR.GRAMMAR, R = window.CJ_READ.PASSAGES, E = window.CJ_EXAMPLES.EXAMPLES;
+  const W = window.CJ_WORDS.WORDS, K = window.CJ_KANJI.KANJI, P = window.CJ_PREF.PREFS;
+
+  /* ---- 録音する文の一覧（アプリで 🔊 が出る文 ぜんぶ） ----
+     { kana: 表示のひらがな（🔊 と同じ文字）, kj: 漢字の書き方, en } を グループ ごとに */
+  const GROUPS = { cards: [], grammar: [], read: [], endings: [], examples: [], words: [], kanji: [], map: [] };
+  const add = (g, kana, kj, en) => { if (kana) GROUPS[g].push({ kana, kj: kj || kana, en: en || '' }); };
+  D.CARDS.forEach(c => { add('cards', c.c[0], c.c[2], c.en); add('cards', c.p[0], c.p[2], c.en); (c.r || []).forEach(r => add('cards', r[0], r[3], r[2])); });
+  G.forEach(g => g.ex.forEach(e => { add('grammar', e[1], e[5], e[0]); add('grammar', e[3], e[6], e[0]); }));
+  R.forEach(p => p.lines.forEach(l => { add('read', l[1][0], l[1][2], l[0]); add('read', l[2][0], l[2][2], l[0]); }));
+  D.ENDINGS.forEach(e => e.ex.forEach(x => add('endings', x[0], x[5], x[2])));
+  D.COMPARE.forEach(c => c.rows.forEach(r => add('endings', r[0], r[4], r[2])));
+  E.forEach(e => { add('examples', e[2][0], e[2][2], e[1]); add('examples', e[3][0], e[3][2], e[1]); });
+  W.forEach(w => add('words', w.kana, w.kj, w.en));
+  K.forEach(k => k.words.forEach(w => add('kanji', CJ.reading(w[0]), w[0], k.k + ' · ' + w[2])));
+  P.forEach(x => add('map', CJ.reading(x.kj), x.kj, x.en));
+  // 同じ文（読み上げの文字が同じ）は1つにする。最初に出てきたグループに入れる
+  const seen = new Set();
+  Object.keys(GROUPS).forEach(g => { GROUPS[g] = GROUPS[g].filter(it => { const k = CJ.voiceId(it.kana); if (seen.has(k)) return false; seen.add(k); return true; }); });
+  const ALL = [].concat(...Object.values(GROUPS));
+
+  let group = 'cards', limit = 40, recState = null;   // recState = { kana, recorder, chunks, timer }
+  const status = it => CJ.hasVoice(it.kana);
+
+  function renderGroups() {
+    $('groupSel').innerHTML = Object.keys(GROUPS).map(g => {
+      const n = GROUPS[g].filter(status).length;
+      return '<option value="' + g + '"' + (g === group ? ' selected' : '') + '>' + esc(t('rec.g.' + g)) + '（' + n + '/' + GROUPS[g].length + '）</option>';
+    }).join('');
+  }
+  function renderList() {
+    const only = $('onlyTodo').checked;
+    const items = GROUPS[group].filter(it => !only || !status(it));
+    const shown = items.slice(0, limit);
+    $('countText').textContent = t('rec.count', { n: ALL.filter(status).length, m: ALL.length });
+    $('list').innerHTML = shown.map(it => {
+      const st = status(it), on = recState && recState.kana === it.kana;
+      return '<div class="rd-line" data-kana="' + esc(it.kana) + '">' +
+        '<div class="k ja" style="font-size:1.15rem;">' + esc(CJ.plain(it.kj)) + '</div>' +
+        '<div class="muted ja">' + esc(it.kana) + (it.en ? ' — ' + esc(it.en) : '') + '</div>' +
+        '<div class="rd-tools">' +
+          '<button class="mic-btn' + (on ? ' on' : '') + '" data-a="rec">' + esc(on ? t('rec.stop') : '🎙️ ' + t('rec.rec')) + '</button>' +
+          (st ? '<button class="icon-btn" data-a="play" aria-label="play">▶️</button>' : '') +
+          (st === 'local' ? '<button class="icon-btn" data-a="del" aria-label="delete">🗑</button>' : '') +
+          '<span class="rd-best">' + esc(st === 'local' ? t('rec.local') : st === 'site' ? t('rec.site') : '') + '</span>' +
+        '</div>' + (on ? '<div class="rd-result show" style="color:var(--bad); font-weight:700;">' + esc(t('rec.recording')) + '</div>' : '') + '</div>';
+    }).join('') || '<p class="muted">✓</p>';
+    $('moreBtn').style.display = items.length > shown.length ? '' : 'none';
+    $('moreBtn').textContent = '＋ ' + (items.length - shown.length);
+  }
+  async function renderSend() {
+    const recs = await CJ.localVoiceRecords().catch(() => []);
+    $('localCount').textContent = recs.length ? t('rec.localCount', { n: recs.length }) : t('rec.noLocal');
+    $('exportBtn').disabled = !recs.length;
+    $('howList').innerHTML = t('rec.how').split('|').map(x => '<li>' + x + '</li>').join('');
+  }
+  function render() { renderGroups(); renderList(); renderSend(); }
+
+  /* ---- 録音 → どの端末でも再生できる WAV（16kHz・モノラル）にする ---- */
+  let stream = null;
+  async function startRec(kana) {
+    try { if (!stream) stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+    catch (e) { CJ.toast(t('rec.micErr')); return; }
+    CJ.stopSpeak();
+    const chunks = [], recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    recorder.onstop = async () => {
+      const raw = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+      try {
+        const wav = await toWav(raw);
+        await CJ.saveLocalVoice(kana, wav);
+        CJ.toast(t('rec.saved'));
+        CJ.speak(kana);
+      } catch (e) { CJ.toast(t('rec.convErr')); }
+      render();
+    };
+    recState = { kana, recorder, timer: setTimeout(stopRec, 10000) };   // 長くても 10 秒で止める
+    recorder.start();
+    renderList();
+  }
+  function stopRec() {
+    if (!recState) return;
+    clearTimeout(recState.timer);
+    const r = recState.recorder; recState = null;
+    try { r.stop(); } catch (e) {}
+    renderList();
+  }
+  async function toWav(blob) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AC();
+    const buf = await new Promise((res, rej) => blob.arrayBuffer().then(ab => ctx.decodeAudioData(ab, res, rej)).catch(rej));
+    ctx.close && ctx.close();
+    // 1チャンネルにまとめる
+    const ch0 = buf.getChannelData(0), mono = new Float32Array(ch0.length);
+    for (let c = 0; c < buf.numberOfChannels; c++) { const d = buf.getChannelData(c); for (let i = 0; i < d.length; i++) mono[i] += d[i] / buf.numberOfChannels; }
+    // 前後の無音をけずる（少しだけ余白を残す）
+    const thr = 0.02, pad = Math.floor(buf.sampleRate * 0.12);
+    let a = 0, b = mono.length - 1;
+    while (a < mono.length && Math.abs(mono[a]) < thr) a++;
+    while (b > a && Math.abs(mono[b]) < thr) b--;
+    a = Math.max(0, a - pad); b = Math.min(mono.length - 1, b + pad);
+    const cut = mono.slice(a, b + 1);
+    // 16kHz にする（線形補間）。音量をそろえる
+    const rate = 16000, ratio = buf.sampleRate / rate, n = Math.max(1, Math.floor(cut.length / ratio));
+    const out = new Float32Array(n);
+    let peak = 0;
+    for (let i = 0; i < n; i++) { const x = i * ratio, i0 = Math.floor(x), f = x - i0; out[i] = (cut[i0] || 0) * (1 - f) + (cut[i0 + 1] || 0) * f; peak = Math.max(peak, Math.abs(out[i])); }
+    const gain = peak > 0 ? Math.min(4, 0.9 / peak) : 1;
+    const view = new DataView(new ArrayBuffer(44 + n * 2));
+    const str = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+    str(0, 'RIFF'); view.setUint32(4, 36 + n * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
+    view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true); view.setUint32(24, rate, true);
+    view.setUint32(28, rate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true); str(36, 'data'); view.setUint32(40, n * 2, true);
+    for (let i = 0; i < n; i++) view.setInt16(44 + i * 2, Math.max(-1, Math.min(1, out[i] * gain)) * 0x7fff, true);
+    return new Blob([view], { type: 'audio/wav' });
+  }
+
+  /* ---- zip にまとめる（圧縮なしの zip。ライブラリなしで作る） ---- */
+  const CRC = (() => { const tb = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; tb[n] = c >>> 0; } return tb; })();
+  function crc32(u8) { let c = 0xffffffff; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; }
+  function makeZip(files) {   // files: [{ name, data: Uint8Array }]
+    const enc = new TextEncoder(), parts = [], central = [];
+    let offset = 0;
+    files.forEach(f => {
+      const name = enc.encode(f.name), crc = crc32(f.data), size = f.data.length;
+      const h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0, true); h.setUint16(8, 0, true);
+      h.setUint16(10, 0, true); h.setUint16(12, 0x21, true); h.setUint32(14, crc, true); h.setUint32(18, size, true); h.setUint32(22, size, true);
+      h.setUint16(26, name.length, true); h.setUint16(28, 0, true);
+      parts.push(new Uint8Array(h.buffer), name, f.data);
+      const c = new DataView(new ArrayBuffer(46));
+      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0, true); c.setUint16(10, 0, true);
+      c.setUint16(12, 0, true); c.setUint16(14, 0x21, true); c.setUint32(16, crc, true); c.setUint32(20, size, true); c.setUint32(24, size, true);
+      c.setUint16(28, name.length, true); c.setUint16(30, 0, true); c.setUint16(32, 0, true); c.setUint16(34, 0, true); c.setUint16(36, 0, true);
+      c.setUint32(38, 0, true); c.setUint32(42, offset, true);
+      central.push(new Uint8Array(c.buffer), name);
+      offset += 30 + name.length + size;
+    });
+    const cSize = central.reduce((n, a) => n + a.length, 0);
+    const e = new DataView(new ArrayBuffer(22));
+    e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true);
+    e.setUint32(12, cSize, true); e.setUint32(16, offset, true);
+    return new Blob(parts.concat(central, [new Uint8Array(e.buffer)]), { type: 'application/zip' });
+  }
+  async function exportZip() {
+    const recs = await CJ.localVoiceRecords();
+    if (!recs.length) return;
+    // サイトにすでにある声 ＋ この スマホ の声 → 新しい index.json
+    const ids = Array.from(new Set(CJ.siteVoiceIds().concat(recs.map(r => r.id)))).sort();
+    const index = { app: 'maru-pace-voice', updated: new Date().toISOString(), ids, texts: {} };
+    recs.forEach(r => { index.texts[r.id] = r.kana; });
+    const files = [{ name: 'voice/index.json', data: new TextEncoder().encode(JSON.stringify(index, null, 1)) }];
+    for (const r of recs) files.push({ name: 'voice/' + r.id + '.wav', data: new Uint8Array(await r.blob.arrayBuffer()) });
+    const url = URL.createObjectURL(makeZip(files));
+    const a = document.createElement('a'); a.href = url; a.download = 'voice-' + CJ.dateKey().replace(/-/g, '') + '.zip';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+    CJ.toast(t('rec.exported', { n: recs.length }));
+  }
+
+  $('groupSel').addEventListener('change', e => { group = e.target.value; limit = 40; renderList(); });
+  $('onlyTodo').addEventListener('change', () => { limit = 40; renderList(); });
+  $('moreBtn').addEventListener('click', () => { limit += 40; renderList(); });
+  $('exportBtn').addEventListener('click', exportZip);
+  $('list').addEventListener('click', e => {
+    const b = e.target.closest('[data-a]'); if (!b) return;
+    const kana = b.closest('[data-kana]').dataset.kana;
+    if (b.dataset.a === 'rec') { if (recState && recState.kana === kana) stopRec(); else { if (recState) stopRec(); startRec(kana); } }
+    else if (b.dataset.a === 'play') CJ.speak(kana);
+    else if (b.dataset.a === 'del') { if (confirm(t('rec.del'))) CJ.deleteLocalVoice(kana).then(render); }
+  });
+  if (!(navigator.mediaDevices && window.MediaRecorder)) { $('list').insertAdjacentHTML('beforebegin', '<div class="notice">' + esc(t('rec.noRec')) + '</div>'); }
+  document.addEventListener('cj:lang', render);
+  document.addEventListener('cj:voices', render);
+  render();
+})();
+</script>
+</body>
+</html>

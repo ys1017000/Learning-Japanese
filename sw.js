@@ -1,7 +1,7 @@
 /* オフライン対応：一度開いたページ・ファイルを端末に保存して、電波がなくても使えるようにする */
-const CACHE = 'casual-japanese-v8';
+const CACHE = 'casual-japanese-v10';
 const ASSETS = ['./', 'index.html', 'practice.html', 'cards.html', 'endings.html', 'grammar.html', 'guide.html', 'kanji.html', 'words.html', 'map.html',
-  'read.html', 'quiz.html', 'ask.html', 'i18n.js', 'data.js', 'grammar-data.js', 'read-data.js', 'examples-data.js', 'kanji-data.js', 'words-data.js', 'pref-data.js',
+  'read.html', 'quiz.html', 'ask.html', 'record.html', 'i18n.js', 'data.js', 'grammar-data.js', 'read-data.js', 'examples-data.js', 'kanji-data.js', 'words-data.js', 'pref-data.js',
   'common.js', 'bank.js', 'common.css', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -18,6 +18,11 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   const key = url.origin + url.pathname;          // ?mode= などのクエリは無視
+  // 声の一覧（voice/index.json）は、新しい録音がすぐ反映されるように ネットを先に見る
+  if (url.pathname.endsWith('/voice/index.json')) {
+    e.respondWith(fetch(req).then(res => { if (res && res.ok) { const cp = res.clone(); caches.open(CACHE).then(c => c.put(key, cp)); } return res; }).catch(() => caches.match(key).then(r => r || Response.error())));
+    return;
+  }
   e.respondWith((async () => {
     const cache = await caches.open(CACHE);
     const cached = await cache.match(key);

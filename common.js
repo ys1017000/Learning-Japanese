@@ -280,7 +280,7 @@
     return kj ? speechText(naturalText(kj)) : plainKana;
   }
   // onEnd: 読み終わったときに呼ぶ（「ぜんぶ きく」用）
-  function speak(kana, slow, onEnd) {
+  function ttsSpeak(kana, slow, onEnd) {
     if (!('speechSynthesis' in window) || !kana) return false;
     const synth = window.speechSynthesis;
     const go = () => {
@@ -299,15 +299,81 @@
     if (!getPrefs().voiceNoted) { setPref('voiceNoted', true); setTimeout(() => toast(t('voice.caution')), 400); }
     return true;
   }
-  function stopSpeak() { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); }
+  /* ---------- ようちゃん の こえ（録音した声） ----------
+     声のファイル名：ひらがな（スペース・〜なし）から作る短い番号。v_xxxxxxxx.wav
+     ① この スマホ で 録音した声（IndexedDB）→ ② サイトの voice/ フォルダ（voice/index.json に一覧）→ ③ 機械の声 の順に使う */
+  const VOICE_DIR = 'voice/';
+  function hashKey(str) { let h = 0x811c9dc5; for (const ch of str) { h ^= ch.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0; } return ('0000000' + h.toString(16)).slice(-8); }
+  function voiceId(kana) { return 'v_' + hashKey(speechText(kana)); }
+  const siteVoices = new Set(), localVoices = {};   // localVoices: id → 再生用URL
+  let voiceDb = null;
+  function openVoiceDb() {
+    return new Promise((res, rej) => {
+      if (!('indexedDB' in window)) { rej(new Error('no idb')); return; }
+      const r = indexedDB.open('cj_voice', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('clips', { keyPath: 'id' });
+      r.onsuccess = () => { voiceDb = r.result; res(voiceDb); };
+      r.onerror = () => rej(r.error);
+    });
+  }
+  function idbAll() {
+    return openVoiceDb().then(db => new Promise((res, rej) => {
+      const q = db.transaction('clips').objectStore('clips').getAll();
+      q.onsuccess = () => res(q.result || []); q.onerror = () => rej(q.error);
+    }));
+  }
+  function idbPut(rec) { return openVoiceDb().then(db => new Promise((res, rej) => { const tx = db.transaction('clips', 'readwrite'); tx.objectStore('clips').put(rec); tx.oncomplete = res; tx.onerror = () => rej(tx.error); })); }
+  function idbDel(id) { return openVoiceDb().then(db => new Promise((res, rej) => { const tx = db.transaction('clips', 'readwrite'); tx.objectStore('clips').delete(id); tx.oncomplete = res; tx.onerror = () => rej(tx.error); })); }
+  const voicesReady = Promise.all([
+    fetch(VOICE_DIR + 'index.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null).then(j => { if (j && Array.isArray(j.ids)) j.ids.forEach(id => siteVoices.add(String(id))); }).catch(() => {}),
+    idbAll().then(list => list.forEach(rec => { if (rec && rec.blob) localVoices[rec.id] = URL.createObjectURL(rec.blob); })).catch(() => {})
+  ]).then(() => { markVoiceButtons(); document.dispatchEvent(new CustomEvent('cj:voices')); });
+  function voiceUrl(kana) { const id = voiceId(kana); return localVoices[id] || (siteVoices.has(id) ? VOICE_DIR + id + '.wav' : null); }
+  function hasVoice(kana) { const id = voiceId(kana); return localVoices[id] ? 'local' : siteVoices.has(id) ? 'site' : ''; }
+  function saveLocalVoice(kana, blob) {
+    const id = voiceId(kana);
+    return idbPut({ id, kana: speechText(kana), blob, t: Date.now() }).then(() => { if (localVoices[id]) URL.revokeObjectURL(localVoices[id]); localVoices[id] = URL.createObjectURL(blob); markVoiceButtons(); return id; });
+  }
+  function deleteLocalVoice(kana) {
+    const id = voiceId(kana);
+    return idbDel(id).then(() => { if (localVoices[id]) URL.revokeObjectURL(localVoices[id]); delete localVoices[id]; markVoiceButtons(); });
+  }
+  function localVoiceRecords() { return idbAll(); }
+  function siteVoiceIds() { return Array.from(siteVoices); }
+  // 🔊 ボタンに ●（ようちゃん の こえ あり）の印をつける。あとから出てくるボタンにも つける
+  function markVoiceButtons(root) {
+    (root || document).querySelectorAll('[data-say]').forEach(b => b.classList.toggle('has-voice', !!hasVoice(b.dataset.say)));
+  }
+  if ('MutationObserver' in window) new MutationObserver(() => markVoiceButtons()).observe(document.documentElement, { childList: true, subtree: true });
+  // 声の再生は1つの audio を使い回す（iPhone は、最初にタップで鳴らした audio なら、あとから続けて鳴らせる）
+  const player = typeof Audio !== 'undefined' ? new Audio() : null;
+  if (player) { player.preload = 'auto'; try { player.preservesPitch = true; player.webkitPreservesPitch = true; } catch (e) {} }
+  function speak(kana, slow, onEnd) {
+    if (!kana) return false;
+    const url = player && voiceUrl(kana);
+    if (url) {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      player.pause();
+      player.onended = onEnd || null;
+      player.onerror = () => { player.onerror = null; ttsSpeak(kana, slow, onEnd); };
+      player.src = url;
+      player.playbackRate = slow ? 0.75 : 1;
+      const pr = player.play();
+      if (pr && pr.catch) pr.catch(() => ttsSpeak(kana, slow, onEnd));
+      return true;
+    }
+    return ttsSpeak(kana, slow, onEnd);
+  }
+  function stopSpeak() { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); if (player) player.pause(); }
   function autoSpeak(kana) { if (getPrefs().autoSpeak !== false) speak(kana); }
   // iPhone の Safari は最初の読み上げが画面タップの中でないと音が出ないので、最初のタップで無音の読み上げをしておく
   (function unlockSpeech() {
-    if (!('speechSynthesis' in window)) return;
     let done = false;
     const unlock = () => {
       if (done) return; done = true;
       try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; window.speechSynthesis.speak(u); } catch (e) {}
+      // 声の audio も、ここで一度 音なしで鳴らしておく（iPhone 用）
+      try { if (player && !player.src) { player.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA='; player.play().catch(() => {}); } } catch (e) {}
       ['touchend', 'click', 'keydown'].forEach(ev => document.removeEventListener(ev, unlock, true));
     };
     ['touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, unlock, true));
@@ -505,7 +571,7 @@
   window.CJ = {
     esc, dateKey, shuffle, getData, saveData, isLearned, toggleLearned, isKanjiLearned, toggleKanji, recordQuiz, recordRead, markStudied,
     calcStreak, updateStreakBadge, getPrefs, setPref, applyPrefs, drillSecs, lang, t, tx, applyI18n, setLang, recordPrac, saveDailySlot,
-    speak, stopSpeak, autoSpeak, hasJaVoice, jaVoices, utterText, speechText, recognitionSupported, listen, normJa, scoreJa, PASS_SCORE,
+    speak, stopSpeak, autoSpeak, voiceId, voiceUrl, hasVoice, saveLocalVoice, deleteLocalVoice, localVoiceRecords, siteVoiceIds, voicesReady, markVoiceButtons, VOICE_DIR, hasJaVoice, jaVoices, utterText, speechText, recognitionSupported, listen, normJa, scoreJa, PASS_SCORE,
     sayBtns, toast, downloadBackup, importBackup, ruby, reading, plain, showKanji, jaHtml, syncKanjiToggles, extLinks, askLink, flipHtml,
     addAsk, updateAsk, ASK_TYPES, togglePref, toggleWord
   };
