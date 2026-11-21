@@ -22,13 +22,19 @@
     <select class="pick" id="typeSel"></select>
     <div class="muted" id="ctxText" style="margin-bottom:0.4rem;"></div>
     <textarea id="text" rows="5" style="width:100%; font-size:16px; padding:0.6rem; border:1px solid var(--border); border-radius:10px; font-family:inherit;"></textarea>
-    <div class="btn-row" style="flex-wrap:wrap;">
-      <button class="btn btn-line" id="lineBtn">💬 <span data-i18n="ask.line"></span></button>
+    <div class="btn-row">
+      <button class="btn btn-insta" id="instaBtn">📷 <span data-i18n="ask.insta"></span></button>
     </div>
+    <p class="muted" style="margin-top:0.4rem; font-size:0.8rem;" data-i18n="ask.instaHow"></p>
     <div class="btn-row">
       <button class="btn btn-secondary" id="shareBtn">📤 <span data-i18n="ask.share"></span></button>
       <button class="btn btn-secondary" id="copyBtn">📋 <span data-i18n="ask.copy"></span></button>
     </div>
+  </div>
+  <div class="card">
+    <label for="instaUser" style="font-weight:700; font-size:0.85rem;" data-i18n="ask.instaUser"></label>
+    <p class="muted" id="userTip" style="font-size:0.8rem;"></p>
+    <input type="text" id="instaUser" autocapitalize="off" autocomplete="off" spellcheck="false" style="width:100%; font-size:16px; padding:0.55rem; border:1px solid var(--border); border-radius:10px; margin-top:0.3rem;">
   </div>
   <div class="card">
     <h2 data-i18n="ask.list"></h2>
@@ -58,6 +64,9 @@
     $('typeSel').innerHTML = CJ.ASK_TYPES.map(k => '<option value="' + k + '"' + (k === type ? ' selected' : '') + '>' + esc(t('ask.t.' + k)) + '</option>').join('');
     $('ctxText').textContent = ctx ? t('ask.ctx', { c: ctx }) : '';
     $('text').placeholder = t('ask.ph');
+    $('instaUser').placeholder = t('ask.instaUserPh');
+    $('instaUser').value = instaUser();
+    $('userTip').textContent = instaUser() ? '' : t('ask.instaNoUser');
   }
   // ようちゃんに届くメッセージ（ようちゃんが読みやすいように、種類は日本語でも書く）
   const TYPE_JA = { say: 'これを言いたい', read: '読み方を知りたい', kanji: '漢字について', q: 'わからないこと', feature: 'ほしい機能', other: 'その他' };
@@ -72,8 +81,19 @@
     $('text').value = ''; renderList(); CJ.toast(t('ask.saved'));
     return a;
   }
-  // LINE の「送る相手を選ぶ」画面を開く（スマホに LINE が入っていれば、そのまま ようちゃん を選べる）
-  function sendLine(a) { location.href = 'https://line.me/R/share?text=' + encodeURIComponent(message(a)); }
+  // インスタの DM は、文章を入れた状態で開く方法が無い。なので、先にコピーしてから ようちゃん との チャット を開く
+  // ユーザーネームが入っていれば ig.me/m/ユーザーネーム（その人との DM）、無ければ DM の一覧を開く
+  function instaUser() { return String(CJ.getPrefs().instaUser || '').replace(/^@/, '').trim(); }
+  async function sendInsta(a) {
+    const s = message(a);
+    let ok = true;
+    try { await navigator.clipboard.writeText(s); } catch (e) { ok = false; }
+    if (!ok) { window.prompt(t('ask.copy'), s); }
+    CJ.toast(t('ask.instaCopied'));
+    const u = instaUser();
+    const url = u ? 'https://ig.me/m/' + encodeURIComponent(u) : 'https://www.instagram.com/direct/inbox/';
+    setTimeout(() => { location.href = url; }, 700);
+  }
   async function share(a) {
     if (navigator.share) { try { await navigator.share({ text: message(a) }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
     copy(a);
@@ -89,19 +109,20 @@
     $('list').innerHTML = asks.length ? asks.map(a => '<div class="ask-item' + (a.done ? ' done' : '') + '" data-id="' + a.id + '">' +
       '<div class="meta">' + esc(t('ask.t.' + a.type)) + ' · ' + new Date(a.t).toLocaleDateString() + (a.done ? ' · ' + esc(t('ask.done')) : '') + '</div>' +
       '<div style="white-space:pre-wrap;">' + esc(a.text) + '</div>' + (a.ctx ? '<div class="meta">' + esc(t('ask.ctx', { c: a.ctx })) + '</div>' : '') +
-      '<div class="ask-btns"><button class="tiny-btn" data-a="line">💬 LINE</button><button class="tiny-btn" data-a="copy">📋 ' + esc(t('ask.copy')) + '</button>' +
+      '<div class="ask-btns"><button class="tiny-btn" data-a="insta">📷 Instagram</button><button class="tiny-btn" data-a="copy">📋 ' + esc(t('ask.copy')) + '</button>' +
       '<button class="tiny-btn" data-a="done">' + esc(a.done ? '↩︎' : t('ask.markDone')) + '</button><button class="tiny-btn" data-a="del">🗑 ' + esc(t('ask.del')) + '</button></div></div>').join('')
       : '<p class="muted">' + esc(t('ask.none')) + '</p>';
   }
 
   $('typeSel').addEventListener('change', e => { type = e.target.value; });
-  $('lineBtn').addEventListener('click', () => { const a = current(); if (a) sendLine(a); });
+  $('instaBtn').addEventListener('click', () => { const a = current(); if (a) sendInsta(a); });
+  $('instaUser').addEventListener('change', e => { CJ.setPref('instaUser', e.target.value.replace(/^@/, '').trim()); renderType(); });
   $('shareBtn').addEventListener('click', () => { const a = current(); if (a) share(a); });
   $('copyBtn').addEventListener('click', () => { const a = current(); if (a) copy(a); });
   $('list').addEventListener('click', e => {
     const b = e.target.closest('[data-a]'); if (!b) return;
     const id = b.closest('[data-id]').dataset.id, a = CJ.getData().asks.find(x => x.id === id); if (!a) return;
-    if (b.dataset.a === 'line') sendLine(a);
+    if (b.dataset.a === 'insta') sendInsta(a);
     else if (b.dataset.a === 'copy') copy(a);
     else if (b.dataset.a === 'done') { CJ.updateAsk(id, x => { x.done = !x.done; }); renderList(); }
     else if (b.dataset.a === 'del') { if (confirm(t('ask.del') + '?')) { CJ.updateAsk(id, x => { x.del = true; }); renderList(); } }

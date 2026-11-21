@@ -1,5 +1,5 @@
 /* オフライン対応：一度開いたページ・ファイルを端末に保存して、電波がなくても使えるようにする */
-const CACHE = 'casual-japanese-v4';
+const CACHE = 'casual-japanese-v5';
 const ASSETS = ['./', 'index.html', 'practice.html', 'cards.html', 'endings.html', 'grammar.html', 'guide.html', 'kanji.html', 'words.html', 'map.html',
   'read.html', 'quiz.html', 'ask.html', 'i18n.js', 'data.js', 'grammar-data.js', 'read-data.js', 'examples-data.js', 'kanji-data.js', 'words-data.js', 'pref-data.js',
   'common.js', 'bank.js', 'common.css', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];

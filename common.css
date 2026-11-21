@@ -295,3 +295,5 @@ header { padding-left: 0.9rem; padding-right: 0.9rem; }
 /* よみかたを隠す：漢字・単語の詳しい表示と一覧の、ふりがな と ローマ字 */
 body.hide-furi #detail rt, body.hide-furi #detail .romaji, body.hide-furi .wd-list rt { visibility: hidden; }
 .menu-btn { font-size: 0.78rem; }
+.btn-insta { background: linear-gradient(45deg, #f58529, #dd2a7b 50%, #8134af); }
+.btn-insta:hover { filter: brightness(0.95); background: linear-gradient(45deg, #f58529, #dd2a7b 50%, #8134af); }
