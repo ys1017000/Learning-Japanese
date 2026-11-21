@@ -30,12 +30,8 @@
   <div class="card" style="margin-top:1rem;">
     <h2 data-i18n="rec.sendTitle"></h2>
     <div class="muted" id="localCount" style="margin-bottom:0.5rem;"></div>
-    <label class="kj-toggle" style="margin-bottom:0.5rem;"><input type="checkbox" id="expToday"> <span id="expGroupLabel"></span></label>
-    <label class="kj-toggle" style="margin-bottom:0.5rem;"><input type="checkbox" id="expAll"> <span data-i18n="rec.expAll"></span></label>
     <button class="btn" id="exportBtn" data-i18n="rec.export"></button>
     <div id="packs"></div>
-    <button class="tiny-btn" id="idxOnly" style="margin:0.8rem auto 0; display:block;" data-i18n="rec.idxOnly"></button>
-    <p class="muted" style="font-size:0.8rem; text-align:center;" data-i18n="rec.idxOnlyDesc"></p>
     <ol class="tips-list" style="margin-top:0.7rem;" id="howList"></ol>
   </div>
 </main>
@@ -121,15 +117,11 @@
   }
   async function pending() {
     const recs = await CJ.localVoiceRecords().catch(() => []), site = new Set(CJ.siteVoiceIds()), sent = getSent();
-    // 「えらんだ グループ の 分 だけ」（例：💬 ごび の 20こ）。ほかの録音は もう GitHub に ある 前提
-    if ($('expToday').checked) { const ids = new Set(GROUPS[group].map(it => CJ.voiceId(it.kana))); return { recs, todo: recs.filter(r => ids.has(r.id)), today: true }; }
-    return { recs, todo: $('expAll').checked ? recs : recs.filter(r => isNew(r, site, sent)) };
+    return { recs, todo: recs.filter(r => isNew(r, site, sent)) };
   }
   async function renderSend() {
-    $('expGroupLabel').textContent = t('rec.expGroup', { g: t('rec.g.' + group) });
     const { recs, todo } = await pending();
-    const { today } = await pending();
-    $('localCount').textContent = !recs.length ? t('rec.noLocal') : today ? t('rec.groupCount', { n: recs.length, m: todo.length, g: t('rec.g.' + group) }) : t('rec.localCount2', { n: recs.length, m: todo.length });
+    $('localCount').textContent = recs.length ? t('rec.localCount2', { n: recs.length, m: todo.length }) : t('rec.noLocal');
     $('exportBtn').disabled = !todo.length;
     $('exportBtn').textContent = todo.length > PACK ? t('rec.exportN', { k: Math.ceil(todo.length / PACK) }) : t('rec.export');
     $('howList').innerHTML = t('rec.how').split('|').map(x => '<li>' + x + '</li>').join('');
@@ -222,11 +214,10 @@
     e.setUint32(12, cSize, true); e.setUint32(16, offset, true);
     return new Blob(parts.concat(central, [new Uint8Array(e.buffer)]), { type: 'application/zip' });
   }
-  let packs = [], todayMode = false, allRecs = [];
+  let packs = [];
   async function exportZip() {
-    const { todo, recs, today } = await pending();
+    const { todo } = await pending();
     if (!todo.length) return;
-    todayMode = !!today; allRecs = recs;
     // いまサイトにある index.json（ids と texts）を読み直して、そこに足していく
     let site = { ids: CJ.siteVoiceIds(), texts: {} };
     try { const r = await fetch(CJ.VOICE_DIR + 'index.json', { cache: 'no-cache' }); if (r.ok) { const j = await r.json(); if (j && Array.isArray(j.ids)) site = { ids: j.ids.map(String), texts: j.texts || {} }; } } catch (e) {}
@@ -238,8 +229,6 @@
     for (let i = 0; i < todo.length; i += PACK) {
       const part = todo.slice(i, i + PACK);
       part.forEach(r => { ids.add(r.id); texts[r.id] = r.kana; });
-      // 「きょう の 分 だけ」：それより前の録音は もう GitHub に ある 前提 → index.json に ぜんぶ 入れる
-      if (todayMode) allRecs.forEach(r => { ids.add(r.id); texts[r.id] = r.kana; });
       // index.json は「その パック まで」の ぜんぶ を入れる → 1 から順に アップロード すれば、どこで止めても こわれない
       packs.push({ recs: part, index: { app: 'maru-pace-voice', updated: new Date().toISOString(), ids: Array.from(ids).sort(), texts: Object.assign({}, texts) } });
     }
@@ -255,7 +244,7 @@
     const a = document.createElement('a'); a.href = url;
     a.download = 'voice-' + CJ.dateKey().replace(/-/g, '') + (packs.length > 1 ? '-' + (i + 1) + 'of' + packs.length : '') + '.zip';
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
-    const sent = getSent(); (todayMode && i === packs.length - 1 ? allRecs : pk.recs).forEach(r => { sent[r.id] = r.t; });
+    const sent = getSent(); pk.recs.forEach(r => { sent[r.id] = r.t; });
     try { localStorage.setItem(SENT_KEY, JSON.stringify(sent)); } catch (e) {}
     const b = document.querySelector('[data-pack="' + i + '"]'); if (b) b.textContent = '✅ ' + b.textContent.replace(/^⬇️ /, '');
     CJ.toast(t('rec.exported', { n: pk.recs.length }));
@@ -265,23 +254,6 @@
   $('onlyTodo').addEventListener('change', () => { limit = 40; renderList(); });
   $('moreBtn').addEventListener('click', () => { limit += 40; renderList(); });
   $('exportBtn').addEventListener('click', exportZip);
-  // WAV は もう GitHub に あげてある とき：index.json だけ ダウンロード して、ぜんぶ「送った」ことにする
-  $('idxOnly').addEventListener('click', async () => {
-    const recs = await CJ.localVoiceRecords().catch(() => []);
-    if (!recs.length) return;
-    let site = { ids: CJ.siteVoiceIds(), texts: {} };
-    try { const r = await fetch(CJ.VOICE_DIR + 'index.json', { cache: 'no-cache' }); if (r.ok) { const j = await r.json(); if (j && Array.isArray(j.ids)) site = { ids: j.ids.map(String), texts: j.texts || {} }; } } catch (e) {}
-    const ids = new Set(site.ids), texts = Object.assign({}, site.texts), sent = getSent();
-    recs.forEach(r => { ids.add(r.id); texts[r.id] = r.kana; sent[r.id] = r.t; });
-    const blob = new Blob([JSON.stringify({ app: 'maru-pace-voice', updated: new Date().toISOString(), ids: Array.from(ids).sort(), texts }, null, 1)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob), a = document.createElement('a');
-    a.href = url; a.download = 'index.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
-    try { localStorage.setItem(SENT_KEY, JSON.stringify(sent)); } catch (e) {}
-    $('packs').innerHTML = ''; renderSend();
-    CJ.toast(t('rec.idxDone', { n: recs.length }));
-  });
-  $('expAll').addEventListener('change', () => { if ($('expAll').checked) $('expToday').checked = false; $('packs').innerHTML = ''; renderSend(); });
-  $('expToday').addEventListener('change', () => { if ($('expToday').checked) $('expAll').checked = false; $('packs').innerHTML = ''; renderSend(); });
   $('packs').addEventListener('click', e => { const b = e.target.closest('[data-pack]'); if (b) downloadPack(Number(b.dataset.pack)); });
   $('list').addEventListener('click', e => {
     const b = e.target.closest('[data-a]'); if (!b) return;
