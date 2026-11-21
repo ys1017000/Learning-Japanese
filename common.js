@@ -4,6 +4,7 @@
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
+  const APP_VERSION = 'v11';
   const DATA_VERSION = 4;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily) / v4: ようちゃんへの質問(asks)・都道府県(pref)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
   const BACKUP_VERSION = 4;           // v1〜v3 のバックアップも読み込める
@@ -565,7 +566,10 @@
 
   /* ---------- オフライン対応（Service Worker） ---------- */
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
-    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').then(r => r.update && r.update()).catch(() => {}); });
+    // 新しいバージョンに切りかわったら、1回だけ読み直して最新の画面にする
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (reloaded) return; reloaded = true; location.reload(); });
   }
 
   window.CJ = {
@@ -573,7 +577,7 @@
     calcStreak, updateStreakBadge, getPrefs, setPref, applyPrefs, drillSecs, lang, t, tx, applyI18n, setLang, recordPrac, saveDailySlot,
     speak, stopSpeak, autoSpeak, voiceId, voiceUrl, hasVoice, saveLocalVoice, deleteLocalVoice, localVoiceRecords, siteVoiceIds, voicesReady, markVoiceButtons, VOICE_DIR, hasJaVoice, jaVoices, utterText, speechText, recognitionSupported, listen, normJa, scoreJa, PASS_SCORE,
     sayBtns, toast, downloadBackup, importBackup, ruby, reading, plain, showKanji, jaHtml, syncKanjiToggles, extLinks, askLink, flipHtml,
-    addAsk, updateAsk, ASK_TYPES, togglePref, toggleWord
+    addAsk, updateAsk, ASK_TYPES, togglePref, toggleWord, APP_VERSION
   };
 
   // common.js は各ページの <body> の最後で読むので、この時点でヘッダーなどはもうある。

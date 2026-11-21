@@ -38,7 +38,8 @@
     <a class="menu-btn" href="endings.html"><span class="icon">💬</span><span data-i18n="home.m.endings"></span></a>
     <a class="menu-btn" href="quiz.html"><span class="icon">❓</span><span data-i18n="home.m.quiz"></span></a>
   </div>
-  <a class="btn btn-insta" href="ask.html" style="margin-bottom:1rem;">💌 <span data-i18n="home.m.ask"></span></a>
+  <a class="btn btn-insta" href="ask.html" style="margin-bottom:0.5rem;">💌 <span data-i18n="home.m.ask"></span></a>
+  <a class="btn btn-secondary" href="record.html" style="margin-bottom:1rem;" data-i18n="rec.link"></a>
 
   <div class="card">
     <h2 data-i18n="home.progress"></h2>
@@ -75,6 +76,7 @@
     <p class="muted" style="font-size:0.78rem; margin-top:0.3rem;" data-i18n="rec.linkDesc"></p>
     <div class="notice" id="voiceNotice" style="display:none;"></div>
     <p class="muted" style="margin-top:0.6rem;" data-i18n="set.spaces"></p>
+    <p class="muted" id="verText" style="margin-top:0.4rem; font-size:0.75rem; text-align:right;"></p>
   </div>
 
   <div class="card">
@@ -208,7 +210,7 @@
     r.readAsText(f);
   });
 
-  function renderAll() { renderToday(); renderIntro(); renderStats(); renderTip(); renderSettings(); if (voiceChecked) checkVoice(); }
+  function renderAll() { $('verText').textContent = 'version ' + CJ.APP_VERSION; renderToday(); renderIntro(); renderStats(); renderTip(); renderSettings(); if (voiceChecked) checkVoice(); }
   document.addEventListener('cj:lang', renderAll);
   renderAll();
   // 音声の一覧は少し遅れて読み込まれることがある
