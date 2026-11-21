@@ -46,7 +46,7 @@
       ['Shall I read your tarot?', ['タロット で うらなって あげよう か？', 'taroto de uranatte ageyou ka?', 'タロットで{占|うらな}ってあげようか？'], ['タロット で うらないましょう か？', 'taroto de uranaimashou ka?', 'タロットで{占|うらな}いましょうか？']],
       ['Pick one card.', ['カード を いちまい えらんで', 'kaado o ichimai erande', 'カードを{一枚|いちまい}{選|えら}んで'], ['カード を いちまい えらんで ください', 'kaado o ichimai erande kudasai', 'カードを{一枚|いちまい}{選|えら}んでください']],
       ['Wow, it\'s a good card!', ['わあ、 いい カード だよ！', 'waa, ii kaado da yo!', 'わあ、いいカードだよ！'], ['わあ、 いい カード です よ', 'waa, ii kaado desu yo', 'わあ、いいカードですよ']]] },
-    { id: 'night', icon: '🌙', title: 'Good night LINE', titleJa: 'おやすみ の LINE', lines: [
+    { id: 'night', icon: '🌙', title: 'Good night messages', titleJa: 'おやすみ の メッセージ', lines: [
       ['I just got home.', ['いま かえった よ', 'ima kaetta yo', '{今|いま}{帰|かえ}ったよ'], ['いま かえりました', 'ima kaerimashita', '{今|いま}{帰|かえ}りました']],
       ['Thank you for today.', ['きょう も ありがとう', 'kyou mo arigatou', '{今日|きょう}もありがとう'], ['きょう も ありがとう ございました', 'kyou mo arigatou gozaimashita', '{今日|きょう}もありがとうございました']],
       ['Good luck tomorrow, too.', ['あした も がんばって ね', 'ashita mo ganbatte ne', '{明日|あした}も{頑張|がんば}ってね'], ['あした も がんばって ください', 'ashita mo ganbatte kudasai', '{明日|あした}も{頑張|がんば}ってください']],

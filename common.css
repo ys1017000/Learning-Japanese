@@ -274,7 +274,6 @@ header { padding-left: 0.9rem; padding-right: 0.9rem; }
 .ask-item.done { opacity: 0.6; }
 .ask-item .meta { font-size: 0.75rem; color: var(--text-muted); }
 .ask-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 0.4rem; }
-.btn-line { background: #06c755; } .btn-line:hover { background: #05a647; }
 
 /* ---- v4: 日本地図（タイル） ---- */
 .jp-map { display: grid; grid-template-columns: repeat(13, 1fr); gap: 3px; margin: 0.4rem 0 0.8rem; }

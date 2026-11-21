@@ -299,7 +299,6 @@ window.CJ_I18N = {
   'ask.t.other': ['📝 Other', '📝 その ほか'],
   'ask.ph': ['Write in English or Japanese…', 'えいご でも にほんご でも OK…'],
   'ask.ctx': ['From: {c}', 'どこ から：{c}'],
-  'ask.line': ['Send on LINE', 'LINE で おくる'],
   'ask.insta': ['Send on Instagram', 'インスタ で おくる'],
   'ask.instaHow': ['The message is copied. Instagram opens the chat with Yoh-chan — just paste it (long-press → Paste) and send.', 'メッセージ を コピー します。インスタ で ようちゃん との チャット が ひらく ので、ながおし → ペースト して おくって ね。'],
   'ask.instaCopied': ['Copied! Now paste it in the Instagram chat 📋', 'コピー しました！ インスタ の チャット に ペースト して ね 📋'],
