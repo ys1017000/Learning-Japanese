@@ -31,13 +31,13 @@
      pw: ていねいに言う相手（クイズで使う）。空なら「ふつう」の場面だけ出題 */
   const CARDS = [
     { id: 'genki', s: 'daily', p: ['げんき ですか？', 'genki desu ka?', '{元気|げんき}ですか？'], c: ['げんき？', 'genki?', '{元気|げんき}？'], en: 'How are you?',
-      note: 'In Japanese, this is mostly for when you haven\'t seen someone for a while. When you see Yoh-chan often, try きょう どう だった？ (How was your day?) instead.',
-      noteJa: '「げんき ですか？」 は、しばらく あって いない ひと に つかう ことば です。ようちゃん と よく あう なら、「きょう どう だった？」 の ほう が しぜん です。',
+      note: 'With Yoh-chan and friends, げんき？ is fine anytime — even when you see each other often. It\'s a light "How are you? / You OK?". The polite げんき です か？ (or おげんき です か？) sounds more formal and is mostly for people you haven\'t seen for a while.',
+      noteJa: 'ようちゃん や ともだち には、よく あって いても 「げんき？」 で OK。かるい 「げんき？・だいじょうぶ？」 の かんじ です。ていねい な 「げんき です か？（おげんき です か？）」 は かたく きこえる ので、しばらく あって いない ひと に よく つかいます。',
       r: [['げんき だよ！', 'genki da yo!', 'I\'m good!', '{元気|げんき}だよ！'], ['まあまあ かな', 'maamaa ka na', 'So-so, I guess.', 'まあまあかな'], ['ちょっと つかれた', 'chotto tsukareta', 'A little tired.', 'ちょっと{疲|つか}れた']],
       pw: ['boss', 'teacher', 'new'] },
     { id: 'doudatta', s: 'daily', p: ['きょう は どう でした か？', 'kyou wa dou deshita ka?', '{今日|きょう}はどうでしたか？'], c: ['きょう どう だった？', 'kyou dou datta?', '{今日|きょう}どうだった？'], en: 'How was your day?',
-      note: 'A great everyday question for Yoh-chan — much more natural than げんき？ every day.',
-      noteJa: 'まいにち つかえる しつもん。まいにち 「げんき？」 と きく より、ずっと しぜん です。',
+      note: 'A great question at the end of the day — it shows you care about his day.',
+      noteJa: 'いちにち の おわり に ぴったり の しつもん。あいて の いちにち を きに かけて いる こと が つたわります。',
       r: [['たのしかった よ！', 'tanoshikatta yo!', 'It was fun!', '{楽|たの}しかったよ！'], ['いそがしかった〜', 'isogashikatta~', 'It was busy~', '{忙|いそが}しかった〜'], ['ふつう かな', 'futsuu ka na', 'Normal, I guess.', '{普通|ふつう}かな']],
       pw: ['boss', 'teacher'] },
     { id: 'iku', s: 'date', p: ['いきます か？', 'ikimasu ka?', '{行|い}きますか？'], c: ['いく？', 'iku?', '{行|い}く？'], en: 'Are you going? / Shall we go?',
