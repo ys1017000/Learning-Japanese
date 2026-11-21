@@ -30,7 +30,7 @@
   <div class="card" style="margin-top:1rem;">
     <h2 data-i18n="rec.sendTitle"></h2>
     <div class="muted" id="localCount" style="margin-bottom:0.5rem;"></div>
-    <label class="kj-toggle" style="margin-bottom:0.5rem;"><input type="checkbox" id="expToday"> <span data-i18n="rec.expToday"></span></label>
+    <label class="kj-toggle" style="margin-bottom:0.5rem;"><input type="checkbox" id="expToday"> <span id="expGroupLabel"></span></label>
     <label class="kj-toggle" style="margin-bottom:0.5rem;"><input type="checkbox" id="expAll"> <span data-i18n="rec.expAll"></span></label>
     <button class="btn" id="exportBtn" data-i18n="rec.export"></button>
     <div id="packs"></div>
@@ -121,13 +121,15 @@
   }
   async function pending() {
     const recs = await CJ.localVoiceRecords().catch(() => []), site = new Set(CJ.siteVoiceIds()), sent = getSent();
-    if ($('expToday').checked) { const d0 = new Date(); d0.setHours(0, 0, 0, 0); return { recs, todo: recs.filter(r => r.t >= d0.getTime()), today: true }; }
+    // 「えらんだ グループ の 分 だけ」（例：💬 ごび の 20こ）。ほかの録音は もう GitHub に ある 前提
+    if ($('expToday').checked) { const ids = new Set(GROUPS[group].map(it => CJ.voiceId(it.kana))); return { recs, todo: recs.filter(r => ids.has(r.id)), today: true }; }
     return { recs, todo: $('expAll').checked ? recs : recs.filter(r => isNew(r, site, sent)) };
   }
   async function renderSend() {
+    $('expGroupLabel').textContent = t('rec.expGroup', { g: t('rec.g.' + group) });
     const { recs, todo } = await pending();
     const { today } = await pending();
-    $('localCount').textContent = !recs.length ? t('rec.noLocal') : today ? t('rec.todayCount', { n: recs.length, m: todo.length }) : t('rec.localCount2', { n: recs.length, m: todo.length });
+    $('localCount').textContent = !recs.length ? t('rec.noLocal') : today ? t('rec.groupCount', { n: recs.length, m: todo.length, g: t('rec.g.' + group) }) : t('rec.localCount2', { n: recs.length, m: todo.length });
     $('exportBtn').disabled = !todo.length;
     $('exportBtn').textContent = todo.length > PACK ? t('rec.exportN', { k: Math.ceil(todo.length / PACK) }) : t('rec.export');
     $('howList').innerHTML = t('rec.how').split('|').map(x => '<li>' + x + '</li>').join('');
@@ -259,7 +261,7 @@
     CJ.toast(t('rec.exported', { n: pk.recs.length }));
   }
 
-  $('groupSel').addEventListener('change', e => { group = e.target.value; limit = 40; renderList(); });
+  $('groupSel').addEventListener('change', e => { group = e.target.value; limit = 40; renderList(); $('packs').innerHTML = ''; renderSend(); });
   $('onlyTodo').addEventListener('change', () => { limit = 40; renderList(); });
   $('moreBtn').addEventListener('click', () => { limit += 40; renderList(); });
   $('exportBtn').addEventListener('click', exportZip);
