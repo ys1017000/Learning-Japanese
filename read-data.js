@@ -27,7 +27,7 @@
       ['I\'m so full.', ['おなか いっぱい〜', 'onaka ippai~', 'お{腹|なか}いっぱい〜'], ['おなか が いっぱい です', 'onaka ga ippai desu', 'お{腹|なか}がいっぱいです']]] },
     { id: 'lights', icon: '✨', title: 'Illuminations', titleJa: 'イルミネーション', lines: [
       ['It\'s cold today, isn\'t it?', ['きょう は さむい ね', 'kyou wa samui ne', '{今日|きょう}は{寒|さむ}いね'], ['きょう は さむい です ね', 'kyou wa samui desu ne', '{今日|きょう}は{寒|さむ}いですね']],
-      ['Shall we hold hands?', ['て つなご？', 'te tsunago?', '{手|て}つなご？'], ['て を つないでも いい です か？', 'te o tsunaide mo ii desu ka?', '{手|て}をつないでもいいですか？']],
+      ['Shall we hold hands?', ['て つなご？', 'te tsunago?', '{手|て}つなご？'], ['て を つないでも いい です か？', 'te o tsunaide mo ii desu ka?', '{手|て}をつないでもいいですか？'], 'c'],
       ['Wow, it\'s beautiful!', ['わあ、 きれい だね！', 'waa, kirei da ne!', 'わあ、きれいだね！'], ['わあ、 きれい です ね！', 'waa, kirei desu ne!', 'わあ、きれいですね！']],
       ['I like the pale blue lights best.', ['みずいろ の ライト が いちばん すき', 'mizuiro no raito ga ichiban suki', '{水色|みずいろ}のライトが{一番|いちばん}{好|す}き'], ['みずいろ の ライト が いちばん すき です', 'mizuiro no raito ga ichiban suki desu', '{水色|みずいろ}のライトが{一番|いちばん}{好|す}きです']],
       ['Let\'s take a photo!', ['しゃしん とろう！', 'shashin torou!', '{写真|しゃしん}{撮|と}ろう！'], ['しゃしん を とりましょう', 'shashin o torimashou', '{写真|しゃしん}を{撮|と}りましょう']],
@@ -52,12 +52,19 @@
       ['Good luck tomorrow, too.', ['あした も がんばって ね', 'ashita mo ganbatte ne', '{明日|あした}も{頑張|がんば}ってね'], ['あした も がんばって ください', 'ashita mo ganbatte kudasai', '{明日|あした}も{頑張|がんば}ってください']],
       ['Don\'t push yourself too hard.', ['むり しないで ね', 'muri shinaide ne', '{無理|むり}しないでね'], ['むり しないで ください ね', 'muri shinaide kudasai ne', '{無理|むり}しないでくださいね']],
       ['Good night~', ['おやすみ〜', 'oyasumi~', 'おやすみ〜'], ['おやすみ なさい', 'oyasumi nasai', 'おやすみなさい']]] },
-    { id: 'intro', icon: '🤝', title: 'Introducing yourself', titleJa: 'じこしょうかい', lines: [
+    { id: 'intro', only: 'p', icon: '🤝', title: 'Introducing yourself', titleJa: 'じこしょうかい', lines: [
       ['Nice to meet you. I\'m Maru.', ['はじめまして！ マル だよ', 'hajimemashite! maru da yo', 'はじめまして！マルだよ'], ['はじめまして、 マル です', 'hajimemashite, maru desu', 'はじめまして、マルです']],
       ['I\'m from Germany.', ['ドイツ から きた よ', 'doitsu kara kita yo', 'ドイツから{来|き}たよ'], ['ドイツ から きました', 'doitsu kara kimashita', 'ドイツから{来|き}ました']],
       ['I want to be an English teacher in Japan.', ['にほん で えいご の せんせい に なりたい んだ', 'nihon de eigo no sensei ni naritai n da', '{日本|にほん}で{英語|えいご}の{先生|せんせい}になりたいんだ'], ['にほん で えいご の きょうし に なりたい です', 'nihon de eigo no kyoushi ni naritai desu', '{日本|にほん}で{英語|えいご}の{教師|きょうし}になりたいです']],
       ['I love nature and camping.', ['しぜん と キャンプ が だいすき', 'shizen to kyanpu ga daisuki', '{自然|しぜん}とキャンプが{大好|だいす}き'], ['しぜん と キャンプ が だいすき です', 'shizen to kyanpu ga daisuki desu', '{自然|しぜん}とキャンプが{大好|だいす}きです']],
       ['Nice to meet you! (Let\'s get along.)', ['よろしく ね！', 'yoroshiku ne!', 'よろしくね！'], ['よろしく おねがい します', 'yoroshiku onegai shimasu', 'よろしくお{願|ねが}いします']]] }
   ];
+  /* 場面によっては、どちらか一方しか使わない（only）。
+     only: 'p' = いつも ていねい（じこしょうかい など）、'c' = したしい ひと と だけ（手をつなぐ など）。
+     行の4番目 か 場面の only で指定。もう一方は 同じ文 にして、カードの切り替えをなくす */
+  PASSAGES.forEach(p => p.lines.forEach(l => {
+    const o = l[3] || p.only;
+    if (o === 'p') { l[1] = l[2]; l[3] = 'p'; } else if (o === 'c') { l[2] = l[1]; l[3] = 'c'; }
+  }));
   window.CJ_READ = { PASSAGES };
 })();

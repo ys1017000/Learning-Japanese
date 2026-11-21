@@ -59,9 +59,9 @@
     ['e46', 'Let\'s take a walk along the river.', ['かわ の ちかく を さんぽ しよう', 'kawa no chikaku o sanpo shiyou', '{川|かわ}の{近|ちか}くを{散歩|さんぽ}しよう'], ['かわ の ちかく を さんぽ しましょう', 'kawa no chikaku o sanpo shimashou', '{川|かわ}の{近|ちか}くを{散歩|さんぽ}しましょう']],
     ['e47', 'What kind of music do you like?', ['どんな おんがく が すき？', 'donna ongaku ga suki?', 'どんな{音楽|おんがく}が{好|す}き？'], ['どんな おんがく が すき です か？', 'donna ongaku ga suki desu ka?', 'どんな{音楽|おんがく}が{好|す}きですか？']],
     // ---- かんじ の れいぶん（すうじ・ようび・まち・からだ など） ----
-    ['e48', 'The bill, please.', ['おかいけい おねがい', 'okaikei onegai', 'お{会計|かいけい}お{願|ねが}い'], ['おかいけい おねがい します', 'okaikei onegai shimasu', 'お{会計|かいけい}お{願|ねが}いします']],
+    ['e48', 'The bill, please.', ['おかいけい おねがい', 'okaikei onegai', 'お{会計|かいけい}お{願|ねが}い'], ['おかいけい おねがい します', 'okaikei onegai shimasu', 'お{会計|かいけい}お{願|ねが}いします'], 'p'],
     ['e49', 'The two of us will go.', ['ふたり で いく よ', 'futari de iku yo', '{二人|ふたり}で{行|い}くよ'], ['ふたり で いきます', 'futari de ikimasu', '{二人|ふたり}で{行|い}きます']],
-    ['e50', 'Three coffees, please.', ['コーヒー みっつ ね', 'koohii mittsu ne', 'コーヒー{三|みっ}つね'], ['コーヒー を みっつ ください', 'koohii o mittsu kudasai', 'コーヒーを{三|みっ}つください']],
+    ['e50', 'Three coffees, please.', ['コーヒー みっつ ね', 'koohii mittsu ne', 'コーヒー{三|みっ}つね'], ['コーヒー を みっつ ください', 'koohii o mittsu kudasai', 'コーヒーを{三|みっ}つください'], 'p'],
     ['e51', 'Let\'s meet at four in the afternoon.', ['ごご よじ に あおう', 'gogo yoji ni aou', '{午後|ごご}{四時|よじ}に{会|あ}おう'], ['ごご よじ に あいましょう', 'gogo yoji ni aimashou', '{午後|ごご}{四時|よじ}に{会|あ}いましょう']],
     ['e52', 'I\'ll be there in five minutes.', ['あと ごふん で つく よ', 'ato gofun de tsuku yo', 'あと{五分|ごふん}で{着|つ}くよ'], ['あと ごふん で つきます', 'ato gofun de tsukimasu', 'あと{五分|ごふん}で{着|つ}きます']],
     ['e53', 'Let\'s make it six thirty.', ['ろくじ はん に しよう', 'rokuji han ni shiyou', '{六時半|ろくじはん}にしよう'], ['ろくじ はん に しましょう', 'rokuji han ni shimashou', '{六時半|ろくじはん}にしましょう']],
@@ -89,7 +89,7 @@
     ['e75', 'The women\'s restroom is this way.', ['じょしトイレ は こっち だよ', 'joshi toire wa kocchi da yo', '{女子|じょし}トイレはこっちだよ'], ['じょしトイレ は こちら です', 'joshi toire wa kochira desu', '{女子|じょし}トイレはこちらです']],
     ['e76', 'Is that man Yoh-chan\'s friend?', ['あの おとこ の ひと、 ようちゃん の ともだち？', 'ano otoko no hito, youchan no tomodachi?', 'あの{男|おとこ}の{人|ひと}、ようちゃんの{友|とも}だち？'], ['あの おとこ の かた は ようちゃん の おともだち です か？', 'ano otoko no kata wa youchan no otomodachi desu ka?', 'あの{男|おとこ}の{方|かた}はようちゃんのお{友|とも}だちですか？']],
     ['e77', 'My eyes are tired.', ['め が つかれた', 'me ga tsukareta', '{目|め}が{疲|つか}れた'], ['め が つかれました', 'me ga tsukaremashita', '{目|め}が{疲|つか}れました']],
-    ['e78', 'Your ears are turning red!', ['みみ、 あかく なってる よ', 'mimi, akaku natteru yo', '{耳|みみ}、{赤|あか}くなってるよ'], ['みみ が あかく なって います よ', 'mimi ga akaku natte imasu yo', '{耳|みみ}が{赤|あか}くなっていますよ']],
+    ['e78', 'Your ears are turning red!', ['みみ、 あかく なってる よ', 'mimi, akaku natteru yo', '{耳|みみ}、{赤|あか}くなってるよ'], ['みみ が あかく なって います よ', 'mimi ga akaku natte imasu yo', '{耳|みみ}が{赤|あか}くなっていますよ'], 'c'],
     ['e79', 'My legs hurt from the hike.', ['ハイキング で あし が いたい', 'haikingu de ashi ga itai', 'ハイキングで{足|あし}が{痛|いた}い'], ['ハイキング で あし が いたい です', 'haikingu de ashi ga itai desu', 'ハイキングで{足|あし}が{痛|いた}いです']],
     ['e80', 'You\'re so strong!', ['ちからもち だね！', 'chikaramochi da ne!', '{力持|ちからも}ちだね！'], ['ちからもち です ね', 'chikaramochi desu ne', '{力持|ちからも}ちですね']],
     ['e81', 'Stand here! (for the photo)', ['ここ に たって！', 'koko ni tatte!', 'ここに{立|た}って！'], ['ここ に たって ください', 'koko ni tatte kudasai', 'ここに{立|た}ってください']],
@@ -103,5 +103,7 @@
     ['e89', 'Let\'s talk on the phone tonight.', ['こんや、 でんわ で はなそう', 'kon\'ya, denwa de hanasou', '{今夜|こんや}、{電話|でんわ}で{話|はな}そう'], ['こんや、 でんわ で はなしましょう', 'kon\'ya, denwa de hanashimashou', '{今夜|こんや}、{電話|でんわ}で{話|はな}しましょう']],
     ['e90', 'Let\'s go to the new café!', ['あたらしい カフェ に いこう！', 'atarashii kafe ni ikou!', '{新|あたら}しいカフェに{行|い}こう！'], ['あたらしい カフェ に いきましょう', 'atarashii kafe ni ikimashou', '{新|あたら}しいカフェに{行|い}きましょう']]
   ];
+  // 5番目 = only（'p' = お店の人 など いつも ていねい、'c' = したしい ひと と だけ）。もう一方は 同じ文 にする
+  EXAMPLES.forEach(e => { if (e[4] === 'p') e[2] = e[3]; else if (e[4] === 'c') e[3] = e[2]; });
   window.CJ_EXAMPLES = { EXAMPLES };
 })();

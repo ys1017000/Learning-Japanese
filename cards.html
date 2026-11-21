@@ -83,8 +83,8 @@
   }
 
   function sideHtml(c, k) {
-    const s = SIDE[k], v = c[k];
-    return '<div class="side"><span class="reg ' + s.cls + '">' + t(s.reg) + '</span><span class="reg-who">' + esc(t(s.who)) + '</span>' +
+    const s = SIDE[k], v = c[k], who = c.only ? t(c.only === 'p' ? 'tap.onlyP' : 'tap.onlyC') : t(s.who);   // only = 片方だけ の言い方
+    return '<div class="side"><span class="reg ' + s.cls + '">' + t(s.reg) + '</span><span class="reg-who">' + esc(who) + '</span>' +
       '<div class="big-ja ja">' + CJ.jaHtml(v) + '</div><div class="romaji">' + esc(v[1]) + '</div>' +
       '<div>' + CJ.sayBtns(v[0]) + '</div></div>';
   }
@@ -101,7 +101,7 @@
       return;
     }
     ['prevBtn', 'nextBtn', 'learnBtn'].forEach(id => $(id).disabled = false);
-    const c = deck[i], a = dir === 'pc' ? 'p' : 'c', b = dir === 'pc' ? 'c' : 'p';
+    const c = deck[i], a = c.only || (dir === 'pc' ? 'p' : 'c'), b = dir === 'pc' ? 'c' : 'p';
     const learned = CJ.isLearned(c.id);
     $('counter').textContent = (i + 1) + ' / ' + deck.length;
     $('learnedMark').textContent = learned ? t('cards.learnedMark') : '';
@@ -110,10 +110,10 @@
     $('learnBtn').className = 'btn ' + (learned ? 'btn-secondary' : 'btn-ok');
 
     let html = '<div class="en">“' + esc(c.en) + '”</div>' + sideHtml(c, a);
-    if (!shown) {
+    if (!shown && !c.only) {
       html += '<button class="btn reveal-btn" id="revealBtn">' + esc(t(b === 'c' ? 'cards.showCasual' : 'cards.showPolite')) + '</button>';
     } else {
-      html += sideHtml(c, b);
+      if (!c.only) html += sideHtml(c, b);
       const note = CJ.tx(c, 'note');
       if (note) html += '<div class="note">💡 ' + esc(note) + '</div>';
       if (c.r && c.r.length) {

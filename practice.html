@@ -213,8 +213,7 @@
       html += '<div class="feedback ' + (picked.ok ? 'correct' : 'wrong') + '" style="display:block;">' +
         '<b>' + esc(picked.ok ? t('pr.pickRight') : (picked.rev ? t('pr.pickWrongHou') : t('pr.pickWrong', { w: picked.w.map(w => w[0]).join(' ・ ') }))) + '</b>' +
         '<div class="flip ' + (st.pol ? 'is-p' : 'is-c') + '" data-a="pol" style="border-radius:12px; padding:0.5rem; border:1px solid var(--border); background:#fff; margin-top:0.4rem; text-align:center;">' +
-          '<div class="flip-top" style="justify-content:center;"><span class="reg ' + (st.pol ? 'polite' : 'casual') + '">' + t(st.pol ? 'reg.polite' : 'reg.casual') + '</span>' +
-          '<span class="flip-hint" style="margin-left:6px;">' + esc(t(same ? 'tap.same' : 'tap.short')) + '</span></div>' +
+          '<div class="flip-top" style="justify-content:center; gap:6px;">' + CJ.regTop(x.only, st.pol, same) + '</div>' +
           '<div class="k ja" style="font-size:1.4rem; font-weight:800;">' + CJ.jaHtml(ans) + '</div><div class="romaji">' + esc(ans[1]) + '</div></div>' +
         '<div style="text-align:center; margin-top:0.3rem;">' + CJ.sayBtns(ans[0]) + '</div>' +
         '<p class="muted" style="text-align:center; font-size:0.8rem;">' + esc(t('pr.saySentence')) + '</p>' +
@@ -226,18 +225,19 @@
     if (st.phase === 'card' && st.queue[st.i] && st.queue[st.i].x.src === 'pt') { renderChoice(); return; }
     const box = $('drill'), secs = CJ.drillSecs();
     if (st.phase !== 'card') return renderRoundEnd();
-    const o = st.queue[st.i], x = o.x, ans = st.pol ? x.p : x.c, same = x.c[0] === x.p[0];
+    const o = st.queue[st.i], x = o.x;
+    if (x.only) st.pol = x.only === 'p';   // 片方だけ の文（じこしょうかい は ていねい、など）
+    const ans = st.pol ? x.p : x.c, same = x.c[0] === x.p[0];
     box.innerHTML = '<div class="counter"><span class="muted">' + esc(st.title) + ' · ' + esc(t('pr.round', { r: st.round })) + ' · ' + (st.i + 1) + '/' + st.queue.length + '</span>' +
       '<button class="tiny-btn" data-a="quit">' + esc(t('pr.quit')) + '</button></div>' +
       '<div style="text-align:center;"><label class="kj-toggle"><input type="checkbox" data-kanji-toggle' + (CJ.showKanji() ? ' checked' : '') + '> ' + esc(t('rd.kanji')) + '</label></div>' +
       '<div class="dr-en">“' + esc(x.en) + '”</div>' +
       (x.pid && ptBy[x.pid] ? '<div class="pt-hint ja">' + esc(t('pr.patHint')) + ' ' + ptHint(ptBy[x.pid]) + '</div>' : '') +
       '<div class="dr-timer"><div id="tfill"></div></div>' +
-      '<p class="muted" style="text-align:center;">' + esc(t('pr.sayCasual')) + '</p>' +
+      '<p class="muted" style="text-align:center;">' + esc(t(x.only === 'p' ? 'pr.sayPolite' : 'pr.sayCasual')) + '</p>' +
       (st.shown
         ? '<div class="dr-ans"><div class="flip ' + (st.pol ? 'is-p' : 'is-c') + '" data-a="pol" style="border-radius:12px; padding:0.5rem; border:1px solid var(--border);">' +
-            '<div class="flip-top" style="justify-content:center;"><span class="reg ' + (st.pol ? 'polite' : 'casual') + '">' + t(st.pol ? 'reg.polite' : 'reg.casual') + '</span>' +
-            '<span class="flip-hint" style="margin-left:6px;">' + esc(t(same ? 'tap.same' : 'tap.short')) + '</span></div>' +
+            '<div class="flip-top" style="justify-content:center; gap:6px;">' + CJ.regTop(x.only, st.pol, same) + '</div>' +
             '<div class="k ja">' + CJ.jaHtml(ans) + '</div><div class="romaji">' + esc(ans[1]) + '</div></div>' +
           (same ? '' : '<div class="muted" style="font-size:0.78rem; margin-top:0.2rem;">' + esc(t('pr.tapPolite')) + '</div>') +
           (x.tag ? '<div style="margin-top:0.3rem;"><span class="gr-tag">🧩 ' + esc(x.tag) + '</span></div>' : '') +

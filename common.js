@@ -4,7 +4,7 @@
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
-  const APP_VERSION = 'v21';
+  const APP_VERSION = 'v22';
   const DATA_VERSION = 4;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily) / v4: ようちゃんへの質問(asks)・都道府県(pref)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
   const BACKUP_VERSION = 4;           // v1〜v3 のバックアップも読み込める
@@ -483,10 +483,17 @@
 
   /* ---------- タップで ふつう ⇔ ていねい が切り替わるカード（ぶんぽう・かんじ・たんご・ガイド で共通） ----------
      it = { en, c: [ひらがな, ローマ字, 漢字], p: [...] }。isP = ていねい を表示中。extra = カードの下に足す HTML */
+  // カード上の「ていねい／ふつう」の札とヒント。only がある文は 片方だけ（切り替えなし）
+  function regTop(only, isP, same) {
+    if (only) return '<span class="reg ' + (only === 'p' ? 'polite' : 'casual') + '">' + t(only === 'p' ? 'reg.polite' : 'reg.casual') + '</span>' +
+      '<span class="flip-hint">' + esc(t(only === 'p' ? 'tap.onlyP' : 'tap.onlyC')) + '</span>';
+    return '<span class="reg ' + (isP ? 'polite' : 'casual') + '">' + t(isP ? 'reg.polite' : 'reg.casual') + '</span><span class="flip-hint">' + esc(t(same ? 'tap.same' : 'tap.short')) + '</span>';
+  }
   function flipHtml(id, it, isP, extra) {
+    if (it.only) isP = it.only === 'p';
     const f = isP ? it.p : it.c, same = it.c[0] === it.p[0];
     return '<div class="ex-row flip ' + (isP ? 'is-p' : 'is-c') + '" data-flip="' + esc(id) + '"><div style="flex:1; min-width:0;">' +
-      '<div class="flip-top"><span class="reg ' + (isP ? 'polite' : 'casual') + '">' + t(isP ? 'reg.polite' : 'reg.casual') + '</span><span class="flip-hint">' + esc(t(same ? 'tap.same' : 'tap.short')) + '</span></div>' +
+      '<div class="flip-top">' + regTop(it.only, isP, same) + '</div>' +
       '<div class="k ja">' + jaHtml(f) + '</div><div class="romaji">' + esc(f[1]) + '</div><div class="e">' + esc(it.en) + '</div>' + (extra || '') + '</div>' + sayBtns(f[0]) + '</div>';
   }
 
@@ -577,7 +584,7 @@
     esc, dateKey, shuffle, getData, saveData, isLearned, toggleLearned, isKanjiLearned, toggleKanji, recordQuiz, recordRead, markStudied,
     calcStreak, updateStreakBadge, getPrefs, setPref, applyPrefs, drillSecs, lang, t, tx, applyI18n, setLang, recordPrac, saveDailySlot,
     speak, stopSpeak, autoSpeak, voiceId, voiceUrl, hasVoice, saveLocalVoice, deleteLocalVoice, localVoiceRecords, siteVoiceIds, voicesReady, markVoiceButtons, VOICE_DIR, hasJaVoice, jaVoices, utterText, speechText, recognitionSupported, listen, normJa, scoreJa, PASS_SCORE,
-    sayBtns, toast, downloadBackup, importBackup, ruby, reading, plain, showKanji, jaHtml, syncKanjiToggles, extLinks, askLink, flipHtml,
+    sayBtns, regTop, toast, downloadBackup, importBackup, ruby, reading, plain, showKanji, jaHtml, syncKanjiToggles, extLinks, askLink, flipHtml,
     addAsk, updateAsk, ASK_TYPES, togglePref, toggleWord, APP_VERSION
   };
 

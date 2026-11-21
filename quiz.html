@@ -64,7 +64,7 @@
     const d2 = reg === 'polite' ? others[1].c : others[1].p;   // 違うていねいさ・違う意味
     return {
       id: 'c:' + c.id + ':' + reg,
-      opts: CJ.shuffle([{ t: right, ok: true }, { t: other }, { t: d1 }, { t: d2 }]),
+      opts: CJ.shuffle([{ t: right, ok: true }, { t: other }, { t: d1 }, { t: d2 }].filter((o, k, arr) => arr.findIndex(z => z.t[0] === o.t[0]) === k)),   // 同じ文は1つに
       answer: right[0],
       head: () => '<div class="q-who">' + P.icon + '</div><div class="q-text">' + esc(t('q.talkingTo', { who: CJ.tx(P, 'label') })) + '</div>' +
         '<div class="q-say">' + t('q.wantSay', { en: esc(c.en) }) + '</div>',
@@ -72,7 +72,7 @@
         const tag = '<span class="reg ' + reg + '">' + t(reg === 'polite' ? 'reg.polite' : 'reg.casual') + '</span>';
         const note = CJ.tx(c, 'note');
         return t(reg === 'polite' ? 'q.whyPolite' : 'q.whyCasual', { who: esc(CJ.tx(P, 'label')), tag }) +
-          '<div style="margin-top:0.4rem;" class="ja">' + esc(c.p[0]) + ' ⇔ ' + esc(c.c[0]) + '</div>' +
+          '<div style="margin-top:0.4rem;" class="ja">' + (c.only ? esc(c.c[0]) : esc(c.p[0]) + ' ⇔ ' + esc(c.c[0])) + '</div>' +
           (note ? '<div class="muted" style="margin-top:0.3rem;">💡 ' + esc(note) + '</div>' : '');
       }
     };

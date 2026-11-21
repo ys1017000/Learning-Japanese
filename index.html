@@ -137,8 +137,8 @@
     const n = Math.floor(new Date(CJ.dateKey() + 'T00:00:00').getTime() / 86400000);
     const c = withNote[n % withNote.length];
     $('tipBox').innerHTML =
-      '<div><span class="reg polite">' + t('reg.polite') + '</span> <b class="ja">' + esc(c.p[0]) + '</b> ' + CJ.sayBtns(c.p[0]) + '</div>' +
-      '<div><span class="reg casual">' + t('reg.casual') + '</span> <b class="ja">' + esc(c.c[0]) + '</b> ' + CJ.sayBtns(c.c[0]) + '</div>' +
+      (c.only !== 'c' ? '<div><span class="reg polite">' + t('reg.polite') + '</span> <b class="ja">' + esc(c.p[0]) + '</b> ' + CJ.sayBtns(c.p[0]) + '</div>' : '') +
+      (c.only !== 'p' ? '<div><span class="reg casual">' + t('reg.casual') + '</span> <b class="ja">' + esc(c.c[0]) + '</b> ' + CJ.sayBtns(c.c[0]) + '</div>' : '') +
       '<div class="romaji">' + esc(c.c[1]) + '</div>' +
       '<div class="muted" style="margin-top:0.3rem;">“' + esc(c.en) + '” — ' + esc(CJ.tx(c, 'note')) + '</div>';
   }

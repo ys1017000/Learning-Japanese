@@ -28,11 +28,11 @@
       <button class="tiny-btn" id="playAll"></button>
     </div>
     <div style="margin-bottom:0.3rem;"><label class="kj-toggle"><input type="checkbox" data-kanji-toggle> <span data-i18n="rd.kanji"></span></label></div>
-    <div class="chip-row" style="margin:0.5rem 0 0.2rem;">
+    <div class="chip-row" id="regRow" style="margin:0.5rem 0 0.2rem;">
       <button class="chip" id="allC" data-i18n="rd.allC"></button>
       <button class="chip" id="allP" data-i18n="rd.allP"></button>
     </div>
-    <div class="tap-hint" data-i18n="tap.hint"></div>
+    <div class="tap-hint" id="regHint" data-i18n="tap.hint"></div>
     <div id="lines"></div>
     <div class="muted" id="doneText" style="text-align:center; margin-top:0.4rem;"></div>
   </div>
@@ -67,7 +67,7 @@
   let regs = {};          // 行番号 → 'c'（ふつう）/ 'p'（ていねい）。カードをタップで切り替え
   const results = {};     // 行番号 → { score, heard }（このページを開いている間だけ）
   const P = () => R.PASSAGES.find(p => p.id === pid);
-  const regOf = n => regs[n] || 'c';
+  const regOf = n => (P().lines[n] && P().lines[n][3]) || regs[n] || 'c';   // [3] = only（片方だけ の文）
   const form = (l, n) => l[regOf(n) === 'p' ? 2 : 1];   // [ひらがな, ローマ字, 漢字の書き方]
   const key = n => pid + ':' + n + ':' + regOf(n);
 
@@ -93,13 +93,14 @@
     const p = P(), best = CJ.getData().read;
     $('pTitle').textContent = p.icon + ' ' + CJ.tx(p, 'title');
     $('playAll').textContent = t(playing ? 'rd.stop' : 'rd.playAll');
-    const allReg = p.lines.every((l, n) => regOf(n) === 'p') ? 'p' : p.lines.every((l, n) => regOf(n) === 'c') ? 'c' : '';
+    const allReg = p.lines.every((l, n) => l[3] || regOf(n) === 'p') ? 'p' : p.lines.every((l, n) => l[3] || regOf(n) === 'c') ? 'c' : '';
+    const fixed = p.lines.every(l => l[3]);   // ぜんぶ 片方だけ の場面（じこしょうかい）は 切り替えボタン を出さない
+    $('regRow').style.display = fixed ? 'none' : ''; $('regHint').style.display = fixed ? 'none' : '';
     $('allC').classList.toggle('active', allReg === 'c'); $('allP').classList.toggle('active', allReg === 'p');
     $('lines').innerHTML = p.lines.map((l, n) => {
       const f = form(l, n), isP = regOf(n) === 'p', same = l[1][0] === l[2][0], b = best[key(n)];
       return '<div class="rd-line flip ' + (isP ? 'is-p' : 'is-c') + '" id="line' + n + '" data-line="' + n + '">' +
-        '<div class="flip-top"><span class="reg ' + (isP ? 'polite' : 'casual') + '">' + t(isP ? 'reg.polite' : 'reg.casual') + '</span>' +
-          '<span class="flip-hint">' + esc(same ? t('tap.same') : t('tap.short')) + '</span></div>' +
+        '<div class="flip-top">' + CJ.regTop(l[3], isP, same) + '</div>' +
         '<div class="k ja">' + CJ.jaHtml(f) + '</div>' +
         '<div class="romaji">' + esc(f[1]) + '</div><div class="e">' + esc(l[0]) + '</div>' +
         '<div class="rd-tools">' + CJ.sayBtns(f[0]) +
@@ -162,6 +163,7 @@
     if (e.target.closest('[data-say], a')) return;   // 🔊 やリンクは切り替えない
     const c = e.target.closest('[data-line]'); if (!c || listeningIdx >= 0) return;
     const n = Number(c.dataset.line);
+    if (P().lines[n][3]) return;   // 片方だけ の文は 切り替えない
     regs[n] = regOf(n) === 'p' ? 'c' : 'p';
     delete results[n];
     render();

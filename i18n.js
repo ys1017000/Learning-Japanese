@@ -202,6 +202,8 @@ window.CJ_I18N = {
   // v3: タップで切り替え
   'tap.hint': ['👆 Tap a card to switch casual ⇔ polite', '👆 カード を タップ すると ふつう ⇔ ていねい'],
   'tap.short': ['tap ⇄', 'タップ ⇄'],
+  'tap.onlyP': ['always polite here', 'ここ では いつも ていねい'],
+  'tap.onlyC': ['only with someone close', 'したしい ひと と だけ'],
   'tap.same': ['same in both', 'どちら も おなじ'],
   'rd.allC': ['All casual', 'ぜんぶ ふつう'],
   'rd.allP': ['All polite', 'ぜんぶ ていねい'],
@@ -280,6 +282,7 @@ window.CJ_I18N = {
 
   // v4: 練習カード
   'pr.tapPolite': ['👆 Tap the answer to see the polite version', '👆 こたえ を タップ すると ていねい に なります'],
+  'pr.sayPolite': ['This one is always polite — say it out loud!', 'これ は いつも ていねい に。こえ に だして！'],
   'pr.sayCasual': ['Say it casually (like to Yoh-chan) — out loud!', 'ふつう に（ようちゃん に はなす ように）、こえ に だして！'],
 
   // v4: ていねい と ふつう のガイド
