@@ -30,7 +30,9 @@
   <div class="card" style="margin-top:1rem;">
     <h2 data-i18n="rec.sendTitle"></h2>
     <div class="muted" id="localCount" style="margin-bottom:0.5rem;"></div>
+    <label class="kj-toggle" style="margin-bottom:0.5rem;"><input type="checkbox" id="expAll"> <span data-i18n="rec.expAll"></span></label>
     <button class="btn" id="exportBtn" data-i18n="rec.export"></button>
+    <div id="packs"></div>
     <ol class="tips-list" style="margin-top:0.7rem;" id="howList"></ol>
   </div>
 </main>
@@ -106,10 +108,22 @@
     $('moreBtn').style.display = items.length > shown.length ? '' : 'none';
     $('moreBtn').textContent = '＋ ' + (items.length - shown.length);
   }
+  /* ---- GitHub へ送る：まだサイトにない声だけ。GitHub は 1回 100ファイル まで なので 90こ ずつ に分ける ---- */
+  const PACK = 90, SENT_KEY = 'cj_voice_sent';   // SENT_KEY: { id: zip に入れた時の録音時刻 }（録り直しを見つける用）
+  const getSent = () => { try { return JSON.parse(localStorage.getItem(SENT_KEY) || '{}') || {}; } catch (e) { return {}; } };
+  function isNew(r, site, sent) {
+    if (!site.has(r.id)) return true;              // サイトにまだない
+    return sent[r.id] != null && r.t > sent[r.id];  // サイトにあるけど、そのあと録り直した
+  }
+  async function pending() {
+    const recs = await CJ.localVoiceRecords().catch(() => []), site = new Set(CJ.siteVoiceIds()), sent = getSent();
+    return { recs, todo: $('expAll').checked ? recs : recs.filter(r => isNew(r, site, sent)) };
+  }
   async function renderSend() {
-    const recs = await CJ.localVoiceRecords().catch(() => []);
-    $('localCount').textContent = recs.length ? t('rec.localCount', { n: recs.length }) : t('rec.noLocal');
-    $('exportBtn').disabled = !recs.length;
+    const { recs, todo } = await pending();
+    $('localCount').textContent = recs.length ? t('rec.localCount2', { n: recs.length, m: todo.length }) : t('rec.noLocal');
+    $('exportBtn').disabled = !todo.length;
+    $('exportBtn').textContent = todo.length > PACK ? t('rec.exportN', { k: Math.ceil(todo.length / PACK) }) : t('rec.export');
     $('howList').innerHTML = t('rec.how').split('|').map(x => '<li>' + x + '</li>').join('');
   }
   function render() { renderGroups(); renderList(); renderSend(); }
@@ -200,25 +214,46 @@
     e.setUint32(12, cSize, true); e.setUint32(16, offset, true);
     return new Blob(parts.concat(central, [new Uint8Array(e.buffer)]), { type: 'application/zip' });
   }
+  let packs = [];
   async function exportZip() {
-    const recs = await CJ.localVoiceRecords();
-    if (!recs.length) return;
-    // サイトにすでにある声 ＋ この スマホ の声 → 新しい index.json
-    const ids = Array.from(new Set(CJ.siteVoiceIds().concat(recs.map(r => r.id)))).sort();
-    const index = { app: 'maru-pace-voice', updated: new Date().toISOString(), ids, texts: {} };
-    recs.forEach(r => { index.texts[r.id] = r.kana; });
-    const files = [{ name: 'voice/index.json', data: new TextEncoder().encode(JSON.stringify(index, null, 1)) }];
-    for (const r of recs) files.push({ name: 'voice/' + r.id + '.wav', data: new Uint8Array(await r.blob.arrayBuffer()) });
+    const { todo } = await pending();
+    if (!todo.length) return;
+    // いまサイトにある index.json（ids と texts）を読み直して、そこに足していく
+    let site = { ids: CJ.siteVoiceIds(), texts: {} };
+    try { const r = await fetch(CJ.VOICE_DIR + 'index.json', { cache: 'no-cache' }); if (r.ok) { const j = await r.json(); if (j && Array.isArray(j.ids)) site = { ids: j.ids.map(String), texts: j.texts || {} }; } } catch (e) {}
+    todo.sort((a, b) => a.t - b.t);
+    const ids = new Set(site.ids), texts = Object.assign({}, site.texts);
+    packs = [];
+    for (let i = 0; i < todo.length; i += PACK) {
+      const part = todo.slice(i, i + PACK);
+      part.forEach(r => { ids.add(r.id); texts[r.id] = r.kana; });
+      // index.json は「その パック まで」の ぜんぶ を入れる → 1 から順に アップロード すれば、どこで止めても こわれない
+      packs.push({ recs: part, index: { app: 'maru-pace-voice', updated: new Date().toISOString(), ids: Array.from(ids).sort(), texts: Object.assign({}, texts) } });
+    }
+    if (packs.length === 1) { await downloadPack(0); return; }
+    $('packs').innerHTML = '<p class="muted" style="margin-top:0.6rem;">' + esc(t('rec.packsNote', { k: packs.length })) + '</p>' +
+      packs.map((pk, i) => '<button class="btn btn-secondary" data-pack="' + i + '" style="margin-top:0.4rem;">⬇️ ' + esc(t('rec.pack', { i: i + 1, k: packs.length, n: pk.recs.length })) + '</button>').join('');
+  }
+  async function downloadPack(i) {
+    const pk = packs[i];
+    const files = [{ name: 'voice/index.json', data: new TextEncoder().encode(JSON.stringify(pk.index, null, 1)) }];
+    for (const r of pk.recs) files.push({ name: 'voice/' + r.id + '.wav', data: new Uint8Array(await r.blob.arrayBuffer()) });
     const url = URL.createObjectURL(makeZip(files));
-    const a = document.createElement('a'); a.href = url; a.download = 'voice-' + CJ.dateKey().replace(/-/g, '') + '.zip';
-    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
-    CJ.toast(t('rec.exported', { n: recs.length }));
+    const a = document.createElement('a'); a.href = url;
+    a.download = 'voice-' + CJ.dateKey().replace(/-/g, '') + (packs.length > 1 ? '-' + (i + 1) + 'of' + packs.length : '') + '.zip';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+    const sent = getSent(); pk.recs.forEach(r => { sent[r.id] = r.t; });
+    try { localStorage.setItem(SENT_KEY, JSON.stringify(sent)); } catch (e) {}
+    const b = document.querySelector('[data-pack="' + i + '"]'); if (b) b.textContent = '✅ ' + b.textContent.replace(/^⬇️ /, '');
+    CJ.toast(t('rec.exported', { n: pk.recs.length }));
   }
 
   $('groupSel').addEventListener('change', e => { group = e.target.value; limit = 40; renderList(); });
   $('onlyTodo').addEventListener('change', () => { limit = 40; renderList(); });
   $('moreBtn').addEventListener('click', () => { limit += 40; renderList(); });
   $('exportBtn').addEventListener('click', exportZip);
+  $('expAll').addEventListener('change', () => { $('packs').innerHTML = ''; renderSend(); });
+  $('packs').addEventListener('click', e => { const b = e.target.closest('[data-pack]'); if (b) downloadPack(Number(b.dataset.pack)); });
   $('list').addEventListener('click', e => {
     const b = e.target.closest('[data-a]'); if (!b) return;
     const kana = b.closest('[data-kana]').dataset.kana;
