@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Polite vs Casual – マルちゃんのペースでいいよ</title>
+<meta name="theme-color" content="#e0517a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<header><a class="logo" href="index.html">🌸 マルちゃんのペースでいいよ</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
+
+<main class="container">
+  <div class="subnav">
+    <a href="cards.html" data-i18n="sub.cards">Polite ⇔ Casual</a>
+    <a href="endings.html" data-i18n="sub.endings">Endings</a>
+    <a href="grammar.html" data-i18n="sub.grammar">Grammar</a>
+    <a href="guide.html" class="active" data-i18n="sub.guide">Tips</a>
+  </div>
+  <div class="card"><h2 data-i18n="gd.title"></h2>
+    <label class="kj-toggle"><input type="checkbox" data-kanji-toggle> <span data-i18n="rd.kanji"></span></label>
+  </div>
+  <div id="guide"></div>
+</main>
+
+<nav>
+  <a href="index.html"><span class="ni">🏠</span><span data-i18n="nav.home">Home</span></a>
+  <a href="practice.html"><span class="ni">🔥</span><span data-i18n="nav.today">Today</span></a>
+  <a href="cards.html" class="active"><span class="ni">📚</span><span data-i18n="nav.learn">Learn</span></a>
+  <a href="kanji.html"><span class="ni">✍️</span><span data-i18n="nav.kanji">Kanji</span></a>
+  <a href="read.html"><span class="ni">🗣️</span><span data-i18n="nav.read">Read</span></a>
+  <a href="quiz.html"><span class="ni">❓</span><span data-i18n="nav.quiz">Quiz</span></a>
+</nav>
+
+<script src="i18n.js"></script>
+<script src="data.js"></script>
+<script src="grammar-data.js"></script>
+<script src="read-data.js"></script>
+<script src="examples-data.js"></script>
+<script src="kanji-data.js"></script>
+<script src="words-data.js"></script>
+<script src="common.js"></script>
+<script src="bank.js"></script>
+<script>
+(function () {
+  const B = window.CJ_BANK, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
+  const ja = () => CJ.lang() === 'ja';
+  const L = (en, jp) => ja() ? jp : en;   // このページの説明（英語／ひらがな）
+  const flipped = {};
+
+  // ていねい → ふつう で かわるところ
+  const CHANGES = [
+    ['です', 'だ ／ (なし)', 'げんき です → げんき (だよ)'],
+    ['〜ます', '〜る・〜う (じしょ の かたち)', 'いきます → いく'],
+    ['〜ました', '〜た', 'たべました → たべた'],
+    ['〜ません', '〜ない', 'のみません → のまない'],
+    ['〜ですか？', '〜？ ↗（か なし）', 'げんき です か？ → げんき？'],
+    ['〜て ください', '〜て (ね)', 'まって ください → まって'],
+    ['〜て います', '〜てる', 'みて います → みてる'],
+    ['すみません', 'ごめん (ね)', ''],
+    ['はい ／ いいえ', 'うん ／ ううん', ''],
+    ['そう です ね', 'そう だね', ''],
+    ['を・が を つかう', 'よく はぶく', 'なに を たべます か？ → なに たべる？']
+  ];
+  // 例：タップで切り替えて くらべる
+  const EXAMPLE_KEYS = ['card:doko', 'card:taberu', 'card:okurete', 'gr:past:0', 'rd:cafe:1', 'gr:omou:3'];
+
+  function render() {
+    const sec = (title, body) => '<div class="card gd-sec"><h3>' + title + '</h3>' + body + '</div>';
+    let html = '';
+    html += sec(L('1. The big idea', '1. いちばん だいじ な こと'),
+      '<p>' + L('<span class="reg polite">POLITE</span> (です・ます) is not "nicer" and <span class="reg casual">CASUAL</span> is not "rude". It is about <b>distance</b>: polite = a kind, respectful distance. Casual = close and relaxed.',
+        '<span class="reg polite">ていねい</span>（です・ます） が 「やさしい」 で、<span class="reg casual">ふつう</span> が 「しつれい」 では ありません。だいじ なのは <b>きょり</b>：ていねい ＝ やさしい きょり、ふつう ＝ ちかくて リラックス。') + '</p>');
+    html += sec(L('2. Who gets which?', '2. だれ に どっち？'),
+      '<table class="gd-table"><tr><th>' + t('reg.polite') + '</th><th>' + t('reg.casual') + '</th></tr>' +
+      '<tr><td class="p">' + L('your boss, coworkers you don\'t know well, teachers', 'じょうし・まだ したしく ない どうりょう・せんせい') + '</td><td class="c">' + L('Yoh-chan, close friends', 'ようちゃん・なかよし の ともだち') + '</td></tr>' +
+      '<tr><td class="p">' + L('shop and restaurant staff, strangers', 'おみせ の ひと・しらない ひと') + '</td><td class="c">' + L('kids, people younger than you who are close', 'こども・なかよし の としした') + '</td></tr>' +
+      '<tr><td class="p">' + L('people you just met, older people', 'はじめて あった ひと・としうえ の ひと') + '</td><td class="c">' + L('friends of friends — after they talk casually to you', 'ともだち の ともだち（あいて が ふつう に なったら）') + '</td></tr></table>');
+    html += sec(L('3. What changes', '3. なに が かわる？'),
+      '<table class="gd-table ja"><tr><th>' + t('reg.polite') + '</th><th>' + t('reg.casual') + '</th><th></th></tr>' +
+      CHANGES.map(r => '<tr><td class="p">' + esc(r[0]) + '</td><td class="c">' + esc(r[1]) + '</td><td class="muted" style="font-size:0.8rem;">' + esc(r[2]) + '</td></tr>').join('') + '</table>');
+    html += sec(L('4. Tips', '4. コツ'), '<ul>' + [
+      L('<b>Not sure? Use polite.</b> Nobody gets upset about polite Japanese.', '<b>まよったら ていねい。</b> ていねい で おこる ひと は いません。'),
+      L('<b>Follow the other person.</b> When someone starts talking casually to you, you can switch too.', '<b>あいて に あわせる。</b> あいて が ふつう で はなしはじめたら、あなた も ふつう で OK。'),
+      L('<b>Polite can be warm.</b> Add ね or よ: きれい です ね！ sounds friendly, not cold.', '<b>ていねい でも あたたかく できる。</b> 「ね」「よ」 を つける：きれい です ね！'),
+      L('<b>A plain だ at the end can sound strong.</b> In casual talk, people usually say だよ or だね instead of only だ.', '<b>さいご が 「だ」 だけ だと つよく きこえる ことも。</b> ふつう の かいわ では 「だよ」「だね」 が よく つかわれます。'),
+      L('<b>At school (work)</b>, talk politely with coworkers — even younger ones — until you become close.', '<b>しょくば では</b>、したしく なる まで どうりょう にも ていねい に（としした でも）。'),
+      L('<b>Shops use extra-polite Japanese (keigo)</b> to you: いらっしゃいませ, しょうしょう おまち ください. You don\'t need to talk like that — normal polite is perfect.', '<b>おみせ の ひと は もっと ていねい な けいご で はなします</b>（いらっしゃいませ・しょうしょう おまち ください）。あなた は ふつう の ていねい で じゅうぶん。'),
+      L('<b>Messages:</b> LINE with Yoh-chan → casual + emoji. Email to school → polite.', '<b>メッセージ：</b> ようちゃん との LINE → ふつう ＋ えもじ。がっこう への メール → ていねい。')
+    ].map(x => '<li>' + x + '</li>').join('') + '</ul>');
+    html += '<div class="card gd-sec"><h3>' + esc(t('gd.examples')) + '</h3><div class="tap-hint">' + esc(t('tap.hint')) + '</div>' +
+      EXAMPLE_KEYS.map(k => B.byKey[k]).filter(Boolean).map(it => CJ.flipHtml(it.key, it, !!flipped[it.key])).join('') + '</div>';
+    $('guide').innerHTML = html;
+  }
+  $('guide').addEventListener('click', e => {
+    if (e.target.closest('[data-say], a')) return;
+    const c = e.target.closest('[data-flip]'); if (!c) return;
+    flipped[c.dataset.flip] = !flipped[c.dataset.flip]; render();
+  });
+  document.addEventListener('cj:lang', render);
+  document.addEventListener('cj:kanji', render);
+  render();
+  CJ.markStudied();
+})();
+</script>
+</body>
+</html>

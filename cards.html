@@ -17,9 +17,11 @@
     <a href="cards.html" class="active" data-i18n="sub.cards">Polite ⇔ Casual</a>
     <a href="endings.html" data-i18n="sub.endings">Endings</a>
     <a href="grammar.html" data-i18n="sub.grammar">Grammar</a>
+    <a href="guide.html" data-i18n="sub.guide">Tips</a>
   </div>
-  <div class="chip-row" id="filterRow" role="group"></div>
-  <div class="chip-row" style="margin-top:-0.3rem;">
+  <select class="pick" id="filterSel" aria-label="Category"></select>
+  <div class="tool-row">
+    <label class="kj-toggle"><input type="checkbox" data-kanji-toggle> <span data-i18n="rd.kanji"></span></label>
     <button class="chip" id="dirBtn"></button>
     <button class="chip" id="shuffleBtn" data-i18n="cards.shuffle"></button>
   </div>
@@ -48,10 +50,16 @@
 
 <script src="i18n.js"></script>
 <script src="data.js"></script>
+<script src="grammar-data.js"></script>
+<script src="read-data.js"></script>
+<script src="examples-data.js"></script>
+<script src="kanji-data.js"></script>
+<script src="words-data.js"></script>
 <script src="common.js"></script>
+<script src="bank.js"></script>
 <script>
 (function () {
-  const D = window.CJ_DATA, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
+  const D = window.CJ_DATA, B = window.CJ_BANK, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
   const SIDE = { p: { cls: 'polite', reg: 'reg.polite', who: 'who.polite' }, c: { cls: 'casual', reg: 'reg.casual', who: 'who.casual' } };
   let filter = 'all', dir = 'pc', deck = [], i = 0, shown = false;
 
@@ -63,18 +71,19 @@
     shown = false;
   }
 
+  // カテゴリーは「えらぶ」（セレクト）にする
   function renderFilters() {
     const learned = new Set(CJ.getData().learned);
     const todo = D.CARDS.filter(c => !learned.has(c.id)).length;
-    const list = [['all', t('cards.all', { n: D.CARDS.length })], ['todo', t('cards.todo', { n: todo })]].concat(D.SCENES.map(s => [s.id, CJ.tx(s, 'label')]));
-    $('filterRow').innerHTML = list.map(f => '<button class="chip' + (f[0] === filter ? ' active' : '') + '" data-f="' + f[0] + '">' + esc(f[1]) + '</button>').join('');
+    const list = [['all', t('cards.all', { n: D.CARDS.length })], ['todo', t('cards.todo', { n: todo })]].concat(D.SCENES.map(s => [s.id, CJ.tx(s, 'label') + '（' + D.CARDS.filter(c => c.s === s.id).length + '）']));
+    $('filterSel').innerHTML = list.map(f => '<option value="' + f[0] + '"' + (f[0] === filter ? ' selected' : '') + '>' + esc(f[1]) + '</option>').join('');
     $('dirBtn').textContent = t(dir === 'pc' ? 'cards.dirPC' : 'cards.dirCP');
   }
 
   function sideHtml(c, k) {
     const s = SIDE[k], v = c[k];
     return '<div class="side"><span class="reg ' + s.cls + '">' + t(s.reg) + '</span><span class="reg-who">' + esc(t(s.who)) + '</span>' +
-      '<div class="big-ja ja">' + esc(v[0]) + '</div><div class="romaji">' + esc(v[1]) + '</div>' +
+      '<div class="big-ja ja">' + CJ.jaHtml(v) + '</div><div class="romaji">' + esc(v[1]) + '</div>' +
       '<div>' + CJ.sayBtns(v[0]) + '</div></div>';
   }
 
@@ -107,8 +116,12 @@
       if (note) html += '<div class="note">💡 ' + esc(note) + '</div>';
       if (c.r && c.r.length) {
         html += '<div class="replies"><div class="t">' + esc(t('cards.howAnswer')) + '</div>' + c.r.map(r =>
-          '<div class="reply-row"><div><div class="k ja">' + esc(r[0]) + '</div><div class="romaji">' + esc(r[1]) + '</div><div class="e">' + esc(r[2]) + '</div></div>' + CJ.sayBtns(r[0]) + '</div>').join('') + '</div>';
+          '<div class="reply-row"><div><div class="k ja">' + CJ.jaHtml([r[0], r[1], r[3]]) + '</div><div class="romaji">' + esc(r[1]) + '</div><div class="e">' + esc(r[2]) + '</div></div>' + CJ.sayBtns(r[0]) + '</div>').join('') + '</div>';
       }
+      // この文の漢字・単語へのリンク、ネイティブの使い方、ようちゃんに質問
+      const it = B.byKey['card:' + c.id];
+      html += '<div style="text-align:left;">' + B.linksHtml(it) + CJ.extLinks(c.c) +
+        '<div style="text-align:right;">' + CJ.askLink(c.c[0] + ' / ' + c.p[0] + ' (' + c.en + ')') + '</div></div>';
     }
     box.innerHTML = html;
     const rb = $('revealBtn');
@@ -124,10 +137,7 @@
   }
   function move(n) { if (!deck.length) return; i = (i + n + deck.length) % deck.length; shown = false; render(); }
 
-  $('filterRow').addEventListener('click', e => {
-    const b = e.target.closest('[data-f]'); if (!b) return;
-    filter = b.dataset.f; buildDeck(); render();
-  });
+  $('filterSel').addEventListener('change', e => { filter = e.target.value; buildDeck(); render(); });
   $('dirBtn').addEventListener('click', () => { dir = dir === 'pc' ? 'cp' : 'pc'; shown = false; render(); });
   $('shuffleBtn').addEventListener('click', () => { deck = CJ.shuffle(deck); i = 0; shown = false; render(); CJ.toast(t('toast.shuffled')); });
   $('prevBtn').addEventListener('click', () => move(-1));
@@ -140,6 +150,7 @@
     else if (on) move(1); else render();
   });
   document.addEventListener('cj:lang', render);
+  document.addEventListener('cj:kanji', render);
 
   // ?card=ID で特定のカードを開く
   const want = new URLSearchParams(location.search).get('card');

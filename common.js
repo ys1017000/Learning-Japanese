@@ -4,9 +4,9 @@
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
-  const DATA_VERSION = 3;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily)。古い形もそのまま読める
+  const DATA_VERSION = 4;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily) / v4: ようちゃんへの質問(asks)・都道府県(pref)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
-  const BACKUP_VERSION = 3;           // v1・v2 のバックアップも読み込める
+  const BACKUP_VERSION = 4;           // v1〜v3 のバックアップも読み込める
 
   /* ---------- 基本ユーティリティ ---------- */
   function esc(s) {
@@ -87,8 +87,20 @@
      { v: 2, learned: [カードID], kanji: [おぼえた漢字], wrong: { 問題ID: 回数 }, history: { 'YYYY-MM-DD': true },
        quiz: { correct, total }, read: { '会話ID:行番号:c|p': いちばん良い点数 },
        prac: { 練習カードのキー: { ok: 言えた回数, ng: 出なかった回数, l: 'ok'|'ng' 最後の結果, d: 最後の日 } },
-       daily: { 'YYYY-MM-DD': { lunch: { k: [キー], r: ['c'|'p'], s: [言えた数, 枚数] or null }, night: {…} } } } */
-  function defaultData() { return { v: DATA_VERSION, learned: [], kanji: [], wrong: {}, history: {}, quiz: { correct: 0, total: 0 }, read: {}, prac: {}, daily: {} }; }
+       daily: { 'YYYY-MM-DD': { lunch: { k: [キー], r: ['c'|'p'], s: [言えた数, 枚数] or null }, night: {…} } },
+       asks: [{ id, t: 時刻, type: 種類, text: 本文, ctx: どこから, done: 解決した }],  pref: [覚えた都道府県], words: [覚えた単語] */
+  function defaultData() { return { v: DATA_VERSION, learned: [], kanji: [], wrong: {}, history: {}, quiz: { correct: 0, total: 0 }, read: {}, prac: {}, daily: {}, asks: [], pref: [], words: [] }; }
+  const ASK_TYPES = ['say', 'read', 'kanji', 'q', 'feature', 'other'];
+  function normAsks(list) {
+    const seen = new Set(), out = [];
+    (Array.isArray(list) ? list : []).forEach(a => {
+      if (!a || typeof a !== 'object' || typeof a.text !== 'string' || !a.text.trim()) return;
+      const id = String(a.id || ''); if (!id || seen.has(id)) return;
+      seen.add(id);
+      out.push({ id, t: Number(a.t) || Date.now(), type: ASK_TYPES.includes(a.type) ? a.type : 'other', text: a.text.trim().slice(0, 2000), ctx: typeof a.ctx === 'string' ? a.ctx.slice(0, 300) : '', done: !!a.done });
+    });
+    return out.sort((x, y) => y.t - x.t).slice(0, 300);
+  }
   const isDate = k => /^\d{4}-\d{2}-\d{2}$/.test(String(k));
   function normSlot(v) {
     if (!v || typeof v !== 'object') return null;
@@ -125,6 +137,9 @@
       const v = s.daily[k] || {}, lunch = normSlot(v.lunch), night = normSlot(v.night);
       if (lunch || night) d.daily[k] = { lunch, night };
     });
+    d.asks = normAsks(s.asks);
+    d.pref = strList(s.pref, 100, 10);
+    d.words = strList(s.words, 3000, 30);
     return d;
   }
   function getData() { try { return normalizeData(JSON.parse(safeGet(KEY_DATA))); } catch (e) { return defaultData(); } }
@@ -154,6 +169,16 @@
     }
     touchToday(d); saveData(d); updateStreakBadge();
   }
+  // 💌 ようちゃんへの質問・おねがい
+  function addAsk(type, text, ctx) {
+    const d = getData();
+    const a = { id: 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), t: Date.now(), type, text, ctx: ctx || '', done: false };
+    d.asks = normAsks([a].concat(d.asks)); saveData(d);
+    return a;
+  }
+  function updateAsk(id, fn) { const d = getData(); const a = d.asks.find(x => x.id === id); if (a) { fn(a); if (a.del) d.asks = d.asks.filter(x => x !== a); saveData(d); } }
+  function toggleWord(id) { return toggleIn('words', id); }
+  function togglePref(code) { const d = getData(), i = d.pref.indexOf(code); if (i >= 0) d.pref.splice(i, 1); else d.pref.push(code); touchToday(d); saveData(d); updateStreakBadge(); return i < 0; }
   // 音読の点数（いちばん良い点数だけ残す）
   function recordRead(key, score) {
     const d = getData();
@@ -300,6 +325,51 @@
   }
   const PASS_SCORE = 75;
 
+  /* ---------- 漢字の書き方（{漢字|よみ}） ---------- */
+  function ruby(s) {
+    return String(s || '').split(/(\{[^|}]+\|[^}]+\})/).map(part => {
+      const m = /^\{([^|}]+)\|([^}]+)\}$/.exec(part);
+      return m ? '<ruby>' + esc(m[1]) + '<rt>' + esc(m[2]) + '</rt></ruby>' : esc(part);
+    }).join('');
+  }
+  function reading(s) { return String(s || '').replace(/\{([^|}]+)\|([^}]+)\}/g, '$2'); }
+  function plain(s) { return String(s || '').replace(/\{([^|}]+)\|([^}]+)\}/g, '$1'); }
+  // 「かんじ で みる」：どのページでも同じ設定（readKanji）。オンなら漢字＋ふりがな、オフならひらがな
+  function showKanji() { return !!getPrefs().readKanji; }
+  function jaHtml(f) { return showKanji() && f && f[2] ? ruby(f[2]) : esc(f ? f[0] : ''); }
+  // data-kanji-toggle のチェックボックスを全部そろえて、切り替えたら cj:kanji を出す
+  function syncKanjiToggles() { document.querySelectorAll('[data-kanji-toggle]').forEach(el => { el.checked = showKanji(); }); }
+  document.addEventListener('change', e => {
+    if (!e.target.matches || !e.target.matches('[data-kanji-toggle]')) return;
+    setPref('readKanji', e.target.checked); syncKanjiToggles();
+    document.dispatchEvent(new CustomEvent('cj:kanji'));
+  });
+
+  /* ---------- アプリの外で、ネイティブの使い方をさがす ---------- */
+  // YouTube（動画検索）・YouGlish（その言葉を話している動画の場面にとぶ）・Instagram（ハッシュタグ）
+  function extLinks(f) {
+    const q = plain(f && f[2] ? f[2] : (f ? f[0] : '')).replace(/[\s　〜~]/g, '');
+    if (!q) return '';
+    const tag = q.replace(/[、。！？!?「」…・,.\s]/g, '');
+    const a = (href, label, aria) => '<a class="ext-link" href="' + esc(href) + '" target="_blank" rel="noopener" aria-label="' + esc(aria) + '">' + label + '</a>';
+    return '<span class="ext-links">' +
+      a('https://www.youtube.com/results?search_query=' + encodeURIComponent(q), '▶ YouTube', 'YouTube: ' + q) +
+      a('https://youglish.com/pronounce/' + encodeURIComponent(q) + '/japanese', '🎧 YouGlish', 'YouGlish: ' + q) +
+      (tag.length <= 20 ? a('https://www.instagram.com/explore/tags/' + encodeURIComponent(tag) + '/', '# Instagram', 'Instagram: ' + tag) : '') +
+      '</span>';
+  }
+  // 💌 ようちゃん に きく（ask.html に、いま見ているものを書いて開く）
+  function askLink(ctx) { return '<a class="ask-link" href="ask.html?ctx=' + encodeURIComponent(String(ctx || '').slice(0, 200)) + '" aria-label="' + esc(t('ask.btn')) + '">💌</a>'; }
+
+  /* ---------- タップで ふつう ⇔ ていねい が切り替わるカード（ぶんぽう・かんじ・たんご・ガイド で共通） ----------
+     it = { en, c: [ひらがな, ローマ字, 漢字], p: [...] }。isP = ていねい を表示中。extra = カードの下に足す HTML */
+  function flipHtml(id, it, isP, extra) {
+    const f = isP ? it.p : it.c, same = it.c[0] === it.p[0];
+    return '<div class="ex-row flip ' + (isP ? 'is-p' : 'is-c') + '" data-flip="' + esc(id) + '"><div style="flex:1; min-width:0;">' +
+      '<div class="flip-top"><span class="reg ' + (isP ? 'polite' : 'casual') + '">' + t(isP ? 'reg.polite' : 'reg.casual') + '</span><span class="flip-hint">' + esc(t(same ? 'tap.same' : 'tap.short')) + '</span></div>' +
+      '<div class="k ja">' + jaHtml(f) + '</div><div class="romaji">' + esc(f[1]) + '</div><div class="e">' + esc(it.en) + '</div>' + (extra || '') + '</div>' + sayBtns(f[0]) + '</div>';
+  }
+
   /* ---------- 表示ヘルパー ---------- */
   // 🔊 と 🐢 のボタン（data-say に読む文を入れる。クリックは下の document のリスナーで処理）
   function sayBtns(kana) {
@@ -360,6 +430,9 @@
         if (!a) { out.prac[k] = b; return; }
         out.prac[k] = { ok: Math.max(a.ok, b.ok), ng: Math.max(a.ng, b.ng), l: b.d > a.d ? b.l : a.l, d: b.d > a.d ? b.d : a.d };
       });
+      out.asks = normAsks(cur.asks.concat(inc.asks));
+      out.pref = Array.from(new Set(cur.pref.concat(inc.pref)));
+      out.words = Array.from(new Set(cur.words.concat(inc.words)));
       out.daily = Object.assign({}, inc.daily);
       Object.keys(cur.daily).forEach(k => {
         const a = cur.daily[k], b = out.daily[k];
@@ -381,10 +454,11 @@
     esc, dateKey, shuffle, getData, saveData, isLearned, toggleLearned, isKanjiLearned, toggleKanji, recordQuiz, recordRead, markStudied,
     calcStreak, updateStreakBadge, getPrefs, setPref, applyPrefs, drillSecs, lang, t, tx, applyI18n, setLang, recordPrac, saveDailySlot,
     speak, stopSpeak, autoSpeak, hasJaVoice, speechText, recognitionSupported, listen, normJa, scoreJa, PASS_SCORE,
-    sayBtns, toast, downloadBackup, importBackup
+    sayBtns, toast, downloadBackup, importBackup, ruby, reading, plain, showKanji, jaHtml, syncKanjiToggles, extLinks, askLink, flipHtml,
+    addAsk, updateAsk, ASK_TYPES, togglePref, toggleWord
   };
 
   // common.js は各ページの <body> の最後で読むので、この時点でヘッダーなどはもうある。
   // ページ本体の <script> より前に言葉を入れておく（表示のちらつき防止）
-  addLangButton(); applyPrefs(); applyI18n(); updateStreakBadge();
+  addLangButton(); applyPrefs(); applyI18n(); updateStreakBadge(); syncKanjiToggles();
 })();

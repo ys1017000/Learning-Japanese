@@ -208,7 +208,7 @@ window.CJ_I18N = {
 
   // v3: 練習カード
   'pr.title': ['🔥 Today\'s practice', '🔥 きょう の れんしゅう'],
-  'pr.intro': ['Read the English, then say it in Japanese out loud within {s} seconds. The cards change every day — once at lunch and once at night.', 'えいご を みて、{s}びょう いない に にほんご で こえ に だして いおう。カード は まいにち かわります — ひる と よる。'],
+  'pr.intro': ['Read the English, then say it in casual Japanese out loud within {s} seconds. The cards change every day — once at lunch and once at night.', 'えいご を みて、{s}びょう いない に ふつう の にほんご で こえ に だして いおう。カード は まいにち かわります — ひる と よる。'],
   'pr.how': ['Who you talk to decides the style: 💕 Yoh-chan / friends → casual, 👔 work / shops → polite.', 'あいて で いいかた が かわります：💕 ようちゃん・ともだち → ふつう、👔 しごと・おみせ → ていねい。'],
   'pr.round': ['Round {r}', '{r}かいめ'],
   'pr.quit': ['✕ Quit', '✕ やめる'],
@@ -242,5 +242,95 @@ window.CJ_I18N = {
   'gr.col.c': ['Casual', 'ふつう'],
   'gr.col.p': ['Polite', 'ていねい'],
   'gr.examples': ['Examples', 'れいぶん'],
-  'gr.practice': ['🔥 Practice these out loud', '🔥 こえ に だして れんしゅう']
+  'gr.practice': ['🔥 Practice these out loud', '🔥 こえ に だして れんしゅう'],
+  // v4: サブナビ・メニュー
+  'sub.guide': ['💡 Polite vs Casual', '💡 ていねい と ふつう'],
+  'sub.kanji': ['✍️ Kanji', '✍️ かんじ'],
+  'sub.words': ['📝 Words', '📝 たんご'],
+  'sub.map': ['🗾 Map', '🗾 ちず'],
+  'home.m.words': ['Words', 'たんご'],
+  'home.m.map': ['Japan map', 'にほん の ちず'],
+  'home.m.ask': ['Ask Yoh-chan', 'ようちゃん に きく'],
+  'home.m.guide': ['Polite vs Casual', 'ていねい と ふつう'],
+  'st.words': ['words learned', 'おぼえた たんご'],
+  'pick.cat': ['Choose', 'えらぶ'],
+
+  // v4: 漢字
+  'kj.cat.g1': ['🌱 Grade 1 ({n})', '🌱 1ねんせい（{n}）'],
+  'kj.cat.g2': ['🌿 Grade 2 ({n})', '🌿 2ねんせい（{n}）'],
+  'kj.cat.life': ['🏙️ Kanji in daily life — signs, stations, shops ({n})', '🏙️ くらし の かんじ — かんばん・えき・おみせ（{n}）'],
+  'kj.cat.app': ['💬 Kanji in the app\'s sentences ({n})', '💬 アプリ の ぶん に でる かんじ（{n}）'],
+  'kj.cat.all': ['📚 All kanji ({n})', '📚 ぜんぶ の かんじ（{n}）'],
+  'kj.cat.todo': ['📝 Not learned yet ({n})', '📝 まだ おぼえて ない（{n}）'],
+  'kj.related': ['📝 Words with this kanji', '📝 この かんじ を つかう ことば'],
+  'kj.sentences': ['💬 Sentences in the app ({n})', '💬 アプリ の れいぶん（{n}）'],
+  'kj.native': ['🎬 Hear how natives use it', '🎬 ネイティブ の つかいかた を きく'],
+  'kj.noneHere': ['No kanji here.', 'かんじ が ありません。'],
+
+  // v4: 単語
+  'wd.title': ['📝 Words for daily life', '📝 くらし の ことば'],
+  'wd.intro': ['Words you see and use every day. Each word shows its kanji, example sentences from the app, and links to hear natives say it.', 'まいにち みる・つかう ことば。かんじ、アプリ の れいぶん、ネイティブ の つかいかた が みられます。'],
+  'wd.all': ['✨ All words ({n})', '✨ ぜんぶ（{n}）'],
+  'wd.todo': ['📝 Not learned yet ({n})', '📝 まだ おぼえて ない（{n}）'],
+  'wd.know': ['✓ I know this word', '✓ この ことば を おぼえた'],
+  'wd.unknow': ['↩︎ Not learned yet', '↩︎ まだ おぼえて ない'],
+  'wd.kanji': ['✍️ Kanji in this word', '✍️ この ことば の かんじ'],
+  'wd.count': ['{n} / {m} learned', '{n} / {m} おぼえた'],
+  'wd.tapWord': ['Tap a word to see sentences and kanji.', 'ことば を タップ すると、れいぶん と かんじ が みられます。'],
+
+  // v4: 練習カード
+  'pr.tapPolite': ['👆 Tap the answer to see the polite version', '👆 こたえ を タップ すると ていねい に なります'],
+  'pr.sayCasual': ['Say it casually (like to Yoh-chan) — out loud!', 'ふつう に（ようちゃん に はなす ように）、こえ に だして！'],
+
+  // v4: ていねい と ふつう のガイド
+  'gd.title': ['💡 Polite vs Casual', '💡 ていねい と ふつう'],
+  'gd.examples': ['Try it: tap to switch', 'タップ で きりかえて みよう'],
+
+  // v4: ようちゃん に きく
+  'ask.btn': ['Ask Yoh-chan about this', 'ようちゃん に きく'],
+  'ask.title': ['💌 Ask Yoh-chan', '💌 ようちゃん に きく'],
+  'ask.intro': ['Want to say something but don\'t know how? Can\'t read a kanji? Want a new feature? Write it here and send it to Yoh-chan on LINE. Yoh-chan can then add it to the app for you.', 'いいたい こと が ある けど いいかた が わからない？ かんじ が よめない？ ほしい きのう が ある？ ここ に かいて、LINE で ようちゃん に おくって ね。ようちゃん が アプリ に ついか します。'],
+  'ask.type': ['What is it about?', 'なに に ついて？'],
+  'ask.t.say': ['💬 I want to say this', '💬 これ を いいたい'],
+  'ask.t.read': ['🔤 How do I read this?', '🔤 よみかた を しりたい'],
+  'ask.t.kanji': ['✍️ About a kanji', '✍️ かんじ に ついて'],
+  'ask.t.q': ['❓ I don\'t understand', '❓ わからない こと'],
+  'ask.t.feature': ['🛠️ Feature request', '🛠️ ほしい きのう'],
+  'ask.t.other': ['📝 Other', '📝 その ほか'],
+  'ask.ph': ['Write in English or Japanese…', 'えいご でも にほんご でも OK…'],
+  'ask.ctx': ['From: {c}', 'どこ から：{c}'],
+  'ask.line': ['Send on LINE', 'LINE で おくる'],
+  'ask.share': ['Share…', 'シェア…'],
+  'ask.copy': ['Copy', 'コピー'],
+  'ask.copied': ['Copied! Paste it into a message to Yoh-chan.', 'コピー しました！ ようちゃん への メッセージ に はりつけて ね。'],
+  'ask.saved': ['Saved to "My questions" ✓', '「わたし の しつもん」 に のこしました ✓'],
+  'ask.list': ['📋 My questions', '📋 わたし の しつもん'],
+  'ask.none': ['Nothing yet.', 'まだ ありません。'],
+  'ask.done': ['✓ Answered', '✓ かいけつ'],
+  'ask.markDone': ['Mark as answered', 'かいけつ に する'],
+  'ask.resend': ['Send again', 'もう いちど おくる'],
+  'ask.del': ['Delete', 'けす'],
+  'ask.empty': ['Please write something first.', 'さき に なにか かいて ね。'],
+  'ask.head': ['[Maru\'s Japanese app]', '【マルちゃんのペースでいいよ】'],
+
+  // v4: 地図
+  'map.title': ['🗾 Japan\'s 47 prefectures', '🗾 にほん の 47 とどうふけん'],
+  'map.intro': ['Each square is one prefecture, placed like the real map. Tap a square to learn its name, region, and what it\'s famous for.', 'しかく ひとつ が ひとつ の けん。ほんとう の ちず と おなじ ばしょ に ならんで います。タップ すると なまえ・ちほう・ゆうめい な もの が わかります。'],
+  'map.region': ['Region', 'ちほう'],
+  'map.capital': ['Capital city', 'けんちょう の ある まち'],
+  'map.famous': ['Famous for', 'ゆうめい な もの'],
+  'map.know': ['✓ I know this one', '✓ おぼえた'],
+  'map.unknow': ['↩︎ Not learned yet', '↩︎ まだ'],
+  'map.count': ['{n} / 47 learned', '{n} / 47 おぼえた'],
+  'map.quiz': ['❓ Map quiz', '❓ ちず クイズ'],
+  'map.stopQuiz': ['✕ Stop quiz', '✕ クイズ を やめる'],
+  'map.find': ['Where is {p}?', '{p} は どこ？'],
+  'map.right': ['⭕ Yes! That\'s {p}.', '⭕ せいかい！ {p} です。'],
+  'map.wrong': ['❌ That\'s {x}. {p} is the blinking one.', '❌ そこ は {x}。{p} は ひかって いる ところ。'],
+  'map.score': ['{s} / {t} correct', '{s} / {t} せいかい'],
+  'map.tapHint': ['Tap a prefecture', 'けん を タップ して ね'],
+
+  // v4: クイズ
+  'mode.words': ['📝 Words', '📝 たんご'],
+  'q.wMeaning': ['What does this word mean?', 'この ことば の いみ は？']
 };

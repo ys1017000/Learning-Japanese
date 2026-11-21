@@ -29,17 +29,23 @@
   <div class="menu-grid">
     <a class="menu-btn" href="cards.html"><span class="icon">🃏</span><span data-i18n="home.m.cards"></span></a>
     <a class="menu-btn" href="grammar.html"><span class="icon">🧩</span><span data-i18n="home.m.grammar"></span></a>
-    <a class="menu-btn" href="endings.html"><span class="icon">💬</span><span data-i18n="home.m.endings"></span></a>
+    <a class="menu-btn" href="guide.html"><span class="icon">💡</span><span data-i18n="home.m.guide"></span></a>
     <a class="menu-btn" href="kanji.html"><span class="icon">✍️</span><span data-i18n="home.m.kanji"></span></a>
+    <a class="menu-btn" href="words.html"><span class="icon">📝</span><span data-i18n="home.m.words"></span></a>
+    <a class="menu-btn" href="map.html"><span class="icon">🗾</span><span data-i18n="home.m.map"></span></a>
     <a class="menu-btn" href="read.html"><span class="icon">🗣️</span><span data-i18n="home.m.read"></span></a>
+    <a class="menu-btn" href="endings.html"><span class="icon">💬</span><span data-i18n="home.m.endings"></span></a>
     <a class="menu-btn" href="quiz.html"><span class="icon">❓</span><span data-i18n="home.m.quiz"></span></a>
   </div>
+  <a class="btn btn-line" href="ask.html" style="margin-bottom:1rem;">💌 <span data-i18n="home.m.ask"></span></a>
 
   <div class="card">
     <h2 data-i18n="home.progress"></h2>
     <div class="stats-grid two">
       <div><div class="stat-number" id="stLearned">0</div><div class="stat-label" data-i18n="st.cards"></div></div>
       <div><div class="stat-number" id="stKanji">0</div><div class="stat-label" data-i18n="st.kanji"></div></div>
+      <div><div class="stat-number" id="stWords">0</div><div class="stat-label" data-i18n="st.words"></div></div>
+      <div><div class="stat-number" id="stPref">0</div><div class="stat-label">🗾 / 47</div></div>
       <div><div class="stat-number" id="stAcc">–</div><div class="stat-label" data-i18n="st.acc"></div></div>
       <div><div class="stat-number" id="stStreak">0</div><div class="stat-label" data-i18n="st.streak"></div></div>
     </div>
@@ -92,6 +98,7 @@
 <script src="i18n.js"></script>
 <script src="data.js"></script>
 <script src="kanji-data.js"></script>
+<script src="words-data.js"></script>
 <script src="common.js"></script>
 <script>
 (function () {
@@ -105,6 +112,9 @@
     const ids = new Set(D.CARDS.map(c => c.id)), ks = new Set(K.KANJI.map(k => k.k));
     $('stLearned').textContent = d.learned.filter(x => ids.has(x)).length + '/' + D.CARDS.length;
     $('stKanji').textContent = d.kanji.filter(x => ks.has(x)).length + '/' + K.KANJI.length;
+    const ws = new Set(window.CJ_WORDS.WORDS.map(w => w.id));
+    $('stWords').textContent = d.words.filter(x => ws.has(x)).length + '/' + ws.size;
+    $('stPref').textContent = d.pref.length;
     $('stAcc').textContent = d.quiz.total ? Math.round(d.quiz.correct / d.quiz.total * 100) + '%' : '–';
     $('stStreak').textContent = CJ.calcStreak(d.history);
     const nWrong = Object.keys(d.wrong).length;

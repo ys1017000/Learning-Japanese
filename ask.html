@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ask Yoh-chan – マルちゃんのペースでいいよ</title>
+<meta name="theme-color" content="#e0517a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<header><a class="logo" href="index.html">🌸 マルちゃんのペースでいいよ</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
+
+<main class="container">
+  <div class="card">
+    <h2 data-i18n="ask.title"></h2>
+    <p class="muted" data-i18n="ask.intro"></p>
+  </div>
+  <div class="card">
+    <div style="font-weight:700; margin-bottom:0.3rem;" data-i18n="ask.type"></div>
+    <select class="pick" id="typeSel"></select>
+    <div class="muted" id="ctxText" style="margin-bottom:0.4rem;"></div>
+    <textarea id="text" rows="5" style="width:100%; font-size:16px; padding:0.6rem; border:1px solid var(--border); border-radius:10px; font-family:inherit;"></textarea>
+    <div class="btn-row" style="flex-wrap:wrap;">
+      <button class="btn btn-line" id="lineBtn">💬 <span data-i18n="ask.line"></span></button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="shareBtn">📤 <span data-i18n="ask.share"></span></button>
+      <button class="btn btn-secondary" id="copyBtn">📋 <span data-i18n="ask.copy"></span></button>
+    </div>
+  </div>
+  <div class="card">
+    <h2 data-i18n="ask.list"></h2>
+    <div id="list"></div>
+  </div>
+</main>
+
+<nav>
+  <a href="index.html" class="active"><span class="ni">🏠</span><span data-i18n="nav.home">Home</span></a>
+  <a href="practice.html"><span class="ni">🔥</span><span data-i18n="nav.today">Today</span></a>
+  <a href="cards.html"><span class="ni">📚</span><span data-i18n="nav.learn">Learn</span></a>
+  <a href="kanji.html"><span class="ni">✍️</span><span data-i18n="nav.kanji">Kanji</span></a>
+  <a href="read.html"><span class="ni">🗣️</span><span data-i18n="nav.read">Read</span></a>
+  <a href="quiz.html"><span class="ni">❓</span><span data-i18n="nav.quiz">Quiz</span></a>
+</nav>
+
+<script src="i18n.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
+  const ctx = new URLSearchParams(location.search).get('ctx') || '';
+  // どこから来たかで、種類を少し推測しておく
+  let type = /^漢字/.test(ctx) ? 'kanji' : /^単語/.test(ctx) ? 'read' : ctx ? 'q' : 'say';
+
+  function renderType() {
+    $('typeSel').innerHTML = CJ.ASK_TYPES.map(k => '<option value="' + k + '"' + (k === type ? ' selected' : '') + '>' + esc(t('ask.t.' + k)) + '</option>').join('');
+    $('ctxText').textContent = ctx ? t('ask.ctx', { c: ctx }) : '';
+    $('text').placeholder = t('ask.ph');
+  }
+  // ようちゃんに届くメッセージ（ようちゃんが読みやすいように、種類は日本語でも書く）
+  const TYPE_JA = { say: 'これを言いたい', read: '読み方を知りたい', kanji: '漢字について', q: 'わからないこと', feature: 'ほしい機能', other: 'その他' };
+  function message(a) {
+    return '【マルちゃんのペースでいいよ】' + TYPE_JA[a.type] + ' / ' + t('ask.t.' + a.type).replace(/^\S+\s/, '') + '\n' +
+      a.text + (a.ctx ? '\n(' + a.ctx + ')' : '');
+  }
+  function current() {
+    const text = $('text').value.trim();
+    if (!text) { CJ.toast(t('ask.empty')); $('text').focus(); return null; }
+    const a = CJ.addAsk(type, text, ctx);
+    $('text').value = ''; renderList(); CJ.toast(t('ask.saved'));
+    return a;
+  }
+  // LINE の「送る相手を選ぶ」画面を開く（スマホに LINE が入っていれば、そのまま ようちゃん を選べる）
+  function sendLine(a) { location.href = 'https://line.me/R/share?text=' + encodeURIComponent(message(a)); }
+  async function share(a) {
+    if (navigator.share) { try { await navigator.share({ text: message(a) }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+    copy(a);
+  }
+  async function copy(a) {
+    const s = message(a);
+    try { await navigator.clipboard.writeText(s); CJ.toast(t('ask.copied')); }
+    catch (e) { window.prompt(t('ask.copy'), s); }
+  }
+
+  function renderList() {
+    const asks = CJ.getData().asks;
+    $('list').innerHTML = asks.length ? asks.map(a => '<div class="ask-item' + (a.done ? ' done' : '') + '" data-id="' + a.id + '">' +
+      '<div class="meta">' + esc(t('ask.t.' + a.type)) + ' · ' + new Date(a.t).toLocaleDateString() + (a.done ? ' · ' + esc(t('ask.done')) : '') + '</div>' +
+      '<div style="white-space:pre-wrap;">' + esc(a.text) + '</div>' + (a.ctx ? '<div class="meta">' + esc(t('ask.ctx', { c: a.ctx })) + '</div>' : '') +
+      '<div class="ask-btns"><button class="tiny-btn" data-a="line">💬 LINE</button><button class="tiny-btn" data-a="copy">📋 ' + esc(t('ask.copy')) + '</button>' +
+      '<button class="tiny-btn" data-a="done">' + esc(a.done ? '↩︎' : t('ask.markDone')) + '</button><button class="tiny-btn" data-a="del">🗑 ' + esc(t('ask.del')) + '</button></div></div>').join('')
+      : '<p class="muted">' + esc(t('ask.none')) + '</p>';
+  }
+
+  $('typeSel').addEventListener('change', e => { type = e.target.value; });
+  $('lineBtn').addEventListener('click', () => { const a = current(); if (a) sendLine(a); });
+  $('shareBtn').addEventListener('click', () => { const a = current(); if (a) share(a); });
+  $('copyBtn').addEventListener('click', () => { const a = current(); if (a) copy(a); });
+  $('list').addEventListener('click', e => {
+    const b = e.target.closest('[data-a]'); if (!b) return;
+    const id = b.closest('[data-id]').dataset.id, a = CJ.getData().asks.find(x => x.id === id); if (!a) return;
+    if (b.dataset.a === 'line') sendLine(a);
+    else if (b.dataset.a === 'copy') copy(a);
+    else if (b.dataset.a === 'done') { CJ.updateAsk(id, x => { x.done = !x.done; }); renderList(); }
+    else if (b.dataset.a === 'del') { if (confirm(t('ask.del') + '?')) { CJ.updateAsk(id, x => { x.del = true; }); renderList(); } }
+  });
+  document.addEventListener('cj:lang', () => { renderType(); renderList(); });
+  renderType(); renderList();
+})();
+</script>
+</body>
+</html>

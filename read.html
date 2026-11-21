@@ -19,14 +19,14 @@
     <div class="notice" id="noMic" style="display:none;" data-i18n="rd.noMic"></div>
   </div>
 
-  <div class="chip-row" id="pRow" role="group"></div>
+  <select class="pick" id="pSel" aria-label="Conversation"></select>
 
   <div class="card" id="pBox">
     <div class="rd-head">
       <b id="pTitle"></b>
       <button class="tiny-btn" id="playAll"></button>
     </div>
-    <div class="setting-row" style="padding-top:0;"><label for="optKanji" data-i18n="rd.kanji"></label><input type="checkbox" id="optKanji"></div>
+    <div style="margin-bottom:0.3rem;"><label class="kj-toggle"><input type="checkbox" data-kanji-toggle> <span data-i18n="rd.kanji"></span></label></div>
     <div class="chip-row" style="margin:0.5rem 0 0.2rem;">
       <button class="chip" id="allC" data-i18n="rd.allC"></button>
       <button class="chip" id="allP" data-i18n="rd.allP"></button>
@@ -48,15 +48,21 @@
 </nav>
 
 <script src="i18n.js"></script>
-<script src="kanji-data.js"></script>
+<script src="data.js"></script>
+<script src="grammar-data.js"></script>
 <script src="read-data.js"></script>
+<script src="examples-data.js"></script>
+<script src="kanji-data.js"></script>
+<script src="words-data.js"></script>
 <script src="common.js"></script>
+<script src="bank.js"></script>
 <script>
 (function () {
-  const R = window.CJ_READ, K = window.CJ_KANJI, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
+  const R = window.CJ_READ, K = window.CJ_KANJI, B = window.CJ_BANK, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
   let pid = new URLSearchParams(location.search).get('p');
   if (!R.PASSAGES.some(p => p.id === pid)) pid = R.PASSAGES[0].id;
   let playing = false, listeningIdx = -1, curRec = null;
+  const openExt = {};     // 行番号 → 🎬（アプリの外のリンク）を開いているか
   let regs = {};          // 行番号 → 'c'（ふつう）/ 'p'（ていねい）。カードをタップで切り替え
   const results = {};     // 行番号 → { score, heard }（このページを開いている間だけ）
   const P = () => R.PASSAGES.find(p => p.id === pid);
@@ -66,8 +72,9 @@
 
   if (!CJ.recognitionSupported) $('noMic').style.display = '';
 
+  // 会話は「えらぶ」（セレクト）にする
   function renderTabs() {
-    $('pRow').innerHTML = R.PASSAGES.map(p => '<button class="chip' + (p.id === pid ? ' active' : '') + '" data-p="' + p.id + '">' + p.icon + ' ' + esc(CJ.tx(p, 'title')) + '</button>').join('');
+    $('pSel').innerHTML = R.PASSAGES.map(p => '<option value="' + p.id + '"' + (p.id === pid ? ' selected' : '') + '>' + p.icon + ' ' + esc(CJ.tx(p, 'title')) + '</option>').join('');
   }
 
   function resultHtml(n) {
@@ -82,9 +89,8 @@
 
   function render() {
     renderTabs();
-    const p = P(), best = CJ.getData().read, showK = !!CJ.getPrefs().readKanji;
+    const p = P(), best = CJ.getData().read;
     $('pTitle').textContent = p.icon + ' ' + CJ.tx(p, 'title');
-    $('optKanji').checked = showK;
     $('playAll').textContent = t(playing ? 'rd.stop' : 'rd.playAll');
     const allReg = p.lines.every((l, n) => regOf(n) === 'p') ? 'p' : p.lines.every((l, n) => regOf(n) === 'c') ? 'c' : '';
     $('allC').classList.toggle('active', allReg === 'c'); $('allP').classList.toggle('active', allReg === 'p');
@@ -93,12 +99,13 @@
       return '<div class="rd-line flip ' + (isP ? 'is-p' : 'is-c') + '" id="line' + n + '" data-line="' + n + '">' +
         '<div class="flip-top"><span class="reg ' + (isP ? 'polite' : 'casual') + '">' + t(isP ? 'reg.polite' : 'reg.casual') + '</span>' +
           '<span class="flip-hint">' + esc(same ? t('tap.same') : t('tap.short')) + '</span></div>' +
-        '<div class="k ja">' + (showK ? K.rubyHtml(f[2], esc) : esc(f[0])) + '</div>' +
+        '<div class="k ja">' + CJ.jaHtml(f) + '</div>' +
         '<div class="romaji">' + esc(f[1]) + '</div><div class="e">' + esc(l[0]) + '</div>' +
         '<div class="rd-tools">' + CJ.sayBtns(f[0]) +
           (CJ.recognitionSupported ? '<button class="mic-btn' + (listeningIdx === n ? ' on' : '') + '" data-mic="' + n + '" aria-label="' + esc(t('rd.mic')) + '">🎙️</button>' : '') +
+          '<button class="icon-btn" data-ext="' + n + '" aria-label="' + esc(t('kj.native')) + '">🎬</button>' + CJ.askLink(f[0] + ' (' + l[0] + ')') +
           (b ? '<span class="rd-best">' + (b >= CJ.PASS_SCORE ? '⭐ ' : '') + esc(t('rd.best', { s: b })) + '</span>' : '') +
-        '</div>' + resultHtml(n) + '</div>';
+        '</div>' + (openExt[n] ? CJ.extLinks(f) : '') + B.linksHtml(B.byKey['rd:' + pid + ':' + n], 6) + resultHtml(n) + '</div>';
     }).join('');
     const good = p.lines.filter((l, n) => (best[key(n)] || 0) >= CJ.PASS_SCORE).length;
     $('doneText').textContent = CJ.recognitionSupported ? t('rd.done', { n: good, m: p.lines.length }) : '';
@@ -146,11 +153,12 @@
     playing = true; $('playAll').textContent = t('rd.stop'); playFrom(0); CJ.markStudied();
   });
 
-  function resetFor(newPid) { stopAll(); pid = newPid; regs = {}; Object.keys(results).forEach(k => delete results[k]); listeningIdx = -1; render(); }
-  $('pRow').addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (b) resetFor(b.dataset.p); });
+  function resetFor(newPid) { stopAll(); pid = newPid; regs = {}; Object.keys(openExt).forEach(k => delete openExt[k]); Object.keys(results).forEach(k => delete results[k]); listeningIdx = -1; render(); }
+  $('pSel').addEventListener('change', e => resetFor(e.target.value));
   $('lines').addEventListener('click', e => {
     const m = e.target.closest('[data-mic]'); if (m) { check(Number(m.dataset.mic)); return; }
-    if (e.target.closest('[data-say]')) return;   // 🔊 は切り替えない
+    const x = e.target.closest('[data-ext]'); if (x) { openExt[x.dataset.ext] = !openExt[x.dataset.ext]; render(); return; }
+    if (e.target.closest('[data-say], a')) return;   // 🔊 やリンクは切り替えない
     const c = e.target.closest('[data-line]'); if (!c || listeningIdx >= 0) return;
     const n = Number(c.dataset.line);
     regs[n] = regOf(n) === 'p' ? 'c' : 'p';
@@ -160,7 +168,7 @@
   const setAll = r => { stopAll(); P().lines.forEach((l, n) => { regs[n] = r; delete results[n]; }); render(); };
   $('allC').addEventListener('click', () => setAll('c'));
   $('allP').addEventListener('click', () => setAll('p'));
-  $('optKanji').addEventListener('change', e => { CJ.setPref('readKanji', e.target.checked); render(); });
+  document.addEventListener('cj:kanji', render);
   document.addEventListener('cj:lang', render);
   render();
 })();

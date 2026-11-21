@@ -232,3 +232,66 @@ header { padding-left: 0.9rem; padding-right: 0.9rem; }
 .head-right { flex-shrink: 0; gap: 4px; }
 .lang-btn { padding: 4px 8px; font-size: 0.75rem; }
 .streak-badge { padding: 4px 8px; }
+
+/* ---- v4: えらぶ（カテゴリーの選択） ---- */
+.pick { width: 100%; padding: 0.7rem 0.9rem; border: 1px solid var(--border); border-radius: 10px; background: #fff; font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 0.8rem; font-family: inherit; }
+.kj-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; background: #fff; }
+.kj-toggle input { width: 18px; height: 18px; accent-color: var(--primary); }
+.tool-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 0.8rem; }
+.flip .k ruby rt, .rd-line .k ruby rt, .dr-ans .k ruby rt, .big-ja ruby rt { font-size: 0.5em; }
+
+/* ---- v4: つながり（この文の漢字・単語）と、アプリの外のリンク ---- */
+.link-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 0.45rem; }
+.link-chip { font-size: 0.78rem; text-decoration: none; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--border); background: #fff; color: var(--text); font-weight: 700; }
+.link-chip.kj { border-color: #c4b5fd; color: #5b21b6; background: #f5f3ff; }
+.link-chip.wd { border-color: #a7f3d0; color: #065f46; background: #ecfdf5; }
+.ext-links { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 0.45rem; }
+.ext-link { font-size: 0.75rem; text-decoration: none; padding: 2px 9px; border-radius: 6px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
+.ask-link { text-decoration: none; font-size: 1.05rem; padding: 2px 6px; border-radius: 8px; }
+.ask-link:active { background: var(--primary-soft); }
+
+/* ---- v4: 単語 ---- */
+.wd-list { display: flex; flex-direction: column; gap: 6px; }
+.wd-item { display: flex; align-items: center; gap: 8px; padding: 0.55rem 0.7rem; border: 1px solid var(--border); border-radius: 10px; background: #fff; cursor: pointer; }
+.wd-item.learned { background: #f0fdf4; border-color: #bbf7d0; }
+.wd-item.current { box-shadow: 0 0 0 2px var(--primary); }
+.wd-item .k { font-size: 1.15rem; font-weight: 800; min-width: 5.5em; }
+.wd-item .e { font-size: 0.85rem; color: #475569; flex: 1; }
+.wd-big { font-size: 2.2rem; font-weight: 800; text-align: center; line-height: 1.5; }
+.wd-big ruby rt { font-size: 0.42em; }
+
+/* ---- v4: ガイド ---- */
+.gd-sec h3 { font-size: 1rem; margin-bottom: 0.4rem; }
+.gd-sec p, .gd-sec li { font-size: 0.92rem; }
+.gd-sec ul { padding-left: 1.1rem; }
+.gd-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.gd-table td, .gd-table th { padding: 5px 4px; border-bottom: 1px dashed var(--border); text-align: left; vertical-align: top; }
+.gd-table th { font-size: 0.72rem; color: var(--text-muted); }
+.gd-table td.p { color: var(--polite); font-weight: 700; } .gd-table td.c { color: var(--casual); font-weight: 700; }
+
+/* ---- v4: ようちゃん に きく ---- */
+.ask-item { border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 0.75rem; margin-bottom: 0.5rem; background: #fff; }
+.ask-item.done { opacity: 0.6; }
+.ask-item .meta { font-size: 0.75rem; color: var(--text-muted); }
+.ask-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 0.4rem; }
+.btn-line { background: #06c755; } .btn-line:hover { background: #05a647; }
+
+/* ---- v4: 日本地図（タイル） ---- */
+.jp-map { display: grid; grid-template-columns: repeat(13, 1fr); gap: 3px; margin: 0.4rem 0 0.8rem; }
+.jp-tile { aspect-ratio: 1; border: none; border-radius: 5px; font-size: 0.62rem; font-weight: 800; color: #1e293b; cursor: pointer; padding: 0; line-height: 1.05; font-family: "Hiragino Sans", "Noto Sans JP", "Noto Sans CJK JP", sans-serif; position: relative; }
+.jp-tile.wide { aspect-ratio: auto; }
+.jp-tile.learned::after { content: '✓'; position: absolute; top: 0; right: 2px; font-size: 0.55rem; color: #166534; }
+.jp-tile.sel { outline: 3px solid #1e293b; outline-offset: 1px; z-index: 1; }
+.jp-tile.ok { outline: 3px solid #16a34a; }
+.jp-tile.ng { outline: 3px solid #dc2626; }
+.jp-tile.blink { animation: blink 0.6s 4; outline: 3px solid #1e293b; }
+@keyframes blink { 50% { opacity: 0.25; } }
+@media (prefers-reduced-motion: reduce) { .jp-tile.blink { animation: none; } }
+.reg-legend { display: flex; flex-wrap: wrap; gap: 4px; font-size: 0.72rem; }
+.reg-legend span { padding: 1px 7px; border-radius: 999px; }
+.map-name { font-size: 1.8rem; font-weight: 800; text-align: center; line-height: 1.6; }
+.map-name ruby rt { font-size: 0.45em; }
+
+/* よみかたを隠す：漢字・単語の詳しい表示と一覧の、ふりがな と ローマ字 */
+body.hide-furi #detail rt, body.hide-furi #detail .romaji, body.hide-furi .wd-list rt { visibility: hidden; }
+.menu-btn { font-size: 0.78rem; }

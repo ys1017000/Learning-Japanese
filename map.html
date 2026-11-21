@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Japan map – マルちゃんのペースでいいよ</title>
+<meta name="theme-color" content="#e0517a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<header><a class="logo" href="index.html">🌸 マルちゃんのペースでいいよ</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
+
+<main class="container">
+  <div class="subnav">
+    <a href="kanji.html" data-i18n="sub.kanji">Kanji</a>
+    <a href="words.html" data-i18n="sub.words">Words</a>
+    <a href="map.html" class="active" data-i18n="sub.map">Map</a>
+  </div>
+  <div class="card">
+    <h2 data-i18n="map.title"></h2>
+    <p class="muted" data-i18n="map.intro"></p>
+  </div>
+  <div class="card" id="quizBar" style="display:none;"></div>
+  <div class="counter"><span class="muted" id="countText"></span><button class="tiny-btn" id="quizBtn"></button></div>
+  <div class="jp-map" id="map" role="group" aria-label="Japan map"></div>
+  <div class="reg-legend" id="legend"></div>
+  <div class="card" id="detail" style="margin-top:0.8rem;"></div>
+</main>
+
+<nav>
+  <a href="index.html"><span class="ni">🏠</span><span data-i18n="nav.home">Home</span></a>
+  <a href="practice.html"><span class="ni">🔥</span><span data-i18n="nav.today">Today</span></a>
+  <a href="cards.html"><span class="ni">📚</span><span data-i18n="nav.learn">Learn</span></a>
+  <a href="kanji.html" class="active"><span class="ni">✍️</span><span data-i18n="nav.kanji">Kanji</span></a>
+  <a href="read.html"><span class="ni">🗣️</span><span data-i18n="nav.read">Read</span></a>
+  <a href="quiz.html"><span class="ni">❓</span><span data-i18n="nav.quiz">Quiz</span></a>
+</nav>
+
+<script src="i18n.js"></script>
+<script src="kanji-data.js"></script>
+<script src="pref-data.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+  const M = window.CJ_PREF, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
+  const byId = {}; M.PREFS.forEach(p => { byId[p.id] = p; });
+  let sel = 'tokyo', quiz = null;   // quiz = { order: [ID], i, score, answered }
+
+  const nameRuby = p => CJ.ruby(p.kj);
+  const nameKana = p => CJ.reading(p.kj);
+  // しかく に書く短い名前（漢字2文字まで）
+  const tileLabel = p => { const s = CJ.plain(p.kj); return s.length > 2 ? s.slice(0, 2) : s; };
+
+  function renderMap() {
+    const learned = new Set(CJ.getData().pref);
+    $('map').innerHTML = M.PREFS.map(p => {
+      let cls = 'jp-tile';
+      if (learned.has(p.id)) cls += ' learned';
+      if (!quiz && p.id === sel) cls += ' sel';
+      if (quiz && quiz.answered) {
+        const target = quiz.order[quiz.i];
+        if (p.id === target) cls += quiz.answered === target ? ' ok' : ' blink';
+        else if (p.id === quiz.answered) cls += ' ng';
+      }
+      return '<button class="' + cls + '" data-p="' + p.id + '" style="grid-column:' + (p.x + 1) + ' / span ' + p.w + '; grid-row:' + (p.y + 1) + '; background:' + M.REGIONS[p.reg].color + ';' + (p.w > 1 ? ' aspect-ratio:' + p.w + ' / 1;' : '') + '" aria-label="' + esc(p.en) + '">' + esc(tileLabel(p)) + '</button>';
+    }).join('');
+    $('legend').innerHTML = Object.keys(M.REGIONS).map(k => '<span style="background:' + M.REGIONS[k].color + ';">' + (CJ.lang() === 'ja' ? esc(CJ.reading(M.REGIONS[k].kj)) : esc(M.REGIONS[k].en)) + '</span>').join('');
+    $('countText').textContent = t('map.count', { n: learned.size });
+    $('quizBtn').textContent = t(quiz ? 'map.stopQuiz' : 'map.quiz');
+  }
+
+  function renderDetail() {
+    const p = byId[sel], box = $('detail');
+    if (!p || quiz) { box.style.display = quiz ? 'none' : ''; return; }
+    box.style.display = '';
+    const learned = CJ.getData().pref.includes(p.id), R = M.REGIONS[p.reg];
+    box.innerHTML = '<div class="map-name ja">' + nameRuby(p) + '</div>' +
+      '<div style="text-align:center;"><span class="romaji">' + esc(p.en) + '</span> ' + CJ.sayBtns(nameKana(p)) + '</div>' +
+      '<div class="kj-read" style="margin-top:0.6rem;"><span class="lbl">' + esc(t('map.region')) + '</span><span class="v ja">' + CJ.ruby(R.kj) + ' <span class="muted" style="font-weight:400;">' + esc(R.en) + '</span></span>' +
+      '<span class="lbl">' + esc(t('map.capital')) + '</span><span class="v ja">' + CJ.ruby(p.cap) + '</span></div>' +
+      '<div class="kj-box img">⭐ ' + esc(t('map.famous')) + '：' + esc(CJ.lang() === 'ja' ? p.famJa : p.fam) + '</div>' +
+      CJ.extLinks([nameKana(p), p.en, p.kj]) +
+      '<div style="text-align:right;">' + CJ.askLink('都道府県 ' + CJ.plain(p.kj)) + '</div>' +
+      '<button class="btn ' + (learned ? 'btn-secondary' : 'btn-ok') + '" data-act="learn" style="margin-top:0.5rem;">' + esc(t(learned ? 'map.unknow' : 'map.know')) + '</button>';
+  }
+
+  /* ---- ちず クイズ：「〇〇 は どこ？」 → しかく を タップ ---- */
+  function renderQuiz() {
+    const bar = $('quizBar');
+    if (!quiz) { bar.style.display = 'none'; return; }
+    bar.style.display = '';
+    if (quiz.i >= quiz.order.length) {
+      bar.innerHTML = '<div class="score-big">' + quiz.score + ' / ' + quiz.order.length + '</div><button class="btn" data-act="again">' + esc(t('q.again')) + '</button>';
+      return;
+    }
+    const p = byId[quiz.order[quiz.i]];
+    let html = '<div class="counter"><span class="muted">' + esc(t('q.num', { i: quiz.i + 1, n: quiz.order.length })) + '</span><span class="muted">⭕ ' + quiz.score + '</span></div>' +
+      '<div class="q-text" style="text-align:center;">' + t('map.find', { p: '<span class="ja" style="font-size:1.4rem;">' + nameRuby(p) + '</span>' }) + '</div>';
+    if (quiz.answered) {
+      const ok = quiz.answered === p.id, x = byId[quiz.answered];
+      html += '<div class="feedback ' + (ok ? 'correct' : 'wrong') + '">' + (ok ? t('map.right', { p: nameRuby(p) }) : t('map.wrong', { x: nameRuby(x), p: nameRuby(p) })) +
+        '<div class="muted" style="margin-top:0.3rem;">⭐ ' + esc(CJ.lang() === 'ja' ? p.famJa : p.fam) + '</div>' +
+        '<button class="btn" data-act="next" style="margin-top:0.6rem;">' + esc(t('q.next')) + '</button></div>';
+    } else html += '<p class="muted" style="text-align:center;">' + esc(t('map.tapHint')) + '</p>';
+    bar.innerHTML = html;
+  }
+  function startQuiz() { quiz = { order: CJ.shuffle(M.PREFS.map(p => p.id)).slice(0, 10), i: 0, score: 0, answered: null }; render(); $('quizBar').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+
+  function render() { renderMap(); renderDetail(); renderQuiz(); }
+
+  $('map').addEventListener('click', e => {
+    const b = e.target.closest('[data-p]'); if (!b) return;
+    if (quiz) {
+      if (quiz.answered || quiz.i >= quiz.order.length) return;
+      quiz.answered = b.dataset.p;
+      const target = quiz.order[quiz.i];
+      if (quiz.answered === target) quiz.score++;
+      CJ.speak(nameKana(byId[target]));
+      CJ.markStudied();
+      render();
+      return;
+    }
+    sel = b.dataset.p; render();
+    CJ.speak(nameKana(byId[sel]));
+    $('detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+  $('quizBtn').addEventListener('click', () => { if (quiz) { quiz = null; render(); } else startQuiz(); });
+  document.addEventListener('click', e => {
+    const b = e.target.closest('#detail [data-act], #quizBar [data-act]'); if (!b) return;
+    if (b.dataset.act === 'learn') { const on = CJ.togglePref(sel); CJ.toast(t(on ? 'toast.learned' : 'toast.unlearned')); render(); }
+    else if (b.dataset.act === 'next') { quiz.i++; quiz.answered = null; render(); }
+    else if (b.dataset.act === 'again') startQuiz();
+  });
+  document.addEventListener('cj:lang', render);
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+/* マルちゃんのペースでいいよ - 単語（くらしの中でよく見る・使う言葉）
+   1行 = [漢字の書き方（{漢字|よみ}）, ローマ字, 英語, ジャンル, 例文さがし用の文字（省略可）]
+   例文は「文の倉庫」（カード・文法・よむ・例文）から、この単語をふくむ文を自動で集めて表示する。
+   活用する言葉（たのしい → たのしかった）は、5つ目に「楽し」のような さがす文字 を入れる */
+(function () {
+  "use strict";
+  const CATS = [
+    { id: 'food', label: '🍽️ Food & drinks', labelJa: '🍽️ たべもの・のみもの' },
+    { id: 'town', label: '🚉 Town & station', labelJa: '🚉 まち・えき' },
+    { id: 'time', label: '🕒 Time & plans', labelJa: '🕒 じかん・よてい' },
+    { id: 'nature', label: '🌿 Nature & seasons', labelJa: '🌿 しぜん・きせつ' },
+    { id: 'feel', label: '💕 Feelings & people', labelJa: '💕 きもち・ひと' },
+    { id: 'work', label: '🏫 Work & school', labelJa: '🏫 しごと・がっこう' },
+    { id: 'hobby', label: '🔮 Hobbies & fun', labelJa: '🔮 しゅみ・あそび' }
+  ];
+  const RAW = [
+    // たべもの・のみもの
+    ['{抹茶|まっちゃ}', 'maccha', 'matcha', 'food'],
+    ['{焼肉|やきにく}', 'yakiniku', 'Japanese BBQ', 'food'],
+    ['{食|た}べ{物|もの}', 'tabemono', 'food', 'food'],
+    ['{飲|の}み{物|もの}', 'nomimono', 'drink', 'food'],
+    ['お{水|みず}', 'omizu', 'water', 'food'],
+    ['お{茶|ちゃ}', 'ocha', 'tea', 'food'],
+    ['{朝|あさ}ごはん', 'asagohan', 'breakfast', 'food'],
+    ['{昼|ひる}ごはん', 'hirugohan', 'lunch', 'food'],
+    ['{夜|よる}ごはん', 'yorugohan', 'dinner', 'food'],
+    ['{肉|にく}', 'niku', 'meat', 'food'],
+    ['{魚|さかな}', 'sakana', 'fish', 'food'],
+    ['{野菜|やさい}', 'yasai', 'vegetables', 'food'],
+    ['お{酒|さけ}', 'osake', 'alcohol / sake', 'food'],
+    ['{赤|あか}ワイン', 'aka wain', 'red wine', 'food'],
+    ['{生|なま}ビール', 'nama biiru', 'draft beer', 'food'],
+    ['お{会計|かいけい}', 'okaikei', 'the bill', 'food'],
+    ['{店員|てんいん}', 'ten\'in', 'shop staff', 'food'],
+    ['{予約|よやく}', 'yoyaku', 'reservation', 'food'],
+    // まち・えき
+    ['{駅|えき}', 'eki', 'station', 'town'],
+    ['{出口|でぐち}', 'deguchi', 'exit', 'town'],
+    ['{入口|いりぐち}', 'iriguchi', 'entrance', 'town'],
+    ['{北口|きたぐち}', 'kitaguchi', 'north exit', 'town'],
+    ['{改札|かいさつ}', 'kaisatsu', 'ticket gate', 'town'],
+    ['{電車|でんしゃ}', 'densha', 'train', 'town'],
+    ['{地下鉄|ちかてつ}', 'chikatetsu', 'subway', 'town'],
+    ['{切符|きっぷ}', 'kippu', 'ticket', 'town'],
+    ['{右|みぎ}', 'migi', 'right', 'town'],
+    ['{左|ひだり}', 'hidari', 'left', 'town'],
+    ['{道|みち}', 'michi', 'road, way', 'town'],
+    ['{営業中|えいぎょうちゅう}', 'eigyouchuu', 'open (shop sign)', 'town'],
+    ['{押|お}す', 'osu', 'push (door sign: 押)', 'town', '押'],
+    ['{引|ひ}く', 'hiku', 'pull (door sign: 引)', 'town', '引'],
+    ['{禁煙|きんえん}', 'kin\'en', 'no smoking', 'town'],
+    ['{無料|むりょう}', 'muryou', 'free (no charge)', 'town'],
+    ['{現金|げんきん}', 'genkin', 'cash', 'town'],
+    ['お{手洗|てあら}い', 'otearai', 'restroom', 'town'],
+    ['{近|ちか}く', 'chikaku', 'nearby', 'town'],
+    // じかん・よてい
+    ['{今日|きょう}', 'kyou', 'today', 'time'],
+    ['{明日|あした}', 'ashita', 'tomorrow', 'time'],
+    ['{昨日|きのう}', 'kinou', 'yesterday', 'time'],
+    ['{今|いま}', 'ima', 'now', 'time'],
+    ['{今週|こんしゅう}', 'konshuu', 'this week', 'time'],
+    ['{来週|らいしゅう}', 'raishuu', 'next week', 'time'],
+    ['{週末|しゅうまつ}', 'shuumatsu', 'weekend', 'time'],
+    ['{今夜|こんや}', 'kon\'ya', 'tonight', 'time'],
+    ['{予定|よてい}', 'yotei', 'plan, schedule', 'time'],
+    ['{時間|じかん}', 'jikan', 'time', 'time'],
+    ['{遅刻|ちこく}', 'chikoku', 'being late', 'time'],
+    ['{待|ま}ち{合|あ}わせ', 'machiawase', 'meeting up', 'time'],
+    ['{約束|やくそく}', 'yakusoku', 'promise / plan', 'time'],
+    ['{連絡|れんらく}', 'renraku', 'contact, message', 'time'],
+    // しぜん・きせつ
+    ['{山|やま}', 'yama', 'mountain', 'nature'],
+    ['{川|かわ}', 'kawa', 'river', 'nature'],
+    ['{空|そら}', 'sora', 'sky', 'nature'],
+    ['{森|もり}', 'mori', 'forest', 'nature'],
+    ['{自然|しぜん}', 'shizen', 'nature', 'nature'],
+    ['{天気|てんき}', 'tenki', 'weather', 'nature'],
+    ['{雨|あめ}', 'ame', 'rain', 'nature'],
+    ['{雪|ゆき}', 'yuki', 'snow', 'nature'],
+    ['{晴|は}れ', 'hare', 'sunny weather', 'nature'],
+    ['{桜|さくら}', 'sakura', 'cherry blossoms', 'nature'],
+    ['お{花見|はなみ}', 'ohanami', 'cherry blossom viewing', 'nature', '花見'],
+    ['{紅葉|こうよう}', 'kouyou', 'autumn leaves', 'nature'],
+    ['{春|はる}', 'haru', 'spring', 'nature'],
+    ['{夏|なつ}', 'natsu', 'summer', 'nature'],
+    ['{秋|あき}', 'aki', 'autumn', 'nature'],
+    ['{冬|ふゆ}', 'fuyu', 'winter', 'nature'],
+    ['{緑色|みどりいろ}', 'midoriiro', 'green', 'nature'],
+    ['{水色|みずいろ}', 'mizuiro', 'light blue', 'nature'],
+    // きもち・ひと
+    ['{元気|げんき}', 'genki', 'fine, healthy', 'feel'],
+    ['{大丈夫|だいじょうぶ}', 'daijoubu', 'OK, all right', 'feel'],
+    ['{好|す}き', 'suki', 'like', 'feel', '好'],
+    ['{大好|だいす}き', 'daisuki', 'love, really like', 'feel', '大好'],
+    ['{楽|たの}しい', 'tanoshii', 'fun', 'feel', '楽し'],
+    ['{怖|こわ}い', 'kowai', 'scary', 'feel', '怖'],
+    ['{寒|さむ}い', 'samui', 'cold', 'feel', '寒'],
+    ['{疲|つか}れる', 'tsukareru', 'get tired', 'feel', '疲'],
+    ['{忙|いそが}しい', 'isogashii', 'busy', 'feel', '忙し'],
+    ['{会|あ}いたい', 'aitai', 'I want to see you', 'feel', '会いた'],
+    ['{友|とも}だち', 'tomodachi', 'friend', 'feel'],
+    ['{家族|かぞく}', 'kazoku', 'family', 'feel'],
+    ['{名前|なまえ}', 'namae', 'name', 'feel'],
+    // しごと・がっこう
+    ['{学校|がっこう}', 'gakkou', 'school', 'work'],
+    ['{先生|せんせい}', 'sensei', 'teacher', 'work'],
+    ['{英語|えいご}', 'eigo', 'English', 'work'],
+    ['{日本語|にほんご}', 'nihongo', 'Japanese', 'work'],
+    ['{仕事|しごと}', 'shigoto', 'work, job', 'work'],
+    ['{勉強|べんきょう}', 'benkyou', 'study', 'work'],
+    ['{学生|がくせい}', 'gakusei', 'student', 'work'],
+    ['{教師|きょうし}', 'kyoushi', 'teacher (job title)', 'work'],
+    // しゅみ・あそび
+    ['{映画|えいが}', 'eiga', 'movie', 'hobby'],
+    ['{写真|しゃしん}', 'shashin', 'photo', 'hobby'],
+    ['{占|うらな}い', 'uranai', 'fortune-telling', 'hobby', '占'],
+    ['{旅行|りょこう}', 'ryokou', 'trip, travel', 'hobby'],
+    ['{日帰|ひがえ}り', 'higaeri', 'day trip', 'hobby'],
+    ['{散歩|さんぽ}', 'sanpo', 'walk, stroll', 'hobby'],
+    ['{音楽|おんがく}', 'ongaku', 'music', 'hobby']
+  ];
+  const plain = s => String(s).replace(/\{([^|}]+)\|([^}]+)\}/g, '$1');
+  const reading = s => String(s).replace(/\{([^|}]+)\|([^}]+)\}/g, '$2');
+  const WORDS = RAW.map(r => ({ id: plain(r[0]), kj: r[0], kana: reading(r[0]), r: r[1], en: r[2], cat: r[3], m: r[4] || plain(r[0]) }));
+  window.CJ_WORDS = { CATS, WORDS };
+})();

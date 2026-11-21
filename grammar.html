@@ -17,10 +17,12 @@
     <a href="cards.html" data-i18n="sub.cards">Polite ⇔ Casual</a>
     <a href="endings.html" data-i18n="sub.endings">Endings</a>
     <a href="grammar.html" class="active" data-i18n="sub.grammar">Grammar</a>
+    <a href="guide.html" data-i18n="sub.guide">Tips</a>
   </div>
   <div class="card">
     <h2 data-i18n="gr.title"></h2>
     <p data-i18n="gr.intro"></p>
+    <div style="margin-top:0.6rem;"><label class="kj-toggle"><input type="checkbox" data-kanji-toggle> <span data-i18n="rd.kanji"></span></label></div>
   </div>
   <div id="list"></div>
 </main>
@@ -35,20 +37,24 @@
 </nav>
 
 <script src="i18n.js"></script>
+<script src="data.js"></script>
 <script src="grammar-data.js"></script>
+<script src="read-data.js"></script>
+<script src="examples-data.js"></script>
+<script src="kanji-data.js"></script>
+<script src="words-data.js"></script>
 <script src="common.js"></script>
+<script src="bank.js"></script>
 <script>
 (function () {
-  const G = window.CJ_GRAMMAR.GRAMMAR, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
+  const G = window.CJ_GRAMMAR.GRAMMAR, B = window.CJ_BANK, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
   const flipped = {};   // 'gid:i' → true ならていねいを表示（最初は ふつう）
   let openIds = new Set([new URLSearchParams(location.search).get('g') || G[0].id]);
 
-  // タップで ふつう ⇔ ていねい が切り替わるカード（よむページと同じ形）
-  function flipCard(id, en, c, p) {
-    const isP = !!flipped[id], f = isP ? p : c;
-    return '<div class="ex-row flip ' + (isP ? 'is-p' : 'is-c') + '" data-flip="' + esc(id) + '"><div style="flex:1; min-width:0;">' +
-      '<div class="flip-top"><span class="reg ' + (isP ? 'polite' : 'casual') + '">' + t(isP ? 'reg.polite' : 'reg.casual') + '</span><span class="flip-hint">' + esc(t('tap.short')) + '</span></div>' +
-      '<div class="k ja">' + esc(f[0]) + '</div><div class="romaji">' + esc(f[1]) + '</div><div class="e">' + esc(en) + '</div></div>' + CJ.sayBtns(f[0]) + '</div>';
+  // タップで ふつう ⇔ ていねい が切り替わるカード（共通の形）。下に、この文の漢字・単語へのリンク
+  function flipCard(id) {
+    const it = B.byKey['gr:' + id];
+    return CJ.flipHtml(id, it, !!flipped[id], B.linksHtml(it, 5));
   }
 
   function render() {
@@ -62,13 +68,13 @@
           g.table.map(r => '<tr><td>' + esc(r[0]) + '</td><td class="c">' + esc(r[1]) + '</td><td class="p">' + esc(r[2]) + '</td></tr>').join('') + '</table>' : '') +
         '<div style="font-weight:700; margin:0.8rem 0 0.2rem; font-size:0.85rem;">' + esc(t('gr.examples')) + '</div>' +
         '<div class="tap-hint">' + esc(t('tap.hint')) + '</div>' +
-        g.ex.map((e, i) => flipCard(g.id + ':' + i, e[0], [e[1], e[2]], [e[3], e[4]])).join('') +
+        g.ex.map((e, i) => flipCard(g.id + ':' + i)).join('') +
         '<a class="btn" href="practice.html?g=' + g.id + '" style="margin-top:0.6rem;">' + esc(t('gr.practice')) + '</a>' +
       '</div></details>').join('');
   }
 
   $('list').addEventListener('click', e => {
-    if (e.target.closest('[data-say]')) return;   // 🔊 を押したときは切り替えない
+    if (e.target.closest('[data-say], a')) return;   // 🔊 やリンクを押したときは切り替えない
     const c = e.target.closest('[data-flip]'); if (!c) return;
     flipped[c.dataset.flip] = !flipped[c.dataset.flip];
     render();
@@ -78,6 +84,7 @@
     if (d.open) { openIds.add(d.dataset.g); CJ.markStudied(); } else openIds.delete(d.dataset.g);
   }, true);
   document.addEventListener('cj:lang', render);
+  document.addEventListener('cj:kanji', render);
   render();
 })();
 </script>

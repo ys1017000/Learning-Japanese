@@ -17,7 +17,7 @@
     <div class="card">
       <h2 data-i18n="pr.title"></h2>
       <p id="introText"></p>
-      <p class="muted" style="margin-top:0.4rem;" data-i18n="pr.how"></p>
+      <p class="muted" style="margin-top:0.4rem;" data-i18n="pr.tapPolite"></p>
     </div>
     <div class="slot-row" id="slots"></div>
     <div class="card" style="margin-top:1rem;">
@@ -41,24 +41,20 @@
 <script src="data.js"></script>
 <script src="grammar-data.js"></script>
 <script src="read-data.js"></script>
+<script src="examples-data.js"></script>
+<script src="kanji-data.js"></script>
+<script src="words-data.js"></script>
 <script src="common.js"></script>
+<script src="bank.js"></script>
 <script>
 (function () {
   const D = window.CJ_DATA, G = window.CJ_GRAMMAR.GRAMMAR, R = window.CJ_READ.PASSAGES;
   const $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
   const N = 8, MAX_ROUND = 3, CIRC = ['', '①', '②', '③'];
-  const POLITE_ALL = ['boss', 'teacher', 'shop', 'new'];
 
-  /* ---------- 練習カードの山（すべての「言える文」） ----------
-     { key, en, c: [ひらがな, ローマ字], p: [...], tag: 文法タグ, pw: ていねいに言う相手 } */
-  const POOL = [];
-  D.CARDS.forEach(c => POOL.push({ key: 'card:' + c.id, en: c.en, c: c.c, p: c.p, tag: '', pw: c.pw }));
-  G.forEach(g => g.ex.forEach((e, i) => POOL.push({ key: 'gr:' + g.id + ':' + i, en: e[0], c: [e[1], e[2]], p: [e[3], e[4]], tag: g.tag, pw: ['boss', 'teacher', 'new'] })));
-  R.forEach(p => p.lines.forEach((l, i) => {
-    const same = l[1][0] === l[2][0];
-    POOL.push({ key: 'rd:' + p.id + ':' + i, en: l[0], c: [l[1][0], l[1][1]], p: [l[2][0], l[2][1]], tag: '', pw: same ? [] : POLITE_ALL });
-  }));
-  const byKey = {}; POOL.forEach(x => { byKey[x.key] = x; });
+  /* ---------- 練習カードの山 = 文の倉庫（カード・文法・よむ・例文）のすべての文 ----------
+     答えは「ふつう」。タップすると「ていねい」に切り替わる */
+  const B = window.CJ_BANK, POOL = B.items, byKey = B.byKey;
 
   /* ---------- 日付で決まる乱数（同じ日は同じカード） ---------- */
   function seedRand(str) {
@@ -69,8 +65,6 @@
   }
   function seededShuffle(arr, rnd) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
-  // ふつう／ていねい の割り当て：ていねいに言う相手がいない文はふつうだけ。だいたい 3 枚に 2 枚は ふつう
-  function pickReg(x, rnd) { return x.pw.length && rnd() < 0.35 ? 'p' : 'c'; }
 
   /* ---------- ひる／よる の山を作る ----------
      ひる：前に出なかった文 2 枚 ＋ まだ練習していない文（日替わりの順番）
@@ -89,7 +83,7 @@
     if (slot === 'lunch') { add(weakOld.slice(0, 2)); add(fresh); add(old); }
     else { add(weakToday); add(weakOld.slice(0, 3)); add(fresh.filter(x => !lunchKeys.has(x.key))); add(old.filter(x => !lunchKeys.has(x.key))); add(fresh); }
     pick = seededShuffle(pick, rnd);
-    return { k: pick.map(x => x.key), r: pick.map(x => pickReg(x, rnd)), s: null };
+    return { k: pick.map(x => x.key), r: pick.map(() => 'c'), s: null };
   }
   function getSlot(date, slot) {
     const d = CJ.getData(), cur = d.daily[date] && d.daily[date][slot];
@@ -126,15 +120,11 @@
   /* ---------- 声に出すカード ----------
      英語を見る → N 秒以内に日本語で言う → 答えを見る → 言えた／出なかった。2回目以降は出なかった文だけ（最大3回） */
   let st = null;
-  const peopleFor = (x, reg, rnd) => {
-    if (reg === 'c') return D.PEOPLE[rnd() < 0.7 ? 'yoh' : 'friend'];
-    const list = x.pw.length ? x.pw : POLITE_ALL;
-    return D.PEOPLE[list[Math.floor(rnd() * list.length)]];
-  };
+  // 答えは基本「ふつう」。答えのカードをタップすると「ていねい」（st.pol = true）
   function startDrill(title, keys, regs, slot) {
-    const rnd = seedRand(CJ.dateKey() + title);
-    const items = keys.map((k, i) => ({ x: byKey[k], reg: regs[i] })).filter(o => o.x).map(o => Object.assign(o, { who: peopleFor(o.x, o.reg, rnd) }));
-    st = { title, slot, items, round: 1, queue: CJ.shuffle(items), i: 0, res: [], hist: [], phase: 'card', shown: false };
+    const seen = new Set();
+    const items = keys.map(k => ({ x: byKey[k], reg: 'c' })).filter(o => o.x && !seen.has(o.x.key) && seen.add(o.x.key));
+    st = { title, slot, items, round: 1, queue: CJ.shuffle(items), i: 0, res: [], hist: [], phase: 'card', shown: false, pol: false };
     $('menu').style.display = 'none'; $('drill').style.display = '';
     renderDrill(); window.scrollTo({ top: 0 });
   }
@@ -142,20 +132,24 @@
   function renderDrill() {
     const box = $('drill'), secs = CJ.drillSecs();
     if (st.phase !== 'card') return renderRoundEnd();
-    const o = st.queue[st.i], x = o.x, ans = x[o.reg], other = x[o.reg === 'c' ? 'p' : 'c'];
+    const o = st.queue[st.i], x = o.x, ans = st.pol ? x.p : x.c, same = x.c[0] === x.p[0];
     box.innerHTML = '<div class="counter"><span class="muted">' + esc(st.title) + ' · ' + esc(t('pr.round', { r: st.round })) + ' · ' + (st.i + 1) + '/' + st.queue.length + '</span>' +
       '<button class="tiny-btn" data-a="quit">' + esc(t('pr.quit')) + '</button></div>' +
-      '<div style="text-align:center;"><span class="dr-who ' + o.reg + '">' + o.who.icon + ' ' + esc(t('pr.to', { who: CJ.tx(o.who, 'label') })) + ' · ' + esc(t(o.reg === 'c' ? 'reg.casual' : 'reg.polite')) + '</span></div>' +
+      '<div style="text-align:center;"><label class="kj-toggle"><input type="checkbox" data-kanji-toggle' + (CJ.showKanji() ? ' checked' : '') + '> ' + esc(t('rd.kanji')) + '</label></div>' +
       '<div class="dr-en">“' + esc(x.en) + '”</div>' +
       '<div class="dr-timer"><div id="tfill"></div></div>' +
-      '<p class="muted" style="text-align:center;">' + esc(t('pr.say')) + '</p>' +
+      '<p class="muted" style="text-align:center;">' + esc(t('pr.sayCasual')) + '</p>' +
       (st.shown
-        ? '<div class="dr-ans"><div class="k ja">' + esc(ans[0]) + '</div><div class="romaji">' + esc(ans[1]) + '</div>' +
+        ? '<div class="dr-ans"><div class="flip ' + (st.pol ? 'is-p' : 'is-c') + '" data-a="pol" style="border-radius:12px; padding:0.5rem; border:1px solid var(--border);">' +
+            '<div class="flip-top" style="justify-content:center;"><span class="reg ' + (st.pol ? 'polite' : 'casual') + '">' + t(st.pol ? 'reg.polite' : 'reg.casual') + '</span>' +
+            '<span class="flip-hint" style="margin-left:6px;">' + esc(t(same ? 'tap.same' : 'tap.short')) + '</span></div>' +
+            '<div class="k ja">' + CJ.jaHtml(ans) + '</div><div class="romaji">' + esc(ans[1]) + '</div></div>' +
+          (same ? '' : '<div class="muted" style="font-size:0.78rem; margin-top:0.2rem;">' + esc(t('pr.tapPolite')) + '</div>') +
           (x.tag ? '<div style="margin-top:0.3rem;"><span class="gr-tag">🧩 ' + esc(x.tag) + '</span></div>' : '') +
           '<div style="margin-top:0.4rem;">' + CJ.sayBtns(ans[0]) +
             (CJ.recognitionSupported ? '<button class="mic-btn" id="drMic" aria-label="' + esc(t('rd.mic')) + '">🎙️</button>' : '') + '</div>' +
           '<div class="rd-result" id="drRes"></div>' +
-          (other[0] !== ans[0] ? '<div class="other ja">' + esc(t('pr.otherForm', { k: other[0] })) + '</div>' : '') +
+          '<div style="text-align:left;">' + B.linksHtml(x, 6) + CJ.extLinks(ans) + '<div style="text-align:right;">' + CJ.askLink(ans[0] + ' (' + x.en + ')') + '</div></div>' +
           '<div class="btn-row"><button class="btn btn-ok" data-a="ok">' + esc(t('pr.ok')) + '</button><button class="btn" data-a="ng" style="background:#be123c;">' + esc(t('pr.ng')) + '</button></div></div>'
         : '<button class="btn" data-a="show" style="margin-top:0.6rem;">' + esc(t('pr.show')) + '</button>');
     const f = $('tfill');
@@ -163,17 +157,17 @@
     else f.style.width = '0%';
   }
   function reveal() {
-    st.shown = true; renderDrill();
+    st.shown = true; st.pol = false; renderDrill();
     const o = st.queue[st.i];
-    CJ.autoSpeak(o.x[o.reg][0]);
+    CJ.autoSpeak(o.x.c[0]);
   }
   function micCheck() {
-    const o = st.queue[st.i], ans = o.x[o.reg], res = $('drRes'), btn = $('drMic');
+    const o = st.queue[st.i], ans = st.pol ? o.x.p : o.x.c, res = $('drRes'), btn = $('drMic');
     res.className = 'rd-result show'; res.textContent = t('rd.listening'); btn.classList.add('on');
     const rec = CJ.listen({
       onInterim: s => { res.textContent = t('rd.listening') + ' ' + s; },
       onFinal: alts => {
-        const r = CJ.scoreJa([ans[0]], alts), ok = r.score >= CJ.PASS_SCORE;
+        const r = CJ.scoreJa([ans[0], CJ.plain(ans[2])], alts), ok = r.score >= CJ.PASS_SCORE;
         res.innerHTML = '<span class="sc ' + (ok ? 'ok' : 'ng') + '">' + esc(t(ok ? 'rd.pass' : 'rd.retry', { s: r.score })) + '</span><div class="muted">' + esc(t('rd.heard', { t: r.heard })) + '</div>';
       },
       onError: m => { res.textContent = m; },
@@ -185,7 +179,7 @@
     const o = st.queue[st.i];
     st.res.push({ o, ok });
     if (st.round === 1) CJ.recordPrac(o.x.key, ok);
-    st.i++; st.shown = false;
+    st.i++; st.shown = false; st.pol = false;
     if (st.i < st.queue.length) { renderDrill(); return; }
     const okSet = st.res.filter(r => r.ok).map(r => itemKey(r.o));
     st.hist.push({ round: st.round, said: okSet.length, total: st.res.length, okSet });
@@ -211,7 +205,7 @@
     }
     if (missItems.length) {
       if (st.phase === 'review') html += '<div class="muted" style="margin-bottom:0.3rem;">' + esc(t('pr.still')) + '</div>';
-      html += missItems.map(o => { const a = o.x[o.reg]; return '<div class="miss-row"><div style="display:flex; justify-content:space-between; align-items:center;"><div><div class="k ja">' + esc(a[0]) + '</div><div class="romaji">' + esc(a[1]) + '</div></div>' + CJ.sayBtns(a[0]) + '</div><div class="muted">' + esc(o.x.en) + '</div></div>'; }).join('');
+      html += missItems.map(o => { const a = o.x.c; return '<div class="miss-row"><div style="display:flex; justify-content:space-between; align-items:center;"><div><div class="k ja">' + CJ.jaHtml(a) + '</div><div class="romaji">' + esc(a[1]) + '</div></div>' + CJ.sayBtns(a[0]) + '</div><div class="muted">' + esc(o.x.en) + '</div></div>'; }).join('');
     } else if (st.phase === 'review') html += '<p style="color:var(--ok); font-weight:800;">' + esc(t('pr.allGood')) + '</p>';
     if (st.phase === 'roundEnd') {
       html += '<button class="btn" data-a="next" style="margin-top:0.6rem;">' + esc(t('pr.nextRound', { r: st.round + 1, n: missItems.length })) + '</button>' +
@@ -224,10 +218,12 @@
   }
 
   $('drill').addEventListener('click', e => {
-    const b = e.target.closest('[data-a]');
-    if (!b) { if (e.target.closest('#drMic')) micCheck(); return; }
+    if (e.target.closest('#drMic')) { micCheck(); return; }
+    if (e.target.closest('[data-say], a, label')) return;
+    const b = e.target.closest('[data-a]'); if (!b) return;
     const a = b.dataset.a;
-    if (a === 'show') reveal();
+    if (a === 'pol') { const x = st.queue[st.i].x; if (x.c[0] !== x.p[0]) { st.pol = !st.pol; renderDrill(); CJ.autoSpeak((st.pol ? x.p : x.c)[0]); } }
+    else if (a === 'show') reveal();
     else if (a === 'ok') answer(true);
     else if (a === 'ng') answer(false);
     else if (a === 'next') { const miss = st.res.filter(r => !r.ok).map(r => r.o); st.round++; st.queue = CJ.shuffle(miss); st.i = 0; st.res = []; st.phase = 'card'; renderDrill(); window.scrollTo({ top: 0 }); }
@@ -241,12 +237,13 @@
     startDrill(t('slot.' + sl), v.k, v.r, sl);
   });
   document.addEventListener('cj:lang', () => { if (st) renderDrill(); else renderMenu(); });
+  document.addEventListener('cj:kanji', () => { if (st) renderDrill(); });
 
   // ?g=文法ID：その文法の例文を ふつう と ていねい の両方で練習（日替わりの記録には入れない）
   const gid = new URLSearchParams(location.search).get('g'), gr = G.find(g => g.id === gid);
   if (gr) {
     const keys = [], regs = [];
-    gr.ex.forEach((e, i) => { keys.push('gr:' + gr.id + ':' + i, 'gr:' + gr.id + ':' + i); regs.push('c', 'p'); });
+    gr.ex.forEach((e, i) => { keys.push('gr:' + gr.id + ':' + i); regs.push('c'); });
     startDrill('🧩 ' + gr.tag, keys, regs, null);
   } else renderMenu();
 })();

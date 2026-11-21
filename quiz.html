@@ -31,12 +31,14 @@
 <script src="i18n.js"></script>
 <script src="data.js"></script>
 <script src="kanji-data.js"></script>
+<script src="words-data.js"></script>
 <script src="common.js"></script>
 <script>
 (function () {
   const D = window.CJ_DATA, K = window.CJ_KANJI, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
   const ROUND = 10;
-  const MODES = ['who', 'endings', 'kanji', 'mistakes'];
+  const MODES = ['who', 'endings', 'kanji', 'words', 'mistakes'];
+  const WORDS = window.CJ_WORDS.WORDS, wordBy = {}; WORDS.forEach(w => { wordBy[w.id] = w; });
   const cardById = {}; D.CARDS.forEach(c => { cardById[c.id] = c; });
   const endById = {}; D.ENDING_QUIZ.forEach(q => { endById[q.id] = q; });
   const kanjiBy = {}; K.KANJI.forEach(x => { kanjiBy[x.k] = x; });
@@ -112,11 +114,24 @@
         '<div style="margin-top:0.4rem;"><a href="kanji.html?k=' + encodeURIComponent(x.k) + '">✍️ ' + esc(x.k) + ' →</a></div>'
     };
   }
+  // 単語：いみ を えらぶ
+  function wordQuestion(w) {
+    const wrong = CJ.shuffle(WORDS.filter(y => y.id !== w.id && y.en !== w.en)).slice(0, 3);
+    return {
+      id: 'w:' + w.id,
+      opts: CJ.shuffle([{ t: [w.en, ''], ok: true }].concat(wrong.map(y => ({ t: [y.en, ''] })))),
+      answer: w.kana,
+      head: () => '<div class="q-text">' + esc(t('q.wMeaning')) + '</div><div class="q-word ja">' + CJ.ruby(w.kj) + '</div>',
+      why: () => '<div class="ja" style="font-size:1.3rem; font-weight:700;">' + CJ.ruby(w.kj) + '</div>' + esc(w.r) + ' = ' + esc(w.en) +
+        '<div style="margin-top:0.4rem;"><a href="words.html?w=' + encodeURIComponent(w.id) + '">📝 ' + esc(w.id) + ' →</a></div>'
+    };
+  }
   function fromId(id) {
     const m = id.split(':');
     if (m[0] === 'c' && cardById[m[1]]) return whoQuestion(cardById[m[1]], m[2]);
     if (m[0] === 'e' && endById[m[1]]) return endQuestion(endById[m[1]]);
     if (m[0] === 'k' && kanjiBy[m[1]]) return kanjiQuestion(kanjiBy[m[1]], m[2]);
+    if (m[0] === 'w' && wordBy[m[1]]) return wordQuestion(wordBy[m[1]]);
     return null;
   }
   function mistakeIds() { return Object.keys(CJ.getData().wrong).filter(id => fromId(id)); }
@@ -130,6 +145,11 @@
       const mine = CJ.shuffle(K.KANJI.filter(x => learned.has(x.k))).slice(0, ROUND / 2);
       const rest = CJ.shuffle(K.KANJI.filter(x => !mine.includes(x))).slice(0, ROUND - mine.length);
       qs = CJ.shuffle(mine.concat(rest)).map(x => kanjiQuestion(x));
+    }
+    else if (mode === 'words') {
+      const learned = new Set(CJ.getData().words);
+      const mine = CJ.shuffle(WORDS.filter(w => learned.has(w.id))).slice(0, ROUND / 2);
+      qs = CJ.shuffle(mine.concat(CJ.shuffle(WORDS.filter(w => !mine.includes(w))).slice(0, ROUND - mine.length))).map(wordQuestion);
     }
     else qs = CJ.shuffle(mistakeIds()).slice(0, ROUND).map(fromId);
     qi = 0; score = 0; answered = -1;
