@@ -13,10 +13,10 @@
 <header><a class="logo" href="index.html">🌸 Casual Japanese</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
 
 <main class="container">
-  <div class="chip-row" id="filterRow" role="group" aria-label="Choose cards"></div>
+  <div class="chip-row" id="filterRow" role="group"></div>
   <div class="chip-row" style="margin-top:-0.3rem;">
     <button class="chip" id="dirBtn"></button>
-    <button class="chip" id="shuffleBtn">🔀 Shuffle</button>
+    <button class="chip" id="shuffleBtn" data-i18n="cards.shuffle"></button>
   </div>
 
   <div class="counter"><span class="muted" id="counter"></span><span class="learned-mark" id="learnedMark"></span></div>
@@ -25,29 +25,29 @@
   <div class="card flash" id="flash"></div>
 
   <div class="btn-row">
-    <button class="btn btn-secondary" id="prevBtn" aria-label="Previous card">←</button>
+    <button class="btn btn-secondary" id="prevBtn" data-i18n-aria="cards.prev">←</button>
     <button class="btn btn-ok" id="learnBtn" style="flex:3;"></button>
-    <button class="btn btn-secondary" id="nextBtn" aria-label="Next card">→</button>
+    <button class="btn btn-secondary" id="nextBtn" data-i18n-aria="cards.next">→</button>
   </div>
-  <p class="muted" style="text-align:center; margin-top:0.8rem;">Say it out loud before you check! 🗣️</p>
+  <p class="muted" style="text-align:center; margin-top:0.8rem;" data-i18n="cards.sayit"></p>
 </main>
 
 <nav>
-  <a href="index.html"><span class="ni">🏠</span>Home</a>
-  <a href="cards.html" class="active"><span class="ni">🃏</span>Cards</a>
-  <a href="endings.html"><span class="ni">💬</span>Endings</a>
-  <a href="quiz.html"><span class="ni">❓</span>Quiz</a>
+  <a href="index.html"><span class="ni">🏠</span><span data-i18n="nav.home">Home</span></a>
+  <a href="cards.html" class="active"><span class="ni">🃏</span><span data-i18n="nav.cards">Cards</span></a>
+  <a href="endings.html"><span class="ni">💬</span><span data-i18n="nav.endings">Endings</span></a>
+  <a href="kanji.html"><span class="ni">✍️</span><span data-i18n="nav.kanji">Kanji</span></a>
+  <a href="read.html"><span class="ni">🗣️</span><span data-i18n="nav.read">Read</span></a>
+  <a href="quiz.html"><span class="ni">❓</span><span data-i18n="nav.quiz">Quiz</span></a>
 </nav>
 
+<script src="i18n.js"></script>
 <script src="data.js"></script>
 <script src="common.js"></script>
 <script>
 (function () {
-  const D = window.CJ_DATA, $ = id => document.getElementById(id), esc = CJ.esc;
-  const SIDE = {
-    p: { cls: 'polite', label: 'POLITE', who: 'teachers, your boss, shops' },
-    c: { cls: 'casual', label: 'CASUAL', who: 'Yoh-chan, friends' }
-  };
+  const D = window.CJ_DATA, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
+  const SIDE = { p: { cls: 'polite', reg: 'reg.polite', who: 'who.polite' }, c: { cls: 'casual', reg: 'reg.casual', who: 'who.casual' } };
   let filter = 'all', dir = 'pc', deck = [], i = 0, shown = false;
 
   function buildDeck(keepId) {
@@ -61,46 +61,47 @@
   function renderFilters() {
     const learned = new Set(CJ.getData().learned);
     const todo = D.CARDS.filter(c => !learned.has(c.id)).length;
-    const list = [['all', '✨ All (' + D.CARDS.length + ')'], ['todo', '📝 Not learned (' + todo + ')']].concat(D.SCENES.map(s => [s.id, s.label]));
+    const list = [['all', t('cards.all', { n: D.CARDS.length })], ['todo', t('cards.todo', { n: todo })]].concat(D.SCENES.map(s => [s.id, CJ.tx(s, 'label')]));
     $('filterRow').innerHTML = list.map(f => '<button class="chip' + (f[0] === filter ? ' active' : '') + '" data-f="' + f[0] + '">' + esc(f[1]) + '</button>').join('');
-    $('dirBtn').textContent = dir === 'pc' ? '↔️ Polite → Casual' : '↔️ Casual → Polite';
+    $('dirBtn').textContent = t(dir === 'pc' ? 'cards.dirPC' : 'cards.dirCP');
   }
 
   function sideHtml(c, k) {
-    const s = SIDE[k], t = c[k];
-    return '<div class="side"><span class="reg ' + s.cls + '">' + s.label + '</span><span class="reg-who">for ' + s.who + '</span>' +
-      '<div class="big-ja ja">' + esc(t[0]) + '</div><div class="romaji">' + esc(t[1]) + '</div>' +
-      '<div>' + CJ.sayBtns(t[0]) + '</div></div>';
+    const s = SIDE[k], v = c[k];
+    return '<div class="side"><span class="reg ' + s.cls + '">' + t(s.reg) + '</span><span class="reg-who">' + esc(t(s.who)) + '</span>' +
+      '<div class="big-ja ja">' + esc(v[0]) + '</div><div class="romaji">' + esc(v[1]) + '</div>' +
+      '<div>' + CJ.sayBtns(v[0]) + '</div></div>';
   }
 
   function render() {
     renderFilters();
     const box = $('flash');
     if (!deck.length) {
-      box.innerHTML = '<p>' + (filter === 'todo' ? '🎉 You learned all the cards! Try the quiz next.' : 'No cards here.') + '</p>' +
-        (filter === 'todo' ? '<a class="btn" href="quiz.html" style="margin-top:1rem;">❓ Go to the quiz</a>' : '');
+      box.innerHTML = '<p>' + esc(t(filter === 'todo' ? 'cards.allDone' : 'cards.none')) + '</p>' +
+        (filter === 'todo' ? '<a class="btn" href="quiz.html" style="margin-top:1rem;">' + esc(t('cards.toQuiz')) + '</a>' : '');
       $('counter').textContent = ''; $('learnedMark').textContent = ''; $('progFill').style.width = '0%';
       ['prevBtn', 'nextBtn', 'learnBtn'].forEach(id => $(id).disabled = true);
-      $('learnBtn').textContent = '✓ I know this';
+      $('learnBtn').textContent = t('cards.know');
       return;
     }
     ['prevBtn', 'nextBtn', 'learnBtn'].forEach(id => $(id).disabled = false);
     const c = deck[i], a = dir === 'pc' ? 'p' : 'c', b = dir === 'pc' ? 'c' : 'p';
     const learned = CJ.isLearned(c.id);
     $('counter').textContent = (i + 1) + ' / ' + deck.length;
-    $('learnedMark').textContent = learned ? '✓ learned' : '';
+    $('learnedMark').textContent = learned ? t('cards.learnedMark') : '';
     $('progFill').style.width = ((i + 1) / deck.length * 100) + '%';
-    $('learnBtn').textContent = learned ? '↩︎ Not learned yet' : '✓ I know this';
+    $('learnBtn').textContent = t(learned ? 'cards.unknow' : 'cards.know');
     $('learnBtn').className = 'btn ' + (learned ? 'btn-secondary' : 'btn-ok');
 
     let html = '<div class="en">“' + esc(c.en) + '”</div>' + sideHtml(c, a);
     if (!shown) {
-      html += '<button class="btn reveal-btn" id="revealBtn">Show ' + SIDE[b].label.toLowerCase() + ' ↓</button>';
+      html += '<button class="btn reveal-btn" id="revealBtn">' + esc(t(b === 'c' ? 'cards.showCasual' : 'cards.showPolite')) + '</button>';
     } else {
       html += sideHtml(c, b);
-      if (c.note) html += '<div class="note">💡 ' + esc(c.note) + '</div>';
+      const note = CJ.tx(c, 'note');
+      if (note) html += '<div class="note">💡 ' + esc(note) + '</div>';
       if (c.r && c.r.length) {
-        html += '<div class="replies"><div class="t">💬 How to answer (casual)</div>' + c.r.map(r =>
+        html += '<div class="replies"><div class="t">' + esc(t('cards.howAnswer')) + '</div>' + c.r.map(r =>
           '<div class="reply-row"><div><div class="k ja">' + esc(r[0]) + '</div><div class="romaji">' + esc(r[1]) + '</div><div class="e">' + esc(r[2]) + '</div></div>' + CJ.sayBtns(r[0]) + '</div>').join('') + '</div>';
       }
     }
@@ -123,16 +124,17 @@
     filter = b.dataset.f; buildDeck(); render();
   });
   $('dirBtn').addEventListener('click', () => { dir = dir === 'pc' ? 'cp' : 'pc'; shown = false; render(); });
-  $('shuffleBtn').addEventListener('click', () => { deck = CJ.shuffle(deck); i = 0; shown = false; render(); CJ.toast('Shuffled 🔀'); });
+  $('shuffleBtn').addEventListener('click', () => { deck = CJ.shuffle(deck); i = 0; shown = false; render(); CJ.toast(t('toast.shuffled')); });
   $('prevBtn').addEventListener('click', () => move(-1));
   $('nextBtn').addEventListener('click', () => move(1));
   $('learnBtn').addEventListener('click', () => {
     const c = deck[i]; if (!c) return;
     const on = CJ.toggleLearned(c.id);
-    CJ.toast(on ? '✓ Nice! Marked as learned' : 'OK, it will come back');
+    CJ.toast(t(on ? 'toast.learned' : 'toast.unlearned'));
     if (filter === 'todo' && on) { deck.splice(i, 1); if (i >= deck.length) i = 0; shown = false; render(); }
     else if (on) move(1); else render();
   });
+  document.addEventListener('cj:lang', render);
 
   // ?card=ID で特定のカードを開く
   const want = new URLSearchParams(location.search).get('card');

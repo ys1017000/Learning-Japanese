@@ -14,51 +14,57 @@
 
 <main class="container">
   <div class="card">
-    <h2>💬 Sentence endings</h2>
-    <p>In casual Japanese, one small sound at the end of a sentence shows your <b>feeling</b>. Same words, different mood!</p>
+    <h2 data-i18n="end.title"></h2>
+    <p data-i18n="end.intro"></p>
     <div class="jump-row" id="jumpRow" style="margin-top:0.7rem;"></div>
   </div>
 
   <div id="endList"></div>
 
   <div class="card" id="compare">
-    <h2>🔍 Same words, different feeling</h2>
+    <h2 data-i18n="end.compare"></h2>
     <div id="cmpBox"></div>
   </div>
 
-  <a class="btn" href="quiz.html?mode=endings">❓ Try the endings quiz</a>
+  <a class="btn" href="quiz.html?mode=endings" data-i18n="end.toQuiz"></a>
 </main>
 
 <nav>
-  <a href="index.html"><span class="ni">🏠</span>Home</a>
-  <a href="cards.html"><span class="ni">🃏</span>Cards</a>
-  <a href="endings.html" class="active"><span class="ni">💬</span>Endings</a>
-  <a href="quiz.html"><span class="ni">❓</span>Quiz</a>
+  <a href="index.html"><span class="ni">🏠</span><span data-i18n="nav.home">Home</span></a>
+  <a href="cards.html"><span class="ni">🃏</span><span data-i18n="nav.cards">Cards</span></a>
+  <a href="endings.html" class="active"><span class="ni">💬</span><span data-i18n="nav.endings">Endings</span></a>
+  <a href="kanji.html"><span class="ni">✍️</span><span data-i18n="nav.kanji">Kanji</span></a>
+  <a href="read.html"><span class="ni">🗣️</span><span data-i18n="nav.read">Read</span></a>
+  <a href="quiz.html"><span class="ni">❓</span><span data-i18n="nav.quiz">Quiz</span></a>
 </nav>
 
+<script src="i18n.js"></script>
 <script src="data.js"></script>
 <script src="common.js"></script>
 <script>
 (function () {
-  const D = window.CJ_DATA, $ = id => document.getElementById(id), esc = CJ.esc;
+  const D = window.CJ_DATA, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t, ja = () => CJ.lang() === 'ja';
 
-  $('jumpRow').innerHTML = D.ENDINGS.map(e => '<a class="chip ja" href="#end-' + e.id + '" style="text-decoration:none;">' + esc(e.mark) + '</a>').join('') +
-    '<a class="chip" href="#compare" style="text-decoration:none;">🔍 Compare</a>';
+  function render() {
+    $('jumpRow').innerHTML = D.ENDINGS.map(e => '<a class="chip ja" href="#end-' + e.id + '" style="text-decoration:none;">' + esc(e.mark) + '</a>').join('') +
+      '<a class="chip" href="#compare" style="text-decoration:none;">' + esc(t('end.cmpChip')) + '</a>';
 
-  $('endList').innerHTML = D.ENDINGS.map(e =>
-    '<div class="card" id="end-' + e.id + '">' +
-      '<div class="end-head"><span class="end-mark ja">' + esc(e.mark) + '</span><span class="romaji">' + esc(e.romaji) + '</span><span class="end-title">' + esc(e.title) + '</span></div>' +
-      '<p class="end-meaning">' + esc(e.meaning) + '</p>' +
-      e.ex.map(x => '<div class="ex-row"><div><div class="k ja">' + esc(x[0]) + '</div><div class="romaji">' + esc(x[1]) + '</div>' +
-        '<div class="e">' + esc(x[2]) + '</div><div class="n">' + esc(x[3]) + '</div></div>' + CJ.sayBtns(x[0]) + '</div>').join('') +
-      (e.tip ? '<div class="tip">💡 ' + esc(e.tip) + '</div>' : '') +
-    '</div>').join('');
+    $('endList').innerHTML = D.ENDINGS.map(e =>
+      '<div class="card" id="end-' + e.id + '">' +
+        '<div class="end-head"><span class="end-mark ja">' + esc(e.mark) + '</span><span class="romaji">' + esc(e.romaji) + '</span><span class="end-title">' + esc(CJ.tx(e, 'title')) + '</span></div>' +
+        '<p class="end-meaning">' + esc(CJ.tx(e, 'meaning')) + '</p>' +
+        e.ex.map(x => '<div class="ex-row"><div><div class="k ja">' + esc(x[0]) + '</div><div class="romaji">' + esc(x[1]) + '</div>' +
+          '<div class="e">' + esc(x[2]) + '</div><div class="n">' + esc(ja() && x[4] ? x[4] : x[3]) + '</div></div>' + CJ.sayBtns(x[0]) + '</div>').join('') +
+        (e.tip ? '<div class="tip">💡 ' + esc(CJ.tx(e, 'tip')) + '</div>' : '') +
+      '</div>').join('');
 
-  $('cmpBox').innerHTML = D.COMPARE.map(c =>
-    '<p style="font-weight:700; margin:0.6rem 0 0.2rem;" class="ja">' + esc(c.base) + '</p><table class="cmp-table">' +
-    c.rows.map(r => '<tr><td class="k ja">' + esc(r[0]) + '<div class="romaji" style="font-weight:normal; font-size:0.8rem;">' + esc(r[1]) + '</div></td><td class="muted">' + esc(r[2]) + '</td><td style="text-align:right;">' + CJ.sayBtns(r[0]) + '</td></tr>').join('') +
-    '</table>').join('');
-
+    $('cmpBox').innerHTML = D.COMPARE.map(c =>
+      '<p style="font-weight:700; margin:0.6rem 0 0.2rem;" class="ja">' + esc(c.base) + '</p><table class="cmp-table">' +
+      c.rows.map(r => '<tr><td class="k ja">' + esc(r[0]) + '<div class="romaji" style="font-weight:normal; font-size:0.8rem;">' + esc(r[1]) + '</div></td><td class="muted">' + esc(ja() && r[3] ? r[3] : r[2]) + '</td><td style="text-align:right;">' + CJ.sayBtns(r[0]) + '</td></tr>').join('') +
+      '</table>').join('');
+  }
+  document.addEventListener('cj:lang', render);
+  render();
   // ページを開いたら学習した日として記録
   CJ.markStudied();
 })();

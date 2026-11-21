@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Kanji – Casual Japanese</title>
+<meta name="theme-color" content="#e0517a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<header><a class="logo" href="index.html">🌸 Casual Japanese</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
+
+<main class="container">
+  <div class="card">
+    <h2 data-i18n="kj.title"></h2>
+    <p data-i18n="kj.intro"></p>
+  </div>
+
+  <details class="card tips" id="tipsBox">
+    <summary data-i18n="kj.tipsTitle"></summary>
+    <ol class="tips-list" id="tipsList"></ol>
+  </details>
+
+  <div class="chip-row" id="gradeRow" role="group"></div>
+
+  <div class="card" id="detail" style="scroll-margin-top:72px;"></div>
+
+  <div class="counter"><span class="muted" id="countText"></span><button class="tiny-btn" id="furiBtn"></button></div>
+  <div class="kj-grid" id="grid"></div>
+
+  <a class="btn" href="quiz.html?mode=kanji" style="margin-top:1rem;" data-i18n="kj.toQuiz"></a>
+</main>
+
+<nav>
+  <a href="index.html"><span class="ni">🏠</span><span data-i18n="nav.home">Home</span></a>
+  <a href="cards.html"><span class="ni">🃏</span><span data-i18n="nav.cards">Cards</span></a>
+  <a href="endings.html"><span class="ni">💬</span><span data-i18n="nav.endings">Endings</span></a>
+  <a href="kanji.html" class="active"><span class="ni">✍️</span><span data-i18n="nav.kanji">Kanji</span></a>
+  <a href="read.html"><span class="ni">🗣️</span><span data-i18n="nav.read">Read</span></a>
+  <a href="quiz.html"><span class="ni">❓</span><span data-i18n="nav.quiz">Quiz</span></a>
+</nav>
+
+<script src="i18n.js"></script>
+<script src="kanji-data.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+  const K = window.CJ_KANJI, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
+  const params = new URLSearchParams(location.search);
+  let grade = 1, list = [], i = 0, hideFuri = false;
+  const wantK = params.get('k');
+  if (wantK) { const f = K.KANJI.find(x => x.k === wantK); if (f) grade = f.g; }
+
+  function setList(keepK) {
+    list = K.KANJI.filter(x => x.g === grade);
+    i = 0;
+    if (keepK) { const n = list.findIndex(x => x.k === keepK); if (n >= 0) i = n; }
+  }
+
+  function renderTips() {
+    $('tipsList').innerHTML = K.KANJI_TIPS.map(x => '<li>' + (CJ.lang() === 'ja' ? x.ja : x.en) + '</li>').join('');
+  }
+
+  function renderGrades() {
+    const n1 = K.KANJI.filter(x => x.g === 1).length, n2 = K.KANJI.filter(x => x.g === 2).length;
+    $('gradeRow').innerHTML = [[1, t('kj.g1', { n: n1 })], [2, t('kj.g2', { n: n2 })]].map(g =>
+      '<button class="chip' + (g[0] === grade ? ' active' : '') + '" data-g="' + g[0] + '">' + esc(g[1]) + '</button>').join('');
+  }
+
+  // 読み方：「ひと(つ)」の( )は送りがななので少し薄く出す
+  function readHtml(s) {
+    if (!s) return '<span class="muted">' + t('kj.none') + '</span>';
+    return s.split('・').map(r => esc(r).replace(/\(([^)]*)\)/g, '<span class="muted">($1)</span>')).join('<span class="muted"> ・ </span>');
+  }
+  // 漢字そのものの読み上げ用：くんよみ（送りがなも付けて）、なければ おんよみ の最初
+  function sayOf(x) { const r = (x.kun || x.on).split('・')[0]; return r.replace(/[()]/g, ''); }
+
+  function renderDetail() {
+    const x = list[i]; if (!x) return;
+    const learned = CJ.isKanjiLearned(x.k);
+    const enOnly = t('kj.enOnly');
+    $('detail').innerHTML =
+      '<div class="counter"><span class="muted">' + (i + 1) + ' / ' + list.length + '</span><span class="learned-mark">' + (learned ? '✓' : '') + '</span></div>' +
+      '<div class="kj-big ja">' + esc(x.k) + '</div>' +
+      '<div class="kj-meaning">' + esc(x.m) + ' ' + CJ.sayBtns(sayOf(x)) + '</div>' +
+      '<div class="kj-read"><span class="lbl">' + esc(t('kj.kun')) + '</span><span class="v ja">' + readHtml(x.kun) + '</span>' +
+      '<span class="lbl">' + esc(t('kj.on')) + '</span><span class="v ja">' + readHtml(x.on) + '</span></div>' +
+      (/\(/.test(x.kun) ? '<div class="muted" style="font-size:0.75rem;">' + esc(t('kj.okuri')) + '</div>' : '') +
+      '<div class="kj-box img">' + esc(t('kj.image')) + '：' + esc(x.img) + '</div>' +
+      (x.tip ? '<div class="kj-box tipb">' + esc(t('kj.tip')) + '：' + esc(x.tip) + '</div>' : '') +
+      (enOnly ? '<div class="muted" style="font-size:0.75rem; margin-top:0.3rem;">' + esc(enOnly) + '</div>' : '') +
+      '<div class="words" style="margin-top:0.8rem;"><div style="font-weight:700; margin-bottom:0.3rem;">' + esc(t('kj.words')) + '</div>' +
+      x.words.map(w => '<div class="ex-row"><div><div class="k ja">' + K.rubyHtml(w[0], esc) + '</div><div class="romaji">' + esc(w[1]) + '</div><div class="e">' + esc(w[2]) + '</div></div>' + CJ.sayBtns(K.reading(w[0])) + '</div>').join('') +
+      '</div>' +
+      '<div class="btn-row"><button class="btn btn-secondary" data-act="prev" aria-label="prev">←</button>' +
+      '<button class="btn ' + (learned ? 'btn-secondary' : 'btn-ok') + '" data-act="learn" style="flex:3;">' + esc(t(learned ? 'kj.unknow' : 'kj.know')) + '</button>' +
+      '<button class="btn btn-secondary" data-act="next" aria-label="next">→</button></div>';
+  }
+
+  function renderGrid() {
+    const learned = new Set(CJ.getData().kanji);
+    $('grid').innerHTML = list.map((x, n) => '<button class="kj-tile' + (learned.has(x.k) ? ' learned' : '') + (n === i ? ' current' : '') + '" data-n="' + n + '" aria-label="' + esc(x.k + ' ' + x.m) + '">' + esc(x.k) + '</button>').join('');
+    $('countText').textContent = t('kj.count', { n: list.filter(x => learned.has(x.k)).length, m: list.length });
+    $('furiBtn').textContent = t(hideFuri ? 'kj.showFuri' : 'kj.hideFuri');
+  }
+
+  function render() { renderGrades(); renderDetail(); renderGrid(); }
+
+  $('gradeRow').addEventListener('click', e => { const b = e.target.closest('[data-g]'); if (!b) return; grade = Number(b.dataset.g); setList(); render(); });
+  $('grid').addEventListener('click', e => {
+    const b = e.target.closest('[data-n]'); if (!b) return;
+    i = Number(b.dataset.n); renderDetail(); renderGrid();
+    $('detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    CJ.markStudied();
+  });
+  $('detail').addEventListener('click', e => {
+    const b = e.target.closest('[data-act]'); if (!b) return;
+    if (b.dataset.act === 'prev') i = (i - 1 + list.length) % list.length;
+    else if (b.dataset.act === 'next') i = (i + 1) % list.length;
+    else if (b.dataset.act === 'learn') {
+      const on = CJ.toggleKanji(list[i].k);
+      CJ.toast(t(on ? 'toast.learned' : 'toast.unlearned'));
+      if (on) i = (i + 1) % list.length;
+    }
+    renderDetail(); renderGrid();
+  });
+  // よみかた（ふりがな）を隠して、自分で読めるか試す
+  $('furiBtn').addEventListener('click', () => { hideFuri = !hideFuri; document.body.classList.toggle('hide-furi', hideFuri); renderGrid(); });
+  document.addEventListener('cj:lang', () => { renderTips(); render(); });
+
+  setList(wantK); renderTips(); render();
+})();
+</script>
+</body>
+</html>

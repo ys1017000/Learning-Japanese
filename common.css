@@ -117,3 +117,53 @@ body.no-romaji .romaji { display: none !important; }
 .toast.show { opacity: 0.95; }
 @media (prefers-reduced-motion: reduce) { .toast, .progress > div { transition: none; } }
 .card[id^="end-"], #compare { scroll-margin-top: 72px; }
+
+/* ---- v2: 言語切り替え ---- */
+.head-right { display: flex; align-items: center; gap: 6px; }
+.lang-btn { border: 1px solid var(--border); background: #fff; border-radius: 999px; font-size: 0.8rem; padding: 4px 10px; cursor: pointer; color: var(--text); font-family: inherit; white-space: nowrap; }
+.lang-btn:active { background: var(--primary-soft); }
+nav a { font-size: 0.68rem; }
+nav a .ni { font-size: 1.15rem; }
+
+/* ---- v2: 漢字 ---- */
+ruby rt { font-size: 0.55em; color: var(--text-muted); font-weight: 600; }
+body.hide-furi .words ruby rt { visibility: hidden; }
+.kj-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.kj-tile { aspect-ratio: 1; border: 1px solid var(--border); background: #fff; border-radius: 10px; font-size: 1.7rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; font-family: "Hiragino Sans", "Noto Sans JP", "Noto Sans CJK JP", sans-serif; color: #0f172a; }
+.kj-tile.learned { background: #ecfdf5; border-color: #86efac; }
+.kj-tile.learned::after { content: '✓'; position: absolute; top: 2px; right: 5px; font-size: 0.65rem; color: var(--ok); }
+.kj-tile.current { outline: 3px solid var(--primary); outline-offset: 1px; }
+.kj-big { font-size: 5rem; font-weight: 800; line-height: 1.1; text-align: center; color: #0f172a; font-family: "Hiragino Mincho ProN", "Noto Serif CJK JP", "Noto Serif JP", serif; }
+.kj-meaning { text-align: center; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.6rem; }
+.kj-read { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 0.95rem; margin: 0.4rem 0; align-items: baseline; }
+.kj-read .lbl { font-size: 0.75rem; color: var(--text-muted); }
+.kj-read .v { font-size: 1.15rem; font-weight: 700; }
+.kj-box { font-size: 0.92rem; border-radius: 8px; padding: 0.5rem 0.7rem; margin-top: 0.5rem; }
+.kj-box.img { background: #f5f3ff; color: #4c1d95; }
+.kj-box.tipb { background: #fff8e7; color: #713f12; }
+.words .ex-row .k { font-size: 1.35rem; }
+.tips-list { padding-left: 1.1rem; font-size: 0.9rem; }
+.tips-list li { margin-bottom: 0.5rem; }
+details.tips > summary { cursor: pointer; font-weight: 700; list-style: none; }
+details.tips > summary::-webkit-details-marker { display: none; }
+details.tips[open] > summary { margin-bottom: 0.6rem; }
+.q-kanji { font-size: 4rem; font-weight: 800; text-align: center; line-height: 1.2; margin: 0.3rem 0 0.8rem; font-family: "Hiragino Mincho ProN", "Noto Serif CJK JP", serif; }
+.q-word { font-size: 2.2rem; font-weight: 800; text-align: center; margin: 0.3rem 0 0.8rem; }
+
+/* ---- v2: 声に出して読む ---- */
+.rd-line { padding: 0.7rem 0.75rem; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 0.55rem; background: #fff; }
+.rd-line.playing { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft); }
+.rd-line .k { font-size: 1.3rem; font-weight: 700; line-height: 1.9; }
+.rd-line .e { font-size: 0.85rem; color: #475569; }
+.rd-tools { display: flex; align-items: center; gap: 2px; margin-top: 0.3rem; flex-wrap: wrap; }
+.mic-btn { background: #ef4444; color: #fff; border: none; border-radius: 999px; padding: 6px 14px; font-size: 0.9rem; cursor: pointer; font-family: inherit; margin-left: 4px; }
+.mic-btn.on { background: #b91c1c; animation: pulse 1s infinite; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.55; } 100% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .mic-btn.on { animation: none; } }
+.rd-result { font-size: 0.85rem; margin-top: 0.35rem; display: none; }
+.rd-result.show { display: block; }
+.rd-result .sc { font-weight: 800; }
+.rd-result .sc.ok { color: var(--ok); } .rd-result .sc.ng { color: #b45309; }
+.rd-best { font-size: 0.72rem; color: var(--ok); font-weight: 700; margin-left: auto; }
+.rd-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 0.6rem; }
+.stats-grid.two { grid-template-columns: repeat(2, 1fr); row-gap: 0.9rem; }

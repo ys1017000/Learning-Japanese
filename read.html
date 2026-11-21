@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Read aloud – Casual Japanese</title>
+<meta name="theme-color" content="#e0517a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<header><a class="logo" href="index.html">🌸 Casual Japanese</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
+
+<main class="container">
+  <div class="card">
+    <h2 data-i18n="rd.title"></h2>
+    <p data-i18n="rd.intro"></p>
+    <div class="notice" id="noMic" style="display:none;" data-i18n="rd.noMic"></div>
+  </div>
+
+  <div class="chip-row" id="pRow" role="group"></div>
+
+  <div class="card" id="pBox">
+    <div class="rd-head">
+      <b id="pTitle"></b>
+      <button class="tiny-btn" id="playAll"></button>
+    </div>
+    <div class="setting-row" style="padding-top:0;"><label for="optKanji" data-i18n="rd.kanji"></label><input type="checkbox" id="optKanji"></div>
+    <div id="lines" style="margin-top:0.6rem;"></div>
+    <div class="muted" id="doneText" style="text-align:center; margin-top:0.4rem;"></div>
+  </div>
+  <p class="muted" data-i18n="rd.hint"></p>
+</main>
+
+<nav>
+  <a href="index.html"><span class="ni">🏠</span><span data-i18n="nav.home">Home</span></a>
+  <a href="cards.html"><span class="ni">🃏</span><span data-i18n="nav.cards">Cards</span></a>
+  <a href="endings.html"><span class="ni">💬</span><span data-i18n="nav.endings">Endings</span></a>
+  <a href="kanji.html"><span class="ni">✍️</span><span data-i18n="nav.kanji">Kanji</span></a>
+  <a href="read.html" class="active"><span class="ni">🗣️</span><span data-i18n="nav.read">Read</span></a>
+  <a href="quiz.html"><span class="ni">❓</span><span data-i18n="nav.quiz">Quiz</span></a>
+</nav>
+
+<script src="i18n.js"></script>
+<script src="kanji-data.js"></script>
+<script src="read-data.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+  const R = window.CJ_READ, K = window.CJ_KANJI, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
+  let pid = new URLSearchParams(location.search).get('p');
+  if (!R.PASSAGES.some(p => p.id === pid)) pid = R.PASSAGES[0].id;
+  let playing = false, listeningIdx = -1, curRec = null;
+  const results = {};   // 行番号 → { score, heard }（このページを開いている間だけ）
+  const P = () => R.PASSAGES.find(p => p.id === pid);
+  const key = n => pid + ':' + n;
+
+  if (!CJ.recognitionSupported) $('noMic').style.display = '';
+
+  function renderTabs() {
+    $('pRow').innerHTML = R.PASSAGES.map(p => '<button class="chip' + (p.id === pid ? ' active' : '') + '" data-p="' + p.id + '">' + p.icon + ' ' + esc(CJ.tx(p, 'title')) + '</button>').join('');
+  }
+
+  function resultHtml(n) {
+    const r = results[n];
+    if (listeningIdx === n) return '<div class="rd-result show">' + esc(t('rd.listening')) + (r && r.interim ? '<div class="muted">' + esc(r.interim) + '</div>' : '') + '</div>';
+    if (!r || (!r.err && typeof r.score !== 'number')) return '<div class="rd-result"></div>';
+    if (r.err) return '<div class="rd-result show" style="color:var(--bad);">' + esc(r.err) + '</div>';
+    const ok = r.score >= CJ.PASS_SCORE;
+    return '<div class="rd-result show"><span class="sc ' + (ok ? 'ok' : 'ng') + '">' + esc(t(ok ? 'rd.pass' : 'rd.retry', { s: r.score })) + '</span>' +
+      '<div class="muted">' + esc(t('rd.heard', { t: r.heard })) + '</div></div>';
+  }
+
+  function render() {
+    renderTabs();
+    const p = P(), best = CJ.getData().read, showK = !!CJ.getPrefs().readKanji;
+    $('pTitle').textContent = p.icon + ' ' + CJ.tx(p, 'title');
+    $('optKanji').checked = showK;
+    $('playAll').textContent = t(playing ? 'rd.stop' : 'rd.playAll');
+    $('lines').innerHTML = p.lines.map((l, n) => {
+      const b = best[key(n)];
+      return '<div class="rd-line" id="line' + n + '">' +
+        '<div class="k ja">' + (showK ? K.rubyHtml(l[3], esc) : esc(l[0])) + '</div>' +
+        '<div class="romaji">' + esc(l[1]) + '</div><div class="e">' + esc(l[2]) + '</div>' +
+        '<div class="rd-tools">' + CJ.sayBtns(l[0]) +
+          (CJ.recognitionSupported ? '<button class="mic-btn' + (listeningIdx === n ? ' on' : '') + '" data-mic="' + n + '" aria-label="' + esc(t('rd.mic')) + '">🎙️</button>' : '') +
+          (b ? '<span class="rd-best">' + (b >= CJ.PASS_SCORE ? '⭐ ' : '') + esc(t('rd.best', { s: b })) + '</span>' : '') +
+        '</div>' + resultHtml(n) + '</div>';
+    }).join('');
+    const good = p.lines.filter((l, n) => (best[key(n)] || 0) >= CJ.PASS_SCORE).length;
+    $('doneText').textContent = CJ.recognitionSupported ? t('rd.done', { n: good, m: p.lines.length }) : '';
+  }
+
+  function check(n) {
+    const l = P().lines[n];
+    if (listeningIdx === n) { if (curRec) curRec.stop(); return; }   // もう一度押すと聞き取りを終える（その時点までで採点）
+    if (curRec) { try { curRec.abort(); } catch (e) {} }
+    stopAll();
+    listeningIdx = n; results[n] = { interim: '' }; render();
+    const rec = CJ.listen({
+      onInterim: s => { if (results[n]) results[n].interim = s; const el = document.querySelector('#line' + n + ' .rd-result .muted'); if (el) el.textContent = s; else render(); },
+      onFinal: alts => {
+        // ひらがな と 漢字の書き方 の両方と比べる（スマホは漢字で聞き取ることが多い）
+        const r = CJ.scoreJa([l[0], K.plain(l[3])], alts);
+        results[n] = r;
+        CJ.recordRead(key(n), r.score);
+      },
+      onError: m => { results[n] = { err: m }; },
+      onState: on => { if (!on && curRec === rec) { curRec = null; listeningIdx = -1; render(); } }
+    });
+    curRec = rec;
+    if (!rec) { listeningIdx = -1; render(); }
+  }
+
+  // ぜんぶ きく：1行ずつ順番に読み上げる
+  function stopAll() {
+    if (!playing) return;
+    playing = false; CJ.stopSpeak();
+    document.querySelectorAll('.rd-line.playing').forEach(el => el.classList.remove('playing'));
+    $('playAll').textContent = t('rd.playAll');
+  }
+  function playFrom(n) {
+    const lines = P().lines;
+    document.querySelectorAll('.rd-line.playing').forEach(el => el.classList.remove('playing'));
+    if (!playing || n >= lines.length) { stopAll(); return; }
+    const el = $('line' + n);
+    if (el) { el.classList.add('playing'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    const ok = CJ.speak(lines[n][0], false, () => setTimeout(() => playFrom(n + 1), 450));
+    if (!ok) { stopAll(); CJ.toast(t('toast.noSpeech')); }
+  }
+  $('playAll').addEventListener('click', () => {
+    if (playing) { stopAll(); return; }
+    playing = true; $('playAll').textContent = t('rd.stop'); playFrom(0); CJ.markStudied();
+  });
+
+  $('pRow').addEventListener('click', e => {
+    const b = e.target.closest('[data-p]'); if (!b) return;
+    stopAll(); pid = b.dataset.p; Object.keys(results).forEach(k => delete results[k]); listeningIdx = -1; render();
+  });
+  $('lines').addEventListener('click', e => { const b = e.target.closest('[data-mic]'); if (b) check(Number(b.dataset.mic)); });
+  $('optKanji').addEventListener('change', e => { CJ.setPref('readKanji', e.target.checked); render(); });
+  document.addEventListener('cj:lang', render);
+  render();
+})();
+</script>
+</body>
+</html>
