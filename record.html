@@ -111,9 +111,10 @@
   /* ---- GitHub へ送る：まだサイトにない声だけ。GitHub は 1回 100ファイル まで なので 90こ ずつ に分ける ---- */
   const PACK = 90, SENT_KEY = 'cj_voice_sent';   // SENT_KEY: { id: zip に入れた時の録音時刻 }（録り直しを見つける用）
   const getSent = () => { try { return JSON.parse(localStorage.getItem(SENT_KEY) || '{}') || {}; } catch (e) { return {}; } };
+  // 「新しい」＝ まだ一度も zip に入れていない（＋サイトにもない）か、zip に入れたあと 録り直した もの
   function isNew(r, site, sent) {
-    if (!site.has(r.id)) return true;              // サイトにまだない
-    return sent[r.id] != null && r.t > sent[r.id];  // サイトにあるけど、そのあと録り直した
+    if (sent[r.id] != null) return r.t > sent[r.id];
+    return !site.has(r.id);
   }
   async function pending() {
     const recs = await CJ.localVoiceRecords().catch(() => []), site = new Set(CJ.siteVoiceIds()), sent = getSent();
@@ -222,7 +223,9 @@
     let site = { ids: CJ.siteVoiceIds(), texts: {} };
     try { const r = await fetch(CJ.VOICE_DIR + 'index.json', { cache: 'no-cache' }); if (r.ok) { const j = await r.json(); if (j && Array.isArray(j.ids)) site = { ids: j.ids.map(String), texts: j.texts || {} }; } } catch (e) {}
     todo.sort((a, b) => a.t - b.t);
-    const ids = new Set(site.ids), texts = Object.assign({}, site.texts);
+    const ids = new Set(site.ids), texts = Object.assign({}, site.texts), sent = getSent();
+    // 前に zip に入れた声も index.json に残す（まだ GitHub に反映前でも 消えない ように）
+    (await CJ.localVoiceRecords().catch(() => [])).forEach(r => { if (sent[r.id] != null) { ids.add(r.id); texts[r.id] = r.kana; } });
     packs = [];
     for (let i = 0; i < todo.length; i += PACK) {
       const part = todo.slice(i, i + PACK);
