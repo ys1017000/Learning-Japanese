@@ -65,7 +65,11 @@
     <div class="setting-row"><label for="optRomaji" data-i18n="set.romaji"></label><input type="checkbox" id="optRomaji"></div>
     <div class="setting-row"><label for="optAuto" data-i18n="set.auto"></label><input type="checkbox" id="optAuto"></div>
     <div class="setting-row"><span data-i18n="set.rate"></span><span class="seg" id="rateSeg"><button data-rate="0.75" data-i18n="rate.slow"></button><button data-rate="0.9" data-i18n="rate.normal"></button><button data-rate="1.05" data-i18n="rate.fast"></button></span></div>
-    <div class="setting-row"><span data-i18n="set.test"></span><button class="tiny-btn" id="testVoice">🔊 こんにちは</button></div>
+    <div class="setting-row"><span data-i18n="set.voice"></span><select id="voiceSel" style="max-width:60%; font-size:16px; padding:4px; border:1px solid var(--border); border-radius:8px;"></select></div>
+    <div class="setting-row"><span data-i18n="set.vmode"></span><span class="seg" id="vmodeSeg"><button data-vm="natural" data-i18n="vmode.natural"></button><button data-vm="kana" data-i18n="vmode.kana"></button></span></div>
+    <p class="muted" style="font-size:0.78rem;" data-i18n="set.vmodeHelp"></p>
+    <div class="setting-row"><span data-i18n="set.test"></span><button class="tiny-btn" id="testVoice">🔊 いま どこ？</button></div>
+    <div class="notice" style="font-size:0.8rem;" data-i18n="set.voiceHelp"></div>
     <div class="notice" id="voiceNotice" style="display:none;"></div>
     <p class="muted" style="margin-top:0.6rem;" data-i18n="set.spaces"></p>
   </div>
@@ -141,6 +145,8 @@
     document.querySelectorAll('#rateSeg button').forEach(b => b.classList.toggle('active', Math.abs(Number(b.dataset.rate) - Number(p.rate)) < 0.01));
     document.querySelectorAll('#langSeg button').forEach(b => b.classList.toggle('active', b.dataset.lang === CJ.lang()));
     document.querySelectorAll('#themeSeg button').forEach(b => b.classList.toggle('active', b.dataset.theme === (p.theme || 'pink')));
+    document.querySelectorAll('#vmodeSeg button').forEach(b => b.classList.toggle('active', b.dataset.vm === (p.voiceMode || 'natural')));
+    renderVoices();
     document.querySelectorAll('#secsSeg button').forEach(b => { b.textContent = t('secs', { n: b.dataset.secs }); b.classList.toggle('active', Number(b.dataset.secs) === CJ.drillSecs()); });
   }
   $('themeSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { CJ.setPref('theme', b.dataset.theme); renderSettings(); } });
@@ -172,7 +178,16 @@
     if (!CJ.hasJaVoice()) { n.style.display = ''; n.innerHTML = t('voice.none'); }
     else n.style.display = 'none';
   }
-  $('testVoice').addEventListener('click', () => { CJ.speak('こんにちは'); setTimeout(checkVoice, 500); });
+  $('testVoice').addEventListener('click', () => { CJ.speak('いま どこ？'); setTimeout(checkVoice, 500); });
+  // 声のえらびかた（端末に入っている日本語の声）
+  function renderVoices() {
+    const list = CJ.jaVoices(), want = CJ.getPrefs().voiceName;
+    $('voiceSel').innerHTML = '<option value="">' + esc(t('set.voiceAuto')) + (list[0] ? '：' + esc(list[0].name) : '') + '</option>' +
+      list.map(v => '<option value="' + esc(v.name) + '"' + (v.name === want ? ' selected' : '') + '>' + esc(v.name) + '</option>').join('');
+  }
+  if ('speechSynthesis' in window) window.speechSynthesis.addEventListener('voiceschanged', renderVoices);
+  $('voiceSel').addEventListener('change', e => { CJ.setPref('voiceName', e.target.value); CJ.speak('いま どこ？'); });
+  $('vmodeSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; CJ.setPref('voiceMode', b.dataset.vm); renderSettings(); CJ.speak('いま どこ？'); });
 
   $('exportBtn').addEventListener('click', () => { CJ.downloadBackup(); CJ.toast(t('bk.done')); });
   $('importBtn').addEventListener('click', () => $('importFile').click());

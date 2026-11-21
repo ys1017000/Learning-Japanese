@@ -296,3 +296,7 @@ body.hide-furi #detail rt, body.hide-furi #detail .romaji, body.hide-furi .wd-li
 .menu-btn { font-size: 0.78rem; }
 .btn-insta { background: linear-gradient(45deg, #f58529, #dd2a7b 50%, #8134af); }
 .btn-insta:hover { filter: brightness(0.95); background: linear-gradient(45deg, #f58529, #dd2a7b 50%, #8134af); }
+/* せってい：ボタンの文字が折り返さないように、ならびごと折り返す */
+.setting-row { flex-wrap: wrap; }
+.seg button { white-space: nowrap; }
+#voiceSel { max-width: 100% !important; }

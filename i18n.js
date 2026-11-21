@@ -337,5 +337,16 @@ window.CJ_I18N = {
 
   // v4: クイズ
   'mode.words': ['📝 Words', '📝 たんご'],
-  'q.wMeaning': ['What does this word mean?', 'この ことば の いみ は？']
+  'q.wMeaning': ['What does this word mean?', 'この ことば の いみ は？'],
+  // v6: 声
+  'set.voice': ['Voice', 'こえ'],
+  'set.voiceAuto': ['Best available (auto)', 'いちばん いい こえ（じどう）'],
+  'set.vmode': ['How the voice reads', 'よみあげ の しかた'],
+  'vmode.natural': ['Natural', 'しぜん'],
+  'vmode.kana': ['Exact kana', 'ひらがな どおり'],
+  'set.vmodeHelp': ['"Natural" reads the sentence with its kanji, so the voice knows where words start and end — the intonation is usually much better. "Exact kana" reads the hiragana letter by letter.', '「しぜん」 は かんじ の ぶん を よむ ので、ことば の くぎり が わかり、イントネーション が ずっと しぜん に なります。「ひらがな どおり」 は ひらがな を そのまま よみます。'],
+  'set.voiceHelp': ['<b>🤖 This is a computer voice.</b> It is good for practice, but sometimes the intonation (pitch) is not natural. To learn real intonation:<br>• Tap 🎧 YouGlish to hear real people say it<br>• Ask Yoh-chan to say it (💌 → "The voice sounded strange")<br><br><b>Get a better voice (free):</b><br>• iPhone: Settings → Accessibility → Spoken Content → Voices → Japanese → download an "Enhanced" or "Premium" voice (e.g. Kyoko, O-ren), then choose it above<br>• Android: Settings → Text-to-speech → Google → install Japanese voice data',
+    '<b>🤖 これ は きかい の こえ です。</b> れんしゅう には べんり です が、イントネーション（こえ の たかさ） が しぜん で ない こと が あります。ほんとう の イントネーション は：<br>• 🎧 YouGlish で ほんもの の ひと の こえ を きく<br>• ようちゃん に いって もらう（💌 →「こえ が へん だった」）<br><br><b>もっと いい こえ（むりょう）：</b><br>• iPhone：せってい → アクセシビリティ → よみあげコンテンツ → こえ → にほんご →「かくちょう」 や 「プレミアム」 の こえ（Kyoko、O-ren など） を ダウンロード して、うえ で えらぶ<br>• Android：せってい → テキストよみあげ → Google → にほんご の こえ を いれる'],
+  'voice.caution': ['🤖 Computer voice — the intonation can be a little off. For real voices, use 🎧 YouGlish or ask Yoh-chan.', '🤖 きかい の こえ です。イントネーション が すこし ちがう ことも。ほんもの の こえ は 🎧 YouGlish か ようちゃん に きいて ね。'],
+  'ask.t.voice': ['🤖 The voice sounded strange', '🤖 こえ が へん だった']
 };

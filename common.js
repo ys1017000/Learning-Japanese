@@ -24,7 +24,7 @@
   function shuffle(a) { const x = a.slice(); for (let i = x.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [x[i], x[j]] = [x[j], x[i]]; } return x; }
 
   /* ---------- 設定 ---------- */
-  const DEFAULT_PREFS = { romaji: true, rate: 0.9, autoSpeak: true, lang: 'en', readKanji: false, theme: 'pink', drillSecs: 5 };
+  const DEFAULT_PREFS = { romaji: true, rate: 0.9, autoSpeak: true, lang: 'en', readKanji: false, theme: 'pink', drillSecs: 5, voiceMode: 'natural', voiceName: '', voiceNoted: false };
   const THEMES = ['pink', 'matcha', 'sky'];
   function getPrefs() { try { return Object.assign({}, DEFAULT_PREFS, JSON.parse(safeGet(KEY_PREFS)) || {}); } catch (e) { return Object.assign({}, DEFAULT_PREFS); } }
   function setPref(k, v) { const p = getPrefs(); p[k] = v; safeSet(KEY_PREFS, JSON.stringify(p)); applyPrefs(); }
@@ -90,7 +90,7 @@
        daily: { 'YYYY-MM-DD': { lunch: { k: [キー], r: ['c'|'p'], s: [言えた数, 枚数] or null }, night: {…} } },
        asks: [{ id, t: 時刻, type: 種類, text: 本文, ctx: どこから, done: 解決した }],  pref: [覚えた都道府県], words: [覚えた単語] */
   function defaultData() { return { v: DATA_VERSION, learned: [], kanji: [], wrong: {}, history: {}, quiz: { correct: 0, total: 0 }, read: {}, prac: {}, daily: {}, asks: [], pref: [], words: [] }; }
-  const ASK_TYPES = ['say', 'read', 'kanji', 'q', 'feature', 'other'];
+  const ASK_TYPES = ['say', 'read', 'kanji', 'voice', 'q', 'feature', 'other'];
   function normAsks(list) {
     const seen = new Set(), out = [];
     (Array.isArray(list) ? list : []).forEach(a => {
@@ -222,19 +222,69 @@
   let cachedVoices = [];
   function loadVoices() { if ('speechSynthesis' in window) cachedVoices = window.speechSynthesis.getVoices() || []; }
   if ('speechSynthesis' in window) { loadVoices(); window.speechSynthesis.onvoiceschanged = loadVoices; }
-  function jaVoice() {
+  // 日本語の声の一覧（よさそうな順）。端末に入っている「拡張」「プレミアム」「Siri」「Google」の声を優先する
+  function voiceScore(v) {
+    const n = v.name || '';
+    let sc = 0;
+    if (/premium|プレミアム/i.test(n)) sc += 50;
+    if (/enhanced|拡張|高品質/i.test(n)) sc += 40;
+    if (/siri/i.test(n)) sc += 35;
+    if (/google/i.test(n)) sc += 30;
+    if (/neural|natural|online/i.test(n)) sc += 25;
+    if (/o-?ren|kyoko|otoya|hattori/i.test(n)) sc += 5;
+    if (v.localService === false) sc += 3;
+    return sc;
+  }
+  function jaVoices() {
     if (!cachedVoices.length) loadVoices();
-    return cachedVoices.find(v => v.lang === 'ja-JP') || cachedVoices.find(v => /^ja/i.test(v.lang.replace('_', '-'))) || null;
+    return cachedVoices.filter(v => /^ja/i.test(String(v.lang).replace('_', '-'))).sort((a, b) => voiceScore(b) - voiceScore(a));
+  }
+  function jaVoice() {
+    const list = jaVoices(), want = getPrefs().voiceName;
+    return (want && list.find(v => v.name === want)) || list[0] || null;
   }
   function hasJaVoice() { return !!jaVoice(); }
+
+  /* ---- 読み上げる文：ひらがなだけだと単語の切れ目が分からず、イントネーションがおかしくなりやすい。
+     アプリ内の文は「漢字の書き方」を持っているので、それを読ませる（しぜん モード）。
+     ただし、機械がまちがえやすい読み（紅葉＝もみじ、十分＝じゅうぶん など）は、ひらがなで読ませる */
+  const FORCE_KANA = new Set(['紅葉|こうよう', '明日|あした', '本当|ほんと', '空|あ', '空|す', '方|かた', '生|なま', '間|ま', '入|はい',
+    '何|なに', '何|なん', '七|しち', '十分|じゅっぷん', '竹林|たけばやし', '一番|いちばん', '今日|きょう', '一人|ひとり', '二人|ふたり', '上手|じょうず']);
+  let kjMap = null;   // ひらがな（スペースなし）→ 漢字の書き方
+  function addKj(kana, kj) { if (kana && kj && /\{/.test(kj)) kjMap[speechText(kana)] = kj; }
+  function buildKjMap() {
+    kjMap = {};
+    const D = window.CJ_DATA, G = window.CJ_GRAMMAR, R = window.CJ_READ, E = window.CJ_EXAMPLES, W = window.CJ_WORDS, K = window.CJ_KANJI, P = window.CJ_PREF;
+    if (D) {
+      D.CARDS.forEach(c => { addKj(c.c[0], c.c[2]); addKj(c.p[0], c.p[2]); (c.r || []).forEach(r => addKj(r[0], r[3])); });
+      D.ENDINGS.forEach(e => e.ex.forEach(x => addKj(x[0], x[5])));
+      D.COMPARE.forEach(c => c.rows.forEach(r => addKj(r[0], r[4])));
+    }
+    if (G) G.GRAMMAR.forEach(g => g.ex.forEach(e => { addKj(e[1], e[5]); addKj(e[3], e[6]); }));
+    if (R) R.PASSAGES.forEach(p => p.lines.forEach(l => { addKj(l[1][0], l[1][2]); addKj(l[2][0], l[2][2]); }));
+    if (E) E.EXAMPLES.forEach(e => { addKj(e[2][0], e[2][2]); addKj(e[3][0], e[3][2]); });
+    if (W) W.WORDS.forEach(w => addKj(w.kana, w.kj));
+    if (K) K.KANJI.forEach(k => k.words.forEach(w => addKj(reading(w[0]), w[0])));
+    if (P) P.PREFS.forEach(x => { addKj(reading(x.kj), x.kj); addKj(reading(x.cap), x.cap); });
+  }
+  function naturalText(kj) {
+    return String(kj).replace(/\{([^|}]+)\|([^}]+)\}/g, (m, b, r) => FORCE_KANA.has(b + '|' + r) ? r : b);
+  }
   // 表示用のスペースと「〜」は読み上げでは取り除く
   function speechText(kana) { return String(kana || '').replace(/[\s　〜~]/g, ''); }
+  function utterText(kana) {
+    const plainKana = speechText(kana);
+    if (getPrefs().voiceMode === 'kana') return plainKana;
+    if (!kjMap) buildKjMap();
+    const kj = kjMap[plainKana];
+    return kj ? speechText(naturalText(kj)) : plainKana;
+  }
   // onEnd: 読み終わったときに呼ぶ（「ぜんぶ きく」用）
   function speak(kana, slow, onEnd) {
     if (!('speechSynthesis' in window) || !kana) return false;
     const synth = window.speechSynthesis;
     const go = () => {
-      const u = new SpeechSynthesisUtterance(speechText(kana));
+      const u = new SpeechSynthesisUtterance(utterText(kana));
       u.lang = 'ja-JP';
       const base = Number(getPrefs().rate) || 0.9;
       u.rate = slow ? Math.max(0.4, base * 0.65) : base;
@@ -245,6 +295,8 @@
     };
     // 再生中に cancel → すぐ speak すると新しい音声が捨てられることがあるので少し待つ
     if (synth.speaking || synth.pending) { synth.cancel(); setTimeout(go, 120); } else go();
+    // はじめて読み上げたときに一度だけ：「機械の声なので、イントネーションは本物とちがうことがある」
+    if (!getPrefs().voiceNoted) { setPref('voiceNoted', true); setTimeout(() => toast(t('voice.caution')), 400); }
     return true;
   }
   function stopSpeak() { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); }
@@ -453,7 +505,7 @@
   window.CJ = {
     esc, dateKey, shuffle, getData, saveData, isLearned, toggleLearned, isKanjiLearned, toggleKanji, recordQuiz, recordRead, markStudied,
     calcStreak, updateStreakBadge, getPrefs, setPref, applyPrefs, drillSecs, lang, t, tx, applyI18n, setLang, recordPrac, saveDailySlot,
-    speak, stopSpeak, autoSpeak, hasJaVoice, speechText, recognitionSupported, listen, normJa, scoreJa, PASS_SCORE,
+    speak, stopSpeak, autoSpeak, hasJaVoice, jaVoices, utterText, speechText, recognitionSupported, listen, normJa, scoreJa, PASS_SCORE,
     sayBtns, toast, downloadBackup, importBackup, ruby, reading, plain, showKanji, jaHtml, syncKanjiToggles, extLinks, askLink, flipHtml,
     addAsk, updateAsk, ASK_TYPES, togglePref, toggleWord
   };
