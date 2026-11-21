@@ -400,9 +400,10 @@ window.CJ_I18N = {
   'slot.nightCards': ['🌙 Night cards', '🌙 よる の カード'],
   'slot.pat': ['🔁 Patterns', '🔁 かた の れんしゅう'],
   // v13: 型 の 選択肢
-  'pr.pickA': ['Tap the word that goes in ［ A ］', '［ A ］ に はいる ことば を タップ'],
-  'pr.pickAB': ['Tap the right words for ［ A ］ ・ ［ B ］ (order matters!)', '［ A ］・［ B ］ に はいる ことば を タップ（じゅんばん に ちゅうい！）'],
+  'pr.pickA': ['Only ONE word fits ［ A ］. Which one?', '［ A ］ に あう ことば は 1つ だけ。どれ？'],
+  'pr.pickAB': ['Which order is right? (A より B = "I like B more than A")', 'どっち の じゅんばん？（A より B ＝ B の ほう が すき）'],
   'pr.pickRight': ['⭕ Yes!', '⭕ せいかい！'],
-  'pr.pickWrong': ['❌ Not "{w}"', '❌ 「{w}」 では ない よ'],
+  'pr.pickWrong': ['❌ "{w}" doesn\'t fit in this pattern', '❌ 「{w}」 は この かた に あわない よ'],
+  'pr.pickWrongHou': ['❌ Opposite! That means you like the other one more.', '❌ はんたい！ それ だと もう ひとつ の ほう が すき に なる よ'],
   'pr.saySentence': ['Now say the whole sentence out loud 🗣️', 'ぶん ぜんぶ を こえ に だして いって みよう 🗣️']
 };

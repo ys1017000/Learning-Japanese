@@ -158,17 +158,36 @@
   function itemKey(o) { return o.x.key + ':' + o.reg; }
   /* ---------- 型 の 練習：［A］に入る言葉を、選択肢からタップして選ぶ ----------
      英語を見る → 型の［A］に入る言葉を 4つ の中から選ぶ → 文が完成して読み上げ → つぎへ */
+  /* 選択肢：正解は1つだけ。ほかの3つは「この型に入れると変になる」ことば（ほかの型から、合わない種類を選ぶ）
+     例）［A］が たべたい な → パスタ ⭕ ／ えき・ろくじ・あした は はれる ❌ */
+  const KIND = { tabetai: 'food', nomitai: 'drink', ikou: 'place', imairu: 'place', doko: 'place', shiyou: 'act', kotoaru: 'act', haretara: 'act', aou: 'time', kirei: 'scene', omou: 'clause' };
+  const WRONG = {   // その型に入れると「おかしい日本語」になる種類
+    tabetai: ['place', 'time', 'clause'], nomitai: ['place', 'time', 'clause'], ikou: ['clause'], shiyou: ['food', 'drink', 'place'],
+    suki: ['clause'], doko: ['time', 'clause'], 'ni-suru': ['clause'], imairu: ['food', 'drink', 'time'], aou: ['food', 'drink', 'clause'],
+    kotoaru: ['food', 'place', 'time'], haretara: ['food', 'drink', 'place'], kirei: ['time', 'clause', 'act'], omou: ['food', 'place', 'time']
+  };
+  // 「おちゃ しよう（＝お茶しよう）」「やきにく しよう」は 自然な 日本語 なので、まちがい の 選択肢 には 使わない
+  const NOT_WRONG = new Set(['おちゃ', 'やきにく']);
+  const KIND_WORDS = {};
+  PT.PATTERNS.forEach(p => { const k = KIND[p.id]; if (k) p.fill.forEach(f => { (KIND_WORDS[k] = KIND_WORDS[k] || []); if (!KIND_WORDS[k].some(w => w[0] === f.x[0])) KIND_WORDS[k].push(f.x); }); });
   function choiceOpts(o) {
     if (o.opts) return o.opts;
     const p = ptBy[o.x.pid], idx = Number(o.x.key.split(':')[2]), f = p.fill[idx];
-    const lab = g => g.y ? [g.x, g.y] : [g.x];
-    let others = p.fill.filter((g, i) => i !== idx);
-    const opts = [{ w: lab(f), ok: true }];
-    if (f.y) opts.push({ w: [f.y, f.x], ok: false });   // A と B が逆 → まちがい（順番がだいじ）
-    CJ.shuffle(others).forEach(g => { if (opts.length < 4) opts.push({ w: lab(g), ok: false }); });
+    if (f.y) {   // 「A より B の ほう が すき」：正しい順番 と 逆 の 2択（逆だと意味が反対になる）
+      o.opts = CJ.shuffle([{ w: [f.x, f.y], ok: true }, { w: [f.y, f.x], ok: false, rev: true }]);
+      return o.opts;
+    }
+    const mine = new Set(p.fill.map(g => g.x[0]));
+    const pools = (WRONG[p.id] || []).map(k => CJ.shuffle((KIND_WORDS[k] || []).filter(w => !mine.has(w[0]) && !NOT_WRONG.has(w[0])))).filter(l => l.length);
+    const opts = [{ w: [f.x], ok: true }], used = new Set([f.x[0]]);
+    for (let i = 0; opts.length < 4 && i < 20 && pools.length; i++) {   // 種類が かたよらない ように 順番に 1つずつ
+      const w = pools[i % pools.length].find(z => !used.has(z[0]));
+      if (w) { used.add(w[0]); opts.push({ w: [w], ok: false }); }
+    }
     o.opts = CJ.shuffle(opts);
     return o.opts;
   }
+
   const wordHtml = w => CJ.showKanji() ? CJ.ruby(w[2]) : esc(w[0]);
   function frameWith(p, ws, cls) {
     const f = CJ.showKanji() ? CJ.ruby(p.c[2]) : esc(p.c[0]);
@@ -192,7 +211,7 @@
     } else {
       const ans = st.pol ? x.p : x.c, same = x.c[0] === x.p[0];
       html += '<div class="feedback ' + (picked.ok ? 'correct' : 'wrong') + '" style="display:block;">' +
-        '<b>' + esc(picked.ok ? t('pr.pickRight') : t('pr.pickWrong', { w: picked.w.map(w => w[0]).join(' ・ ') })) + '</b>' +
+        '<b>' + esc(picked.ok ? t('pr.pickRight') : (picked.rev ? t('pr.pickWrongHou') : t('pr.pickWrong', { w: picked.w.map(w => w[0]).join(' ・ ') }))) + '</b>' +
         '<div class="flip ' + (st.pol ? 'is-p' : 'is-c') + '" data-a="pol" style="border-radius:12px; padding:0.5rem; border:1px solid var(--border); background:#fff; margin-top:0.4rem; text-align:center;">' +
           '<div class="flip-top" style="justify-content:center;"><span class="reg ' + (st.pol ? 'polite' : 'casual') + '">' + t(st.pol ? 'reg.polite' : 'reg.casual') + '</span>' +
           '<span class="flip-hint" style="margin-left:6px;">' + esc(t(same ? 'tap.same' : 'tap.short')) + '</span></div>' +
