@@ -238,8 +238,8 @@
   }
   async function downloadPack(i) {
     const pk = packs[i];
-    const files = [{ name: 'voice/index.json', data: new TextEncoder().encode(JSON.stringify(pk.index, null, 1)) }];
-    for (const r of pk.recs) files.push({ name: 'voice/' + r.id + '.wav', data: new Uint8Array(await r.blob.arrayBuffer()) });
+    const files = [{ name: 'index.json', data: new TextEncoder().encode(JSON.stringify(pk.index, null, 1)) }];
+    for (const r of pk.recs) files.push({ name: r.id + '.wav', data: new Uint8Array(await r.blob.arrayBuffer()) });
     const url = URL.createObjectURL(makeZip(files));
     const a = document.createElement('a'); a.href = url;
     a.download = 'voice-' + CJ.dateKey().replace(/-/g, '') + (packs.length > 1 ? '-' + (i + 1) + 'of' + packs.length : '') + '.zip';

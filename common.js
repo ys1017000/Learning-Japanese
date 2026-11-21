@@ -4,7 +4,7 @@
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
-  const APP_VERSION = 'v20';
+  const APP_VERSION = 'v21';
   const DATA_VERSION = 4;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily) / v4: ようちゃんへの質問(asks)・都道府県(pref)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
   const BACKUP_VERSION = 4;           // v1〜v3 のバックアップも読み込める
@@ -303,8 +303,8 @@
   }
   /* ---------- ようちゃん の こえ（録音した声） ----------
      声のファイル名：ひらがな（スペース・〜なし）から作る短い番号。v_xxxxxxxx.wav
-     ① この スマホ で 録音した声（IndexedDB）→ ② サイトの voice/ フォルダ（voice/index.json に一覧）→ ③ 機械の声 の順に使う */
-  const VOICE_DIR = 'voice/';
+     ① この スマホ で 録音した声（IndexedDB）→ ② サイトの いちばん上（index.json に一覧・WAV も同じ場所）→ ③ 機械の声 の順に使う */
+  const VOICE_DIR = '';   // GitHub の いちばん上 に WAV と index.json を置く
   function hashKey(str) { let h = 0x811c9dc5; for (const ch of str) { h ^= ch.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0; } return ('0000000' + h.toString(16)).slice(-8); }
   function voiceId(kana) { return 'v_' + hashKey(speechText(kana)); }
   const siteVoices = new Set(), localVoices = {};   // localVoices: id → 再生用URL

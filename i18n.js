@@ -379,7 +379,7 @@ window.CJ_I18N = {
   'rec.noLocal': ['Nothing recorded on this phone yet.', 'この スマホ には まだ ろくおん が ありません。'],
   'rec.export': ['⬇️ Download for GitHub (zip)', '⬇️ GitHub よう に ダウンロード（zip）'],
   'rec.exported': ['Downloaded {n} recordings 📦', '{n} こ の ろくおん を ダウンロード しました 📦'],
-  'rec.how': ['Tap the button. Only new recordings go into the zip.|Upload everything inside the zip\'s voice folder to the voice folder on GitHub (replace index.json).', 'ボタン を おす。zip に は あたらしい ろくおん だけ が はいります。|zip の voice フォルダ の なか を ぜんぶ、GitHub の voice フォルダ に アップロード（index.json は うわがき）。'],
+  'rec.how': ['Tap the button. Only new recordings go into the zip.|Unzip it and upload all the files to the top of the GitHub repository (the same place as index.html). Replace index.json.', 'ボタン を おす。zip に は あたらしい ろくおん だけ が はいります。|zip を ひらいて、なか の ファイル を ぜんぶ GitHub の いちばん うえ（index.html と おなじ ばしょ）に アップロード。index.json は うわがき。'],
   'rec.localCount2': ['New recordings: {m} (total on this phone: {n})', 'あたらしい ろくおん：{m} こ（ぜんぶ で {n} こ）'],
   'rec.exportN': ['⬇️ Make {k} zip packs for GitHub', '⬇️ GitHub よう の zip を {k} こ つくる'],
   'rec.packsNote': ['More than 90 files, so it\'s split. Upload them in order: 1, 2, 3…', '90 こ を こえた ので わけました。1、2、3… の じゅん に アップロード して ね。'],
