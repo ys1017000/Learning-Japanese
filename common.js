@@ -4,7 +4,7 @@
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
-  const APP_VERSION = 'v22';
+  const APP_VERSION = 'v23';
   const DATA_VERSION = 4;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily) / v4: ようちゃんへの質問(asks)・都道府県(pref)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
   const BACKUP_VERSION = 4;           // v1〜v3 のバックアップも読み込める
@@ -25,7 +25,7 @@
   function shuffle(a) { const x = a.slice(); for (let i = x.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [x[i], x[j]] = [x[j], x[i]]; } return x; }
 
   /* ---------- 設定 ---------- */
-  const DEFAULT_PREFS = { romaji: true, rate: 0.9, autoSpeak: true, lang: 'en', readKanji: false, theme: 'pink', drillSecs: 5, voiceMode: 'natural', voiceName: '', voiceNoted: false };
+  const DEFAULT_PREFS = { romaji: true, rate: 0.9, autoSpeak: true, lang: 'en', readKanji: false, theme: 'pink', drillSecs: 5, voiceMode: 'natural', voiceName: '', voiceNoted: false, voiceSrc: 'yoh' };   // voiceSrc: 'yoh' = ようちゃん の録音があれば それ、'tts' = いつも 機械の声
   const THEMES = ['pink', 'matcha', 'sky'];
   function getPrefs() { try { return Object.assign({}, DEFAULT_PREFS, JSON.parse(safeGet(KEY_PREFS)) || {}); } catch (e) { return Object.assign({}, DEFAULT_PREFS); } }
   function setPref(k, v) { const p = getPrefs(); p[k] = v; safeSet(KEY_PREFS, JSON.stringify(p)); applyPrefs(); }
@@ -331,7 +331,8 @@
     idbAll().then(list => list.forEach(rec => { if (rec && rec.blob) localVoices[rec.id] = URL.createObjectURL(rec.blob); })).catch(() => {})
   ]).then(() => { markVoiceButtons(); document.dispatchEvent(new CustomEvent('cj:voices')); });
   function voiceUrl(kana) { const id = voiceId(kana); return localVoices[id] || (siteVoices.has(id) ? VOICE_DIR + id + '.wav' : null); }
-  function hasVoice(kana) { const id = voiceId(kana); return localVoices[id] ? 'local' : siteVoices.has(id) ? 'site' : ''; }
+  const useYoh = () => getPrefs().voiceSrc !== 'tts';
+  function hasVoice(kana) { if (!useYoh()) return ''; const id = voiceId(kana); return localVoices[id] ? 'local' : siteVoices.has(id) ? 'site' : ''; }
   function saveLocalVoice(kana, blob) {
     const id = voiceId(kana);
     return idbPut({ id, kana: speechText(kana), blob, t: Date.now() }).then(() => { if (localVoices[id]) URL.revokeObjectURL(localVoices[id]); localVoices[id] = URL.createObjectURL(blob); markVoiceButtons(); return id; });
@@ -352,7 +353,7 @@
   if (player) { player.preload = 'auto'; try { player.preservesPitch = true; player.webkitPreservesPitch = true; } catch (e) {} }
   function speak(kana, slow, onEnd) {
     if (!kana) return false;
-    const url = player && voiceUrl(kana);
+    const url = player && useYoh() && voiceUrl(kana);
     if (url) {
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       player.pause();
@@ -580,7 +581,15 @@
     navigator.serviceWorker.addEventListener('controllerchange', () => { if (reloaded) return; reloaded = true; location.reload(); });
   }
 
+  /* ようちゃん モード：録音・バックアップ など ようちゃん が いじる ところ は、この端末で モード を ON にした ときだけ 出す。
+     ホームの いちばん下の version を 5回 タップ で ON／OFF（端末ごと。バックアップ には ふくめない） */
+  const KEY_DEV = 'cj_dev';
+  const isDev = () => safeGet(KEY_DEV) === '1';
+  function setDev(on) { try { if (on) localStorage.setItem(KEY_DEV, '1'); else localStorage.removeItem(KEY_DEV); } catch (e) {} applyDev(); }
+  function applyDev() { document.querySelectorAll('[data-dev]').forEach(el => { el.style.display = isDev() ? '' : 'none'; }); }
+  applyDev(); document.addEventListener('DOMContentLoaded', applyDev);
   window.CJ = {
+    isDev, setDev, applyDev, ttsSpeak,
     esc, dateKey, shuffle, getData, saveData, isLearned, toggleLearned, isKanjiLearned, toggleKanji, recordQuiz, recordRead, markStudied,
     calcStreak, updateStreakBadge, getPrefs, setPref, applyPrefs, drillSecs, lang, t, tx, applyI18n, setLang, recordPrac, saveDailySlot,
     speak, stopSpeak, autoSpeak, voiceId, voiceUrl, hasVoice, saveLocalVoice, deleteLocalVoice, localVoiceRecords, siteVoiceIds, voicesReady, markVoiceButtons, VOICE_DIR, hasJaVoice, jaVoices, utterText, speechText, recognitionSupported, listen, normJa, scoreJa, PASS_SCORE,
