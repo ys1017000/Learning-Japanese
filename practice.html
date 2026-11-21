@@ -46,6 +46,7 @@
 <script src="kanji-data.js"></script>
 <script src="words-data.js"></script>
 <script src="common.js"></script>
+<script src="pattern-data.js"></script>
 <script src="bank.js"></script>
 <script>
 (function () {
@@ -55,7 +56,12 @@
 
   /* ---------- 練習カードの山 = 文の倉庫（カード・文法・よむ・例文）のすべての文 ----------
      答えは「ふつう」。タップすると「ていねい」に切り替わる */
-  const B = window.CJ_BANK, POOL = B.items, byKey = B.byKey;
+  const B = window.CJ_BANK, POOL = B.items;
+  // 型（かた）の文も、練習カードとして使えるようにする（文の倉庫とは別にしておく）
+  const PT = window.CJ_PATTERNS;
+  const byKey = Object.assign({}, B.byKey);
+  PT.items.forEach(it => { it.txt = CJ.plain(it.c[2]) + '\n' + CJ.plain(it.p[2]); byKey[it.key] = it; });
+  const ptBy = {}; PT.PATTERNS.forEach(p => { ptBy[p.id] = p; });
 
   /* ---------- 日付で決まる乱数（同じ日は同じカード） ---------- */
   function seedRand(str) {
@@ -70,7 +76,21 @@
   /* ---------- ひる／よる の山を作る ----------
      ひる：前に出なかった文 2 枚 ＋ まだ練習していない文（日替わりの順番）
      よる：きょう出なかった文（ひるの まちがい） ＋ 前に出なかった文 ＋ ひるに出ていない新しい文 */
+  /* 型 の よる：2つ の 型 × 4枚。まだ言えていない文が多い型を先に。同じ日は同じ型 */
+  function buildPatSlot(date) {
+    const prac = CJ.getData().prac, rnd = seedRand(date + ':pat');
+    const score = p => PT.items.filter(it => it.pid === p.id && prac[it.key] && prac[it.key].l === 'ok').length / p.fill.length;
+    const order = seededShuffle(PT.PATTERNS, rnd).sort((a, b) => score(a) - score(b));
+    const pick = [];
+    order.slice(0, 2).forEach(p => {
+      const its = PT.items.filter(it => it.pid === p.id);
+      const weak = its.filter(it => !prac[it.key] || prac[it.key].l === 'ng');
+      seededShuffle(weak, rnd).concat(seededShuffle(its.filter(it => !weak.includes(it)), rnd)).slice(0, 4).forEach(it => pick.push(it));
+    });
+    return { k: pick.map(x => x.key), r: pick.map(() => 'c'), s: null };
+  }
   function buildSlot(date, slot) {
+    if (slot === 'pat') return buildPatSlot(date);
     const d = CJ.getData(), prac = d.prac, rnd = seedRand(date + ':' + slot);
     const today = d.daily[date] || {};
     const lunchKeys = new Set(today.lunch ? today.lunch.k : []);
@@ -100,19 +120,25 @@
     $('introText').textContent = t('pr.intro', { s: CJ.drillSecs() });
     const today = CJ.dateKey(), d = CJ.getData(), day = d.daily[today] || {};
     const nowSlot = new Date().getHours() < 16 ? 'lunch' : 'night';
-    $('slots').innerHTML = ['lunch', 'night'].map(sl => {
-      const v = day[sl], done = v && v.s;
-      return '<div class="slot' + (done ? ' done' : '') + (sl === nowSlot && !done ? ' now' : '') + '">' +
-        '<div class="nm">' + esc(t('slot.' + sl)) + '</div>' +
-        '<div class="st">' + esc(done ? t('slot.done', { s: v.s[0], t: v.s[1] }) : t('slot.' + sl + 'Desc') + ' · ' + t('slot.todo', { n: N })) + '</div>' +
-        '<button class="btn' + (done ? ' btn-secondary' : '') + '" data-slot="' + sl + '">' + esc(t(done ? 'slot.redo' : 'slot.start')) + '</button></div>';
-    }).join('');
+    // ひる：1つ。よる：「よる の カード」 か 「型 の れんしゅう」 を えらぶ（どちらか おわれば よる は できた）
+    const lv = day.lunch, ldone = lv && lv.s, nv = day.night, pv = day.pat;
+    const ndone = (nv && nv.s) || (pv && pv.s);
+    $('slots').innerHTML =
+      '<div class="slot' + (ldone ? ' done' : '') + (nowSlot === 'lunch' && !ldone ? ' now' : '') + '">' +
+        '<div class="nm">' + esc(t('slot.lunch')) + '</div>' +
+        '<div class="st">' + esc(ldone ? t('slot.done', { s: lv.s[0], t: lv.s[1] }) : t('slot.lunchDesc') + ' · ' + t('slot.todo', { n: N })) + '</div>' +
+        '<button class="btn' + (ldone ? ' btn-secondary' : '') + '" data-slot="lunch">' + esc(t(ldone ? 'slot.redo' : 'slot.start')) + '</button></div>' +
+      '<div class="slot' + (ndone ? ' done' : '') + (nowSlot === 'night' && !ndone ? ' now' : '') + '">' +
+        '<div class="nm">' + esc(t('slot.night')) + '</div>' +
+        '<div class="st">' + esc(t('slot.nightPick')) + '</div>' +
+        '<button class="btn' + (nv && nv.s ? ' btn-secondary' : '') + '" data-slot="night" style="margin-bottom:6px;">' + esc(t('slot.nightCards')) + (nv && nv.s ? ' ✓ ' + nv.s[0] + '/' + nv.s[1] : '') + '</button>' +
+        '<button class="btn' + (pv && pv.s ? ' btn-secondary' : '') + '" data-slot="pat">' + esc(t('slot.pat')) + (pv && pv.s ? ' ✓ ' + pv.s[0] + '/' + pv.s[1] : '') + '</button></div>';
     // こんしゅう：7日分の ☀️ / 🌙
     const days = [];
     for (let i = 6; i >= 0; i--) { const x = new Date(); x.setDate(x.getDate() - i); days.push(x); }
     $('week').innerHTML = days.map(x => {
       const k = CJ.dateKey(x), v = d.daily[k] || {};
-      const l = v.lunch && v.lunch.s, n = v.night && v.night.s;
+      const l = v.lunch && v.lunch.s, n = (v.night && v.night.s) || (v.pat && v.pat.s);
       return '<div class="rm-day' + (k === today ? ' today' : '') + '">' + (x.getMonth() + 1) + '/' + x.getDate() +
         '<b>' + (l ? '☀️' : '・') + (n ? '🌙' : '・') + '</b></div>';
     }).join('');
@@ -138,6 +164,7 @@
       '<button class="tiny-btn" data-a="quit">' + esc(t('pr.quit')) + '</button></div>' +
       '<div style="text-align:center;"><label class="kj-toggle"><input type="checkbox" data-kanji-toggle' + (CJ.showKanji() ? ' checked' : '') + '> ' + esc(t('rd.kanji')) + '</label></div>' +
       '<div class="dr-en">“' + esc(x.en) + '”</div>' +
+      (x.pid && ptBy[x.pid] ? '<div class="pt-hint ja">' + esc(t('pr.patHint')) + ' ' + ptHint(ptBy[x.pid]) + '</div>' : '') +
       '<div class="dr-timer"><div id="tfill"></div></div>' +
       '<p class="muted" style="text-align:center;">' + esc(t('pr.sayCasual')) + '</p>' +
       (st.shown
@@ -156,6 +183,11 @@
     const f = $('tfill');
     if (!st.shown) { f.style.transition = 'none'; f.style.width = '100%'; void f.offsetWidth; f.style.transition = 'width ' + secs + 's linear'; f.style.width = '0%'; }
     else f.style.width = '0%';
+  }
+  // 型のヒント：「［ A ］ が たべたい な」
+  function ptHint(p) {
+    const f = CJ.showKanji() ? CJ.ruby(p.c[2]) : esc(p.c[0]);
+    return f.split('{X}').join('<span class="pt-slot">［ A ］</span>').split('{Y}').join('<span class="pt-slot">［ B ］</span>');
   }
   function reveal() {
     st.shown = true; st.pol = false; renderDrill();
@@ -235,14 +267,19 @@
   $('slots').addEventListener('click', e => {
     const b = e.target.closest('[data-slot]'); if (!b) return;
     const sl = b.dataset.slot, v = getSlot(CJ.dateKey(), sl);
-    startDrill(t('slot.' + sl), v.k, v.r, sl);
+    startDrill(sl === 'pat' ? t('slot.pat') : t('slot.' + sl), v.k, v.r, sl);
   });
   document.addEventListener('cj:lang', () => { if (st) renderDrill(); else renderMenu(); });
   document.addEventListener('cj:kanji', () => { if (st) renderDrill(); });
 
   // ?g=文法ID：その文法の例文を ふつう と ていねい の両方で練習（日替わりの記録には入れない）
-  const gid = new URLSearchParams(location.search).get('g'), gr = G.find(g => g.id === gid);
-  if (gr) {
+  const qs = new URLSearchParams(location.search);
+  const gid = qs.get('g'), gr = G.find(g => g.id === gid), pp = ptBy[qs.get('pt')];
+  // ?pt=型ID：その型の文を ぜんぶ 練習（日替わりの記録には入れない）
+  if (pp) {
+    const keys = PT.items.filter(it => it.pid === pp.id).map(it => it.key);
+    startDrill(pp.icon + ' ' + CJ.tx(pp, 'title'), keys, keys.map(() => 'c'), null);
+  } else if (gr) {
     const keys = [], regs = [];
     gr.ex.forEach((e, i) => { keys.push('gr:' + gr.id + ':' + i); regs.push('c'); });
     startDrill('🧩 ' + gr.tag, keys, regs, null);

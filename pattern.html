@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Patterns – マルちゃんのペースでいいよ</title>
+<meta name="theme-color" content="#e0517a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<header><a class="logo" href="index.html">🌸 マルちゃんのペースでいいよ</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
+
+<main class="container">
+  <div class="subnav">
+    <a href="cards.html" data-i18n="sub.cards">Polite ⇔ Casual</a>
+    <a href="pattern.html" class="active" data-i18n="sub.patterns">Patterns</a>
+    <a href="grammar.html" data-i18n="sub.grammar">Grammar</a>
+    <a href="endings.html" data-i18n="sub.endings">Endings</a>
+    <a href="guide.html" data-i18n="sub.guide">Tips</a>
+  </div>
+  <div class="card">
+    <h2 data-i18n="pt.title"></h2>
+    <p class="muted" data-i18n="pt.intro"></p>
+    <div style="margin-top:0.6rem;"><label class="kj-toggle"><input type="checkbox" data-kanji-toggle> <span data-i18n="rd.kanji"></span></label></div>
+  </div>
+  <select class="pick" id="ptSel" aria-label="Pattern"></select>
+  <div class="card" id="frame"></div>
+  <div class="card">
+    <div style="font-weight:700; margin-bottom:0.2rem;" data-i18n="pt.examples"></div>
+    <div class="tap-hint" data-i18n="tap.hint"></div>
+    <div id="list"></div>
+  </div>
+</main>
+
+<nav>
+  <a href="index.html"><span class="ni">🏠</span><span data-i18n="nav.home">Home</span></a>
+  <a href="practice.html"><span class="ni">🔥</span><span data-i18n="nav.today">Today</span></a>
+  <a href="cards.html" class="active"><span class="ni">📚</span><span data-i18n="nav.learn">Learn</span></a>
+  <a href="kanji.html"><span class="ni">✍️</span><span data-i18n="nav.kanji">Kanji</span></a>
+  <a href="read.html"><span class="ni">🗣️</span><span data-i18n="nav.read">Read</span></a>
+  <a href="quiz.html"><span class="ni">❓</span><span data-i18n="nav.quiz">Quiz</span></a>
+</nav>
+
+<script src="i18n.js"></script>
+<script src="grammar-data.js"></script>
+<script src="kanji-data.js"></script>
+<script src="words-data.js"></script>
+<script src="pattern-data.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+  const PT = window.CJ_PATTERNS, G = window.CJ_GRAMMAR.GRAMMAR, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
+  let pid = new URLSearchParams(location.search).get('p');
+  if (!PT.PATTERNS.some(p => p.id === pid)) pid = PT.PATTERNS[0].id;
+  const flipped = {};
+  const cur = () => PT.PATTERNS.find(p => p.id === pid);
+  const itemsOf = id => PT.items.filter(it => it.pid === id);
+  // この型で、練習カードで「言えた」文の数
+  function progress(id) { const prac = CJ.getData().prac, its = itemsOf(id); return { said: its.filter(it => prac[it.key] && prac[it.key].l === 'ok').length, all: its.length }; }
+
+  function renderSel() {
+    $('ptSel').innerHTML = PT.PATTERNS.map(p => { const pr = progress(p.id); return '<option value="' + p.id + '"' + (p.id === pid ? ' selected' : '') + '>' + p.icon + ' ' + esc(CJ.tx(p, 'title')) + '（' + pr.said + '/' + pr.all + '）</option>'; }).join('');
+  }
+  // 型を大きく表示：［　］ が入れ替える場所
+  function slotHtml(form) {
+    const f = CJ.showKanji() ? CJ.ruby(form[2]) : esc(form[0]);
+    return f.split('{X}').join('<span class="pt-slot">［ A ］</span>').split('{Y}').join('<span class="pt-slot">［ B ］</span>');
+  }
+  function renderFrame() {
+    const p = cur(), g = G.find(x => x.id === p.g), pr = progress(p.id);
+    const words = p.fill.map(f => f.y ? CJ.esc(f.x[0]) + ' ⇄ ' + CJ.esc(f.y[0]) : CJ.esc(f.x[0]));
+    $('frame').innerHTML = '<div style="text-align:center;"><div style="font-size:1.8rem;">' + p.icon + '</div>' +
+      '<div class="muted">' + esc(t('reg.casual')) + '</div><div class="pt-frame ja">' + slotHtml(p.c) + '</div>' +
+      '<div class="muted" style="margin-top:0.3rem;">' + esc(t('reg.polite')) + '</div><div class="pt-frame small ja">' + slotHtml(p.p) + '</div>' +
+      '<div style="margin-top:0.4rem; font-weight:700;">' + esc(p.title) + '</div></div>' +
+      '<div style="margin-top:0.7rem; font-weight:700; font-size:0.85rem;">' + esc(t('pt.words')) + '</div><div class="link-row">' + words.map(x => '<span class="link-chip">' + x + '</span>').join('') + '</div>' +
+      (g ? '<div style="margin-top:0.6rem;"><a class="link-chip" href="grammar.html?g=' + g.id + '">🧩 ' + esc(CJ.tx(g, 'title')) + ' →</a></div>' : '') +
+      '<p class="muted" style="margin-top:0.5rem;">' + esc(t('pt.progress', { n: pr.said, m: pr.all })) + '</p>' +
+      '<a class="btn" href="practice.html?pt=' + p.id + '" style="margin-top:0.4rem;">' + esc(t('pt.practice')) + '</a>';
+  }
+  function renderList() { $('list').innerHTML = itemsOf(pid).map(it => CJ.flipHtml(it.key, it, !!flipped[it.key])).join(''); }
+  function render() { renderSel(); renderFrame(); renderList(); }
+
+  $('ptSel').addEventListener('change', e => { pid = e.target.value; render(); });
+  $('list').addEventListener('click', e => {
+    if (e.target.closest('[data-say], a')) return;
+    const c = e.target.closest('[data-flip]'); if (!c) return;
+    flipped[c.dataset.flip] = !flipped[c.dataset.flip]; renderList();
+  });
+  document.addEventListener('cj:lang', render);
+  document.addEventListener('cj:kanji', render);
+  render();
+  CJ.markStudied();
+})();
+</script>
+</body>
+</html>

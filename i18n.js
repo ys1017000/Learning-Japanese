@@ -380,5 +380,18 @@ window.CJ_I18N = {
   'rec.export': ['⬇️ Download for GitHub (zip)', '⬇️ GitHub よう に ダウンロード（zip）'],
   'rec.exported': ['Downloaded {n} recordings 📦', '{n} こ の ろくおん を ダウンロード しました 📦'],
   'rec.how': ['Tap the button above to download the zip.|Unzip it — you get a <b>voice</b> folder (WAV files + index.json).|In the GitHub repository, open the <b>voice</b> folder → Add file → Upload files → drop all the files in (replace index.json) → Commit.|Wait a minute, then open the app on Maru\'s iPhone. Buttons with a green dot ● now play Yoh-chan\'s voice.',
-    'うえ の ボタン で zip を ダウンロード。|zip を ひらく と <b>voice</b> フォルダ（WAV と index.json）。|GitHub の リポジトリ で <b>voice</b> フォルダ を ひらく → Add file → Upload files → ぜんぶ いれる（index.json は うわがき）→ Commit。|すこし まって、マルちゃん の iPhone で アプリ を ひらく。みどり の てん ● が ついた ボタン で ようちゃん の こえ が ながれます。']
+    'うえ の ボタン で zip を ダウンロード。|zip を ひらく と <b>voice</b> フォルダ（WAV と index.json）。|GitHub の リポジトリ で <b>voice</b> フォルダ を ひらく → Add file → Upload files → ぜんぶ いれる（index.json は うわがき）→ Commit。|すこし まって、マルちゃん の iPhone で アプリ を ひらく。みどり の てん ● が ついた ボタン で ようちゃん の こえ が ながれます。'],
+  // v12: 型（かた）
+  'sub.patterns': ['🔁 Patterns', '🔁 かた'],
+  'home.m.patterns': ['Patterns', 'かた の れんしゅう'],
+  'pt.title': ['🔁 Patterns — swap one word', '🔁 かた — ことば を ひとつ いれかえる'],
+  'pt.intro': ['A pattern is a sentence frame. Keep the frame, swap the word in ［ A ］, and you can say many things. All words come from this app.', 'かた は ぶん の わく。わく は そのまま、［ A ］ の ことば を いれかえる だけ で、いろいろ いえます。ことば は ぜんぶ この アプリ に ある もの です。'],
+  'pt.words': ['Words to put in', 'いれる ことば'],
+  'pt.examples': ['Sentences', 'ぶん'],
+  'pt.progress': ['Said in practice: {n} / {m}', 'れんしゅう で いえた：{n} / {m}'],
+  'pt.practice': ['🔥 Practice this pattern out loud', '🔥 この かた を こえ に だして れんしゅう'],
+  'pr.patHint': ['Pattern:', 'かた：'],
+  'slot.nightPick': ['Choose one:', 'どちら か えらんで ね：'],
+  'slot.nightCards': ['🌙 Night cards', '🌙 よる の カード'],
+  'slot.pat': ['🔁 Patterns', '🔁 かた の れんしゅう']
 };

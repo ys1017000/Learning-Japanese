@@ -4,7 +4,7 @@
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
-  const APP_VERSION = 'v11';
+  const APP_VERSION = 'v12';
   const DATA_VERSION = 4;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily) / v4: ようちゃんへの質問(asks)・都道府県(pref)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
   const BACKUP_VERSION = 4;           // v1〜v3 のバックアップも読み込める
@@ -135,8 +135,8 @@
       d.prac[k] = { ok: Math.max(0, Math.floor(Number(e.ok) || 0)), ng: Math.max(0, Math.floor(Number(e.ng) || 0)), l: e.l === 'ng' ? 'ng' : 'ok', d: isDate(e.d) ? e.d : '' };
     });
     if (s.daily && typeof s.daily === 'object' && !Array.isArray(s.daily)) Object.keys(s.daily).filter(isDate).sort().slice(-60).forEach(k => {
-      const v = s.daily[k] || {}, lunch = normSlot(v.lunch), night = normSlot(v.night);
-      if (lunch || night) d.daily[k] = { lunch, night };
+      const v = s.daily[k] || {}, lunch = normSlot(v.lunch), night = normSlot(v.night), pat = normSlot(v.pat);
+      if (lunch || night || pat) d.daily[k] = { lunch, night, pat };
     });
     d.asks = normAsks(s.asks);
     d.pref = strList(s.pref, 100, 10);
@@ -197,7 +197,7 @@
   // 日替わりの練習（ひる／よる）を保存。s を入れると「おわった」になる
   function saveDailySlot(date, slot, v) {
     const d = getData();
-    d.daily[date] = d.daily[date] || { lunch: null, night: null };
+    d.daily[date] = d.daily[date] || { lunch: null, night: null, pat: null };
     d.daily[date][slot] = normSlot(v);
     if (v && v.s) touchToday(d);
     saveData(d); updateStreakBadge();
@@ -267,6 +267,7 @@
     if (W) W.WORDS.forEach(w => addKj(w.kana, w.kj));
     if (K) K.KANJI.forEach(k => k.words.forEach(w => addKj(reading(w[0]), w[0])));
     if (P) P.PREFS.forEach(x => { addKj(reading(x.kj), x.kj); addKj(reading(x.cap), x.cap); });
+    if (window.CJ_PATTERNS) window.CJ_PATTERNS.items.forEach(it => { addKj(it.c[0], it.c[2]); addKj(it.p[0], it.p[2]); });
   }
   function naturalText(kj) {
     return String(kj).replace(/\{([^|}]+)\|([^}]+)\}/g, (m, b, r) => FORCE_KANA.has(b + '|' + r) ? r : b);
@@ -556,7 +557,7 @@
       Object.keys(cur.daily).forEach(k => {
         const a = cur.daily[k], b = out.daily[k];
         if (!b) { out.daily[k] = a; return; }
-        ['lunch', 'night'].forEach(sl => { if (!b[sl] || (a[sl] && a[sl].s && !b[sl].s)) b[sl] = a[sl]; });
+        ['lunch', 'night', 'pat'].forEach(sl => { if (!b[sl] || (a[sl] && a[sl].s && !b[sl].s)) b[sl] = a[sl]; });
       });
     }
     if (!saveData(out)) throw new Error(t('err.save'));

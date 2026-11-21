@@ -304,3 +304,10 @@ body.hide-furi #detail rt, body.hide-furi #detail .romaji, body.hide-furi .wd-li
 /* ● ＝ ようちゃん の こえ がある 🔊（小さな点） */
 .icon-btn.has-voice { position: relative; }
 .icon-btn.has-voice::after { content: ''; position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 2px #fff; }
+
+/* ---- v12: 型 ---- */
+.pt-frame { font-size: 1.5rem; font-weight: 800; line-height: 1.8; }
+.pt-frame.small { font-size: 1.1rem; }
+.pt-frame ruby rt { font-size: 0.45em; }
+.pt-slot { display: inline-block; color: var(--primary); background: var(--primary-soft); border-radius: 8px; padding: 0 6px; margin: 0 2px; font-weight: 800; }
+.pt-hint { text-align: center; font-size: 1rem; margin: -0.3rem 0 0.6rem; color: #475569; }
