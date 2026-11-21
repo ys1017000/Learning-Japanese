@@ -385,6 +385,11 @@ window.CJ_I18N = {
   'rec.expAll': ['Include everything (also ones already on the website)', 'ぜんぶ いれる（サイト に ある もの も）'],
   'rec.exportN': ['⬇️ Make {k} zip packs for GitHub', '⬇️ GitHub よう の zip を {k} こ つくる'],
   'rec.packsNote': ['Too many files for one upload, so here are {k} packs. Download and upload them one by one, in order.', '1かい では おおすぎる ので {k} こ に わけました。1 から じゅん に、1こ ずつ ダウンロード → アップロード して ね。'],
+  'rec.idxOnly': ['📄 WAVs are already on GitHub → download only index.json', '📄 WAV は もう GitHub に ある → index.json だけ ダウンロード'],
+  'rec.idxOnlyDesc': ['For Yoh-chan: if you already uploaded the WAV files, just upload this index.json to the voice folder. After that, only new recordings go into the zip.', 'ようちゃん へ：WAV を もう あげて ある なら、この index.json を voice フォルダ に うわがき する だけ で OK。つぎ から は あたらしい ろくおん だけ に なります。'],
+  'rec.idxDone': ['index.json downloaded ({n} voices) ✓', 'index.json を ダウンロード しました（{n} こ）✓'],
+  'rec.expToday': ['Only today\'s recordings (older ones are already on GitHub)', 'きょう ろくおん した ぶん だけ（まえ の ぶん は もう GitHub に ある）'],
+  'rec.todayCount': ['{n} recordings on this phone · {m} recorded today', 'この スマホ に {n} こ ・ きょう とった の は {m} こ'],
   'rec.pack': ['Pack {i}/{k} ({n} voices)', 'パック {i}/{k}（{n} こ）'],
   // v12: 型（かた）
   'sub.patterns': ['🔁 Patterns', '🔁 かた'],
