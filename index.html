@@ -3,30 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Casual Japanese</title>
+<title>マルちゃんのペースでいいよ</title>
 <meta name="theme-color" content="#e0517a">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Casual JP">
+<meta name="apple-mobile-web-app-title" content="マルちゃんのペース">
 <link rel="stylesheet" href="common.css">
 </head>
 <body>
-<header><a class="logo" href="index.html">🌸 Casual Japanese</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
+<header><a class="logo" href="index.html">🌸 マルちゃんのペースでいいよ</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
 
 <main class="container">
   <div class="card">
-    <div class="hello" data-i18n="home.hello">Hi Maru! 👋</div>
+    <div class="hello" data-i18n="home.hello">Heyy マルちゃん！ 👋</div>
     <p class="muted" id="introText"></p>
+  </div>
+
+  <div class="card">
+    <h2 data-i18n="home.today"></h2>
+    <p class="muted" style="margin-bottom:0.7rem;" data-i18n="home.todayDesc"></p>
+    <div class="slot-row" id="homeSlots"></div>
   </div>
 
   <div class="menu-grid">
     <a class="menu-btn" href="cards.html"><span class="icon">🃏</span><span data-i18n="home.m.cards"></span></a>
+    <a class="menu-btn" href="grammar.html"><span class="icon">🧩</span><span data-i18n="home.m.grammar"></span></a>
     <a class="menu-btn" href="endings.html"><span class="icon">💬</span><span data-i18n="home.m.endings"></span></a>
     <a class="menu-btn" href="kanji.html"><span class="icon">✍️</span><span data-i18n="home.m.kanji"></span></a>
     <a class="menu-btn" href="read.html"><span class="icon">🗣️</span><span data-i18n="home.m.read"></span></a>
     <a class="menu-btn" href="quiz.html"><span class="icon">❓</span><span data-i18n="home.m.quiz"></span></a>
-    <a class="menu-btn" href="quiz.html?mode=mistakes"><span class="icon">🎯</span><span data-i18n="home.m.mistakes"></span></a>
   </div>
 
   <div class="card">
@@ -48,6 +54,8 @@
   <div class="card">
     <h2 data-i18n="set.title"></h2>
     <div class="setting-row"><span data-i18n="set.lang"></span><span class="seg" id="langSeg"><button data-lang="en">English</button><button data-lang="ja">にほんご</button></span></div>
+    <div class="setting-row"><span data-i18n="set.theme"></span><span class="seg" id="themeSeg"><button data-theme="pink" data-i18n="theme.pink"></button><button data-theme="matcha" data-i18n="theme.matcha"></button><button data-theme="sky" data-i18n="theme.sky"></button></span></div>
+    <div class="setting-row"><span data-i18n="set.secs"></span><span class="seg" id="secsSeg"><button data-secs="3"></button><button data-secs="5"></button><button data-secs="8"></button></span></div>
     <div class="setting-row"><label for="optRomaji" data-i18n="set.romaji"></label><input type="checkbox" id="optRomaji"></div>
     <div class="setting-row"><label for="optAuto" data-i18n="set.auto"></label><input type="checkbox" id="optAuto"></div>
     <div class="setting-row"><span data-i18n="set.rate"></span><span class="seg" id="rateSeg"><button data-rate="0.75" data-i18n="rate.slow"></button><button data-rate="0.9" data-i18n="rate.normal"></button><button data-rate="1.05" data-i18n="rate.fast"></button></span></div>
@@ -74,8 +82,8 @@
 
 <nav>
   <a href="index.html" class="active"><span class="ni">🏠</span><span data-i18n="nav.home">Home</span></a>
-  <a href="cards.html"><span class="ni">🃏</span><span data-i18n="nav.cards">Cards</span></a>
-  <a href="endings.html"><span class="ni">💬</span><span data-i18n="nav.endings">Endings</span></a>
+  <a href="practice.html"><span class="ni">🔥</span><span data-i18n="nav.today">Today</span></a>
+  <a href="cards.html"><span class="ni">📚</span><span data-i18n="nav.learn">Learn</span></a>
   <a href="kanji.html"><span class="ni">✍️</span><span data-i18n="nav.kanji">Kanji</span></a>
   <a href="read.html"><span class="ni">🗣️</span><span data-i18n="nav.read">Read</span></a>
   <a href="quiz.html"><span class="ni">❓</span><span data-i18n="nav.quiz">Quiz</span></a>
@@ -122,6 +130,20 @@
     $('optAuto').checked = p.autoSpeak !== false;
     document.querySelectorAll('#rateSeg button').forEach(b => b.classList.toggle('active', Math.abs(Number(b.dataset.rate) - Number(p.rate)) < 0.01));
     document.querySelectorAll('#langSeg button').forEach(b => b.classList.toggle('active', b.dataset.lang === CJ.lang()));
+    document.querySelectorAll('#themeSeg button').forEach(b => b.classList.toggle('active', b.dataset.theme === (p.theme || 'pink')));
+    document.querySelectorAll('#secsSeg button').forEach(b => { b.textContent = t('secs', { n: b.dataset.secs }); b.classList.toggle('active', Number(b.dataset.secs) === CJ.drillSecs()); });
+  }
+  $('themeSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { CJ.setPref('theme', b.dataset.theme); renderSettings(); } });
+  $('secsSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { CJ.setPref('drillSecs', Number(b.dataset.secs)); renderSettings(); } });
+
+  // きょう の れんしゅう（ひる／よる）の状況
+  function renderToday() {
+    const v = CJ.getData().daily[CJ.dateKey()] || {}, nowSlot = new Date().getHours() < 16 ? 'lunch' : 'night';
+    $('homeSlots').innerHTML = ['lunch', 'night'].map(sl => {
+      const x = v[sl], done = x && x.s;
+      return '<a class="slot' + (done ? ' done' : '') + (sl === nowSlot && !done ? ' now' : '') + '" href="practice.html" style="text-decoration:none; color:inherit;">' +
+        '<div class="nm">' + esc(t('slot.' + sl)) + '</div><div class="st" style="margin-bottom:0;">' + esc(done ? t('slot.done', { s: x.s[0], t: x.s[1] }) : t('slot.start')) + '</div></a>';
+    }).join('');
   }
   $('langSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) CJ.setLang(b.dataset.lang); });
   $('optRomaji').addEventListener('change', e => CJ.setPref('romaji', e.target.checked));
@@ -158,7 +180,7 @@
     r.readAsText(f);
   });
 
-  function renderAll() { renderIntro(); renderStats(); renderTip(); renderSettings(); if (voiceChecked) checkVoice(); }
+  function renderAll() { renderToday(); renderIntro(); renderStats(); renderTip(); renderSettings(); if (voiceChecked) checkVoice(); }
   document.addEventListener('cj:lang', renderAll);
   renderAll();
   // 音声の一覧は少し遅れて読み込まれることがある

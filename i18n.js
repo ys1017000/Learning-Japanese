@@ -1,4 +1,4 @@
-/* Casual Japanese - 画面の言葉（英語 / 日本語）
+/* マルちゃんのペースでいいよ - 画面の言葉（英語 / 日本語）
    日本語は、マルちゃんが読めるように ひらがな・カタカナ だけで書く（漢字なし）。
    { キー: [英語, 日本語] }。{n} のような部分は CJ.t(key, {n: 3}) で置き換わる */
 window.CJ_I18N = {
@@ -20,7 +20,7 @@ window.CJ_I18N = {
   'toast.noSpeech': ['Sorry, this browser can\'t read aloud.', 'この ブラウザ は よみあげ が できません。'],
 
   // ホーム
-  'home.hello': ['Hi Maru! 👋', 'やあ、マル！ 👋'],
+  'home.hello': ['Heyy マルちゃん！ 👋', 'Heyy マルちゃん！ 👋'],
   'home.intro': ['Learn to switch between {p} and {c} Japanese — for work, for shops, and for chatting with Yoh-chan.',
     '{p} と {c} の にほんご を つかいわけよう — しごと、おみせ、ようちゃん との おしゃべり で。'],
   'home.m.cards': ['Polite ⇔ Casual', 'ていねい ⇔ ふつう'],
@@ -173,5 +173,74 @@ window.CJ_I18N = {
   'q.backCards': ['🃏 Back to the cards', '🃏 カード に もどる'],
   'q.noMistakes': ['🎉 No mistakes to review right now!', '🎉 いま ふくしゅう する まちがい は ありません！'],
   'q.noMistakesSub': ['Questions you get wrong will appear here, so you can try them again.', 'まちがえた もんだい が ここ に たまります。もう いちど ちょうせん できます。'],
-  'q.playWho': ['👥 Play “Who are you talking to?”', '👥 「だれ と はなしてる？」 を やる']
+  'q.playWho': ['👥 Play “Who are you talking to?”', '👥 「だれ と はなしてる？」 を やる'],
+  // v3: ナビ・サブナビ
+  'nav.today': ['Today', 'きょう'],
+  'nav.learn': ['Learn', 'まなぶ'],
+  'sub.cards': ['🃏 Polite ⇔ Casual', '🃏 ていねい ⇔ ふつう'],
+  'sub.endings': ['💬 Endings', '💬 ごび'],
+  'sub.grammar': ['🧩 Grammar', '🧩 ぶんぽう'],
+  'home.m.today': ['Today\'s practice', 'きょう の れんしゅう'],
+  'home.m.grammar': ['Grammar', 'ぶんぽう'],
+  'home.today': ['🔥 Today\'s practice', '🔥 きょう の れんしゅう'],
+  'home.todayDesc': ['New cards every day. Say each sentence out loud within a few seconds — like a real conversation.', 'まいにち カード が かわります。ほんとう の かいわ の ように、すうびょう で こえ に だして いおう。'],
+  'slot.lunch': ['☀️ Lunch', '☀️ ひる'],
+  'slot.night': ['🌙 Night', '🌙 よる'],
+  'slot.start': ['Start ▶', 'はじめる ▶'],
+  'slot.redo': ['Again', 'もう いちど'],
+  'slot.done': ['✓ Done: {s} / {t}', '✓ できた：{s} / {t}'],
+  'slot.todo': ['{n} cards', '{n}まい'],
+  'slot.lunchDesc': ['Today\'s new mix', 'きょう の カード'],
+  'slot.nightDesc': ['Lunch misses + review', 'ひる の まちがい ＋ ふくしゅう'],
+  'set.theme': ['Color', 'いろ'],
+  'theme.pink': ['🌸 Pink', '🌸 ピンク'],
+  'theme.matcha': ['🍵 Matcha', '🍵 まっちゃ'],
+  'theme.sky': ['🫧 Pastel blue', '🫧 パステルブルー'],
+  'set.secs': ['Seconds to answer (practice)', 'れんしゅう の こたえる じかん'],
+  'secs': ['{n}s', '{n}びょう'],
+
+  // v3: タップで切り替え
+  'tap.hint': ['👆 Tap a card to switch casual ⇔ polite', '👆 カード を タップ すると ふつう ⇔ ていねい'],
+  'tap.short': ['tap ⇄', 'タップ ⇄'],
+  'tap.same': ['same in both', 'どちら も おなじ'],
+  'rd.allC': ['All casual', 'ぜんぶ ふつう'],
+  'rd.allP': ['All polite', 'ぜんぶ ていねい'],
+
+  // v3: 練習カード
+  'pr.title': ['🔥 Today\'s practice', '🔥 きょう の れんしゅう'],
+  'pr.intro': ['Read the English, then say it in Japanese out loud within {s} seconds. The cards change every day — once at lunch and once at night.', 'えいご を みて、{s}びょう いない に にほんご で こえ に だして いおう。カード は まいにち かわります — ひる と よる。'],
+  'pr.how': ['Who you talk to decides the style: 💕 Yoh-chan / friends → casual, 👔 work / shops → polite.', 'あいて で いいかた が かわります：💕 ようちゃん・ともだち → ふつう、👔 しごと・おみせ → ていねい。'],
+  'pr.round': ['Round {r}', '{r}かいめ'],
+  'pr.quit': ['✕ Quit', '✕ やめる'],
+  'pr.to': ['To {who}', '{who} に'],
+  'pr.say': ['Say it in Japanese — out loud!', 'にほんご で、こえ に だして！'],
+  'pr.show': ['Show answer', 'こたえ を みる'],
+  'pr.ok': ['⭕ Said it', '⭕ いえた'],
+  'pr.ng': ['❌ Didn\'t come out', '❌ でなかった'],
+  'pr.otherForm': ['The other style: {k}', 'もう ひとつ の いいかた：{k}'],
+  'pr.roundEnd': ['Round {r} finished', '{r}かいめ おわり'],
+  'pr.said': ['said it', 'いえた'],
+  'pr.missed': ['missed', 'でなかった'],
+  'pr.nextRound': ['▶ Round {r}: only the {n} missed', '▶ {r}かいめ：でなかった {n}まい だけ'],
+  'pr.end': ['Finish here', 'ここ で おわる'],
+  'pr.review': ['📋 Review', '📋 ふりかえり'],
+  'pr.first': ['First try: {s} / {t}', '1かいめ で いえた：{s} / {t}'],
+  'pr.still': ['Still practicing', 'まだ れんしゅう ちゅう'],
+  'pr.allGood': ['You said them all! 🎉', 'ぜんぶ いえた！ 🎉'],
+  'pr.saved': ['Saved to today\'s record ✓', 'きょう の きろく に のこしました ✓'],
+  'pr.back': ['← Back', '← もどる'],
+  'pr.again': ['🔀 Again (shuffle)', '🔀 もう いちど（シャッフル）'],
+  'pr.from.card': ['Polite ⇔ Casual', 'ていねい ⇔ ふつう'],
+  'pr.from.read': ['Conversation', 'かいわ'],
+  'pr.week': ['📅 This week', '📅 こんしゅう'],
+
+  // v3: 文法
+  'gr.title': ['🧩 Grammar for everyday talk', '🧩 まいにち の かいわ の ぶんぽう'],
+  'gr.intro': ['14 small steps — the grammar you need with Yoh-chan and friends. Each step has the rule and example sentences from your life. These sentences also appear in your daily practice cards.', 'ようちゃん や ともだち と はなす ため の 14 の ちいさな ステップ。ルール と、ふたり の せいかつ の れいぶん が あります。れいぶん は まいにち の れんしゅう カード にも でて きます。'],
+  'gr.table': ['How it changes', 'かたち の かわりかた'],
+  'gr.col.d': ['Basic', 'もと'],
+  'gr.col.c': ['Casual', 'ふつう'],
+  'gr.col.p': ['Polite', 'ていねい'],
+  'gr.examples': ['Examples', 'れいぶん'],
+  'gr.practice': ['🔥 Practice these out loud', '🔥 こえ に だして れんしゅう']
 };

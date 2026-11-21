@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Read aloud – Casual Japanese</title>
+<title>Read aloud – マルちゃんのペースでいいよ</title>
 <meta name="theme-color" content="#e0517a">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="common.css">
 </head>
 <body>
-<header><a class="logo" href="index.html">🌸 Casual Japanese</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
+<header><a class="logo" href="index.html">🌸 マルちゃんのペースでいいよ</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
 
 <main class="container">
   <div class="card">
@@ -27,7 +27,12 @@
       <button class="tiny-btn" id="playAll"></button>
     </div>
     <div class="setting-row" style="padding-top:0;"><label for="optKanji" data-i18n="rd.kanji"></label><input type="checkbox" id="optKanji"></div>
-    <div id="lines" style="margin-top:0.6rem;"></div>
+    <div class="chip-row" style="margin:0.5rem 0 0.2rem;">
+      <button class="chip" id="allC" data-i18n="rd.allC"></button>
+      <button class="chip" id="allP" data-i18n="rd.allP"></button>
+    </div>
+    <div class="tap-hint" data-i18n="tap.hint"></div>
+    <div id="lines"></div>
     <div class="muted" id="doneText" style="text-align:center; margin-top:0.4rem;"></div>
   </div>
   <p class="muted" data-i18n="rd.hint"></p>
@@ -35,8 +40,8 @@
 
 <nav>
   <a href="index.html"><span class="ni">🏠</span><span data-i18n="nav.home">Home</span></a>
-  <a href="cards.html"><span class="ni">🃏</span><span data-i18n="nav.cards">Cards</span></a>
-  <a href="endings.html"><span class="ni">💬</span><span data-i18n="nav.endings">Endings</span></a>
+  <a href="practice.html"><span class="ni">🔥</span><span data-i18n="nav.today">Today</span></a>
+  <a href="cards.html"><span class="ni">📚</span><span data-i18n="nav.learn">Learn</span></a>
   <a href="kanji.html"><span class="ni">✍️</span><span data-i18n="nav.kanji">Kanji</span></a>
   <a href="read.html" class="active"><span class="ni">🗣️</span><span data-i18n="nav.read">Read</span></a>
   <a href="quiz.html"><span class="ni">❓</span><span data-i18n="nav.quiz">Quiz</span></a>
@@ -52,9 +57,12 @@
   let pid = new URLSearchParams(location.search).get('p');
   if (!R.PASSAGES.some(p => p.id === pid)) pid = R.PASSAGES[0].id;
   let playing = false, listeningIdx = -1, curRec = null;
-  const results = {};   // 行番号 → { score, heard }（このページを開いている間だけ）
+  let regs = {};          // 行番号 → 'c'（ふつう）/ 'p'（ていねい）。カードをタップで切り替え
+  const results = {};     // 行番号 → { score, heard }（このページを開いている間だけ）
   const P = () => R.PASSAGES.find(p => p.id === pid);
-  const key = n => pid + ':' + n;
+  const regOf = n => regs[n] || 'c';
+  const form = (l, n) => l[regOf(n) === 'p' ? 2 : 1];   // [ひらがな, ローマ字, 漢字の書き方]
+  const key = n => pid + ':' + n + ':' + regOf(n);
 
   if (!CJ.recognitionSupported) $('noMic').style.display = '';
 
@@ -78,12 +86,16 @@
     $('pTitle').textContent = p.icon + ' ' + CJ.tx(p, 'title');
     $('optKanji').checked = showK;
     $('playAll').textContent = t(playing ? 'rd.stop' : 'rd.playAll');
+    const allReg = p.lines.every((l, n) => regOf(n) === 'p') ? 'p' : p.lines.every((l, n) => regOf(n) === 'c') ? 'c' : '';
+    $('allC').classList.toggle('active', allReg === 'c'); $('allP').classList.toggle('active', allReg === 'p');
     $('lines').innerHTML = p.lines.map((l, n) => {
-      const b = best[key(n)];
-      return '<div class="rd-line" id="line' + n + '">' +
-        '<div class="k ja">' + (showK ? K.rubyHtml(l[3], esc) : esc(l[0])) + '</div>' +
-        '<div class="romaji">' + esc(l[1]) + '</div><div class="e">' + esc(l[2]) + '</div>' +
-        '<div class="rd-tools">' + CJ.sayBtns(l[0]) +
+      const f = form(l, n), isP = regOf(n) === 'p', same = l[1][0] === l[2][0], b = best[key(n)];
+      return '<div class="rd-line flip ' + (isP ? 'is-p' : 'is-c') + '" id="line' + n + '" data-line="' + n + '">' +
+        '<div class="flip-top"><span class="reg ' + (isP ? 'polite' : 'casual') + '">' + t(isP ? 'reg.polite' : 'reg.casual') + '</span>' +
+          '<span class="flip-hint">' + esc(same ? t('tap.same') : t('tap.short')) + '</span></div>' +
+        '<div class="k ja">' + (showK ? K.rubyHtml(f[2], esc) : esc(f[0])) + '</div>' +
+        '<div class="romaji">' + esc(f[1]) + '</div><div class="e">' + esc(l[0]) + '</div>' +
+        '<div class="rd-tools">' + CJ.sayBtns(f[0]) +
           (CJ.recognitionSupported ? '<button class="mic-btn' + (listeningIdx === n ? ' on' : '') + '" data-mic="' + n + '" aria-label="' + esc(t('rd.mic')) + '">🎙️</button>' : '') +
           (b ? '<span class="rd-best">' + (b >= CJ.PASS_SCORE ? '⭐ ' : '') + esc(t('rd.best', { s: b })) + '</span>' : '') +
         '</div>' + resultHtml(n) + '</div>';
@@ -93,18 +105,18 @@
   }
 
   function check(n) {
-    const l = P().lines[n];
     if (listeningIdx === n) { if (curRec) curRec.stop(); return; }   // もう一度押すと聞き取りを終える（その時点までで採点）
     if (curRec) { try { curRec.abort(); } catch (e) {} }
     stopAll();
+    const l = P().lines[n], f = form(l, n), k = key(n);
     listeningIdx = n; results[n] = { interim: '' }; render();
     const rec = CJ.listen({
       onInterim: s => { if (results[n]) results[n].interim = s; const el = document.querySelector('#line' + n + ' .rd-result .muted'); if (el) el.textContent = s; else render(); },
       onFinal: alts => {
         // ひらがな と 漢字の書き方 の両方と比べる（スマホは漢字で聞き取ることが多い）
-        const r = CJ.scoreJa([l[0], K.plain(l[3])], alts);
+        const r = CJ.scoreJa([f[0], K.plain(f[2])], alts);
         results[n] = r;
-        CJ.recordRead(key(n), r.score);
+        CJ.recordRead(k, r.score);
       },
       onError: m => { results[n] = { err: m }; },
       onState: on => { if (!on && curRec === rec) { curRec = null; listeningIdx = -1; render(); } }
@@ -113,7 +125,7 @@
     if (!rec) { listeningIdx = -1; render(); }
   }
 
-  // ぜんぶ きく：1行ずつ順番に読み上げる
+  // ぜんぶ きく：いま表示している言い方で、1行ずつ順番に読み上げる
   function stopAll() {
     if (!playing) return;
     playing = false; CJ.stopSpeak();
@@ -126,7 +138,7 @@
     if (!playing || n >= lines.length) { stopAll(); return; }
     const el = $('line' + n);
     if (el) { el.classList.add('playing'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-    const ok = CJ.speak(lines[n][0], false, () => setTimeout(() => playFrom(n + 1), 450));
+    const ok = CJ.speak(form(lines[n], n)[0], false, () => setTimeout(() => playFrom(n + 1), 450));
     if (!ok) { stopAll(); CJ.toast(t('toast.noSpeech')); }
   }
   $('playAll').addEventListener('click', () => {
@@ -134,11 +146,20 @@
     playing = true; $('playAll').textContent = t('rd.stop'); playFrom(0); CJ.markStudied();
   });
 
-  $('pRow').addEventListener('click', e => {
-    const b = e.target.closest('[data-p]'); if (!b) return;
-    stopAll(); pid = b.dataset.p; Object.keys(results).forEach(k => delete results[k]); listeningIdx = -1; render();
+  function resetFor(newPid) { stopAll(); pid = newPid; regs = {}; Object.keys(results).forEach(k => delete results[k]); listeningIdx = -1; render(); }
+  $('pRow').addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (b) resetFor(b.dataset.p); });
+  $('lines').addEventListener('click', e => {
+    const m = e.target.closest('[data-mic]'); if (m) { check(Number(m.dataset.mic)); return; }
+    if (e.target.closest('[data-say]')) return;   // 🔊 は切り替えない
+    const c = e.target.closest('[data-line]'); if (!c || listeningIdx >= 0) return;
+    const n = Number(c.dataset.line);
+    regs[n] = regOf(n) === 'p' ? 'c' : 'p';
+    delete results[n];
+    render();
   });
-  $('lines').addEventListener('click', e => { const b = e.target.closest('[data-mic]'); if (b) check(Number(b.dataset.mic)); });
+  const setAll = r => { stopAll(); P().lines.forEach((l, n) => { regs[n] = r; delete results[n]; }); render(); };
+  $('allC').addEventListener('click', () => setAll('c'));
+  $('allP').addEventListener('click', () => setAll('p'));
   $('optKanji').addEventListener('change', e => { CJ.setPref('readKanji', e.target.checked); render(); });
   document.addEventListener('cj:lang', render);
   render();

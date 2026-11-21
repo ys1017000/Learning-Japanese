@@ -1,6 +1,6 @@
 /* オフライン対応：一度開いたページ・ファイルを端末に保存して、電波がなくても使えるようにする */
-const CACHE = 'casual-japanese-v2';
-const ASSETS = ['./', 'index.html', 'cards.html', 'endings.html', 'quiz.html', 'kanji.html', 'read.html', 'i18n.js', 'data.js', 'kanji-data.js', 'read-data.js', 'common.js', 'common.css', 'manifest.webmanifest',
+const CACHE = 'casual-japanese-v3';
+const ASSETS = ['./', 'index.html', 'cards.html', 'endings.html', 'quiz.html', 'kanji.html', 'read.html', 'practice.html', 'grammar.html', 'grammar-data.js', 'i18n.js', 'data.js', 'kanji-data.js', 'read-data.js', 'common.js', 'common.css', 'manifest.webmanifest',
   'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

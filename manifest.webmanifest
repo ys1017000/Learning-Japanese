@@ -1,6 +1,6 @@
 {
-  "name": "Casual Japanese",
-  "short_name": "Casual JP",
+  "name": "マルちゃんのペースでいいよ",
+  "short_name": "マルちゃんのペース",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

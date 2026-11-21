@@ -1,12 +1,12 @@
-/* Casual Japanese - 共通スクリプト（window.CJ で各ページから使う） */
+/* マルちゃんのペースでいいよ - 共通スクリプト（window.CJ で各ページから使う） */
 (function () {
   "use strict";
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
-  const DATA_VERSION = 2;             // v2: 漢字(kanji)・音読(read)を追加。v1 のデータもそのまま読める
+  const DATA_VERSION = 3;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
-  const BACKUP_VERSION = 2;           // v1 のバックアップも読み込める
+  const BACKUP_VERSION = 3;           // v1・v2 のバックアップも読み込める
 
   /* ---------- 基本ユーティリティ ---------- */
   function esc(s) {
@@ -24,11 +24,19 @@
   function shuffle(a) { const x = a.slice(); for (let i = x.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [x[i], x[j]] = [x[j], x[i]]; } return x; }
 
   /* ---------- 設定 ---------- */
-  const DEFAULT_PREFS = { romaji: true, rate: 0.9, autoSpeak: true, lang: 'en', readKanji: false };
+  const DEFAULT_PREFS = { romaji: true, rate: 0.9, autoSpeak: true, lang: 'en', readKanji: false, theme: 'pink', drillSecs: 5 };
+  const THEMES = ['pink', 'matcha', 'sky'];
   function getPrefs() { try { return Object.assign({}, DEFAULT_PREFS, JSON.parse(safeGet(KEY_PREFS)) || {}); } catch (e) { return Object.assign({}, DEFAULT_PREFS); } }
   function setPref(k, v) { const p = getPrefs(); p[k] = v; safeSet(KEY_PREFS, JSON.stringify(p)); applyPrefs(); }
   // ローマ字の表示/非表示は body のクラスで切り替える（.romaji を隠す）
-  function applyPrefs() { if (document.body) document.body.classList.toggle('no-romaji', !getPrefs().romaji); }
+  function applyPrefs() {
+    if (!document.body) return;
+    const p = getPrefs();
+    document.body.classList.toggle('no-romaji', !p.romaji);
+    // 色のテーマ（🌸 ピンク / 🍵 まっちゃ / 🫧 パステルブルー）
+    THEMES.forEach(th => document.body.classList.toggle('theme-' + th, (THEMES.includes(p.theme) ? p.theme : 'pink') === th));
+  }
+  function drillSecs() { const n = Number(getPrefs().drillSecs); return [3, 5, 8].includes(n) ? n : 5; }
 
   /* ---------- 画面の言語（英語 / 日本語） ---------- */
   function lang() { return getPrefs().lang === 'ja' ? 'ja' : 'en'; }
@@ -77,8 +85,20 @@
 
   /* ---------- 学習データ ----------
      { v: 2, learned: [カードID], kanji: [おぼえた漢字], wrong: { 問題ID: 回数 }, history: { 'YYYY-MM-DD': true },
-       quiz: { correct, total }, read: { '会話ID:行番号': いちばん良い点数 } } */
-  function defaultData() { return { v: DATA_VERSION, learned: [], kanji: [], wrong: {}, history: {}, quiz: { correct: 0, total: 0 }, read: {} }; }
+       quiz: { correct, total }, read: { '会話ID:行番号:c|p': いちばん良い点数 },
+       prac: { 練習カードのキー: { ok: 言えた回数, ng: 出なかった回数, l: 'ok'|'ng' 最後の結果, d: 最後の日 } },
+       daily: { 'YYYY-MM-DD': { lunch: { k: [キー], r: ['c'|'p'], s: [言えた数, 枚数] or null }, night: {…} } } } */
+  function defaultData() { return { v: DATA_VERSION, learned: [], kanji: [], wrong: {}, history: {}, quiz: { correct: 0, total: 0 }, read: {}, prac: {}, daily: {} }; }
+  const isDate = k => /^\d{4}-\d{2}-\d{2}$/.test(String(k));
+  function normSlot(v) {
+    if (!v || typeof v !== 'object') return null;
+    const k = (Array.isArray(v.k) ? v.k : []).filter(x => typeof x === 'string' && x.length < 100).slice(0, 30);
+    if (!k.length) return null;
+    const r = k.map((x, i) => (Array.isArray(v.r) && v.r[i] === 'p') ? 'p' : 'c');
+    let sc = null;
+    if (Array.isArray(v.s) && v.s.length === 2) { const t = Math.max(0, Math.min(30, Math.floor(Number(v.s[1]) || 0))); sc = [Math.max(0, Math.min(t, Math.floor(Number(v.s[0]) || 0))), t]; }
+    return { k, r, s: sc };
+  }
   function strList(a, max, maxLen) { return Array.from(new Set((Array.isArray(a) ? a : []).filter(x => typeof x === 'string' && x && x.length < maxLen))).slice(0, max); }
   function normalizeData(s) {
     const d = defaultData();
@@ -96,6 +116,14 @@
     if (s.read && typeof s.read === 'object' && !Array.isArray(s.read)) Object.keys(s.read).slice(0, 2000).forEach(k => {
       const n = Math.round(Number(s.read[k]) || 0);
       if (k.length < 80 && n > 0) d.read[k] = Math.min(100, n);
+    });
+    if (s.prac && typeof s.prac === 'object' && !Array.isArray(s.prac)) Object.keys(s.prac).slice(0, 3000).forEach(k => {
+      const e = s.prac[k]; if (!e || typeof e !== 'object' || k.length >= 100) return;
+      d.prac[k] = { ok: Math.max(0, Math.floor(Number(e.ok) || 0)), ng: Math.max(0, Math.floor(Number(e.ng) || 0)), l: e.l === 'ng' ? 'ng' : 'ok', d: isDate(e.d) ? e.d : '' };
+    });
+    if (s.daily && typeof s.daily === 'object' && !Array.isArray(s.daily)) Object.keys(s.daily).filter(isDate).sort().slice(-60).forEach(k => {
+      const v = s.daily[k] || {}, lunch = normSlot(v.lunch), night = normSlot(v.night);
+      if (lunch || night) d.daily[k] = { lunch, night };
     });
     return d;
   }
@@ -132,6 +160,21 @@
     d.read[key] = Math.max(d.read[key] || 0, Math.round(score));
     touchToday(d); saveData(d); updateStreakBadge();
     return d.read[key];
+  }
+  // 練習カード1枚の結果
+  function recordPrac(key, ok) {
+    const d = getData(), e = d.prac[key] || { ok: 0, ng: 0, l: 'ok', d: '' };
+    if (ok) e.ok++; else e.ng++;
+    e.l = ok ? 'ok' : 'ng'; e.d = dateKey();
+    d.prac[key] = e; touchToday(d); saveData(d); updateStreakBadge();
+  }
+  // 日替わりの練習（ひる／よる）を保存。s を入れると「おわった」になる
+  function saveDailySlot(date, slot, v) {
+    const d = getData();
+    d.daily[date] = d.daily[date] || { lunch: null, night: null };
+    d.daily[date][slot] = normSlot(v);
+    if (v && v.s) touchToday(d);
+    saveData(d); updateStreakBadge();
   }
   function markStudied() { const d = getData(); touchToday(d); saveData(d); updateStreakBadge(); }
 
@@ -308,9 +351,21 @@
         history: Object.assign({}, cur.history, inc.history),
         quiz: { correct: Math.max(cur.quiz.correct, inc.quiz.correct), total: Math.max(cur.quiz.total, inc.quiz.total) },
         read: Object.assign({}, cur.read)
-      };
+      };   // prac・daily は下で合わせる
       Object.keys(inc.wrong).forEach(k => { out.wrong[k] = Math.max(out.wrong[k] || 0, inc.wrong[k]); });
       Object.keys(inc.read).forEach(k => { out.read[k] = Math.max(out.read[k] || 0, inc.read[k]); });
+      out.prac = Object.assign({}, cur.prac);
+      Object.keys(inc.prac).forEach(k => {
+        const a = out.prac[k], b = inc.prac[k];
+        if (!a) { out.prac[k] = b; return; }
+        out.prac[k] = { ok: Math.max(a.ok, b.ok), ng: Math.max(a.ng, b.ng), l: b.d > a.d ? b.l : a.l, d: b.d > a.d ? b.d : a.d };
+      });
+      out.daily = Object.assign({}, inc.daily);
+      Object.keys(cur.daily).forEach(k => {
+        const a = cur.daily[k], b = out.daily[k];
+        if (!b) { out.daily[k] = a; return; }
+        ['lunch', 'night'].forEach(sl => { if (!b[sl] || (a[sl] && a[sl].s && !b[sl].s)) b[sl] = a[sl]; });
+      });
     }
     if (!saveData(out)) throw new Error(t('err.save'));
     updateStreakBadge();
@@ -324,7 +379,7 @@
 
   window.CJ = {
     esc, dateKey, shuffle, getData, saveData, isLearned, toggleLearned, isKanjiLearned, toggleKanji, recordQuiz, recordRead, markStudied,
-    calcStreak, updateStreakBadge, getPrefs, setPref, applyPrefs, lang, t, tx, applyI18n, setLang,
+    calcStreak, updateStreakBadge, getPrefs, setPref, applyPrefs, drillSecs, lang, t, tx, applyI18n, setLang, recordPrac, saveDailySlot,
     speak, stopSpeak, autoSpeak, hasJaVoice, speechText, recognitionSupported, listen, normJa, scoreJa, PASS_SCORE,
     sayBtns, toast, downloadBackup, importBackup
   };
