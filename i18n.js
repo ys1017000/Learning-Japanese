@@ -385,7 +385,7 @@ window.CJ_I18N = {
   'sub.patterns': ['🔁 Patterns', '🔁 かた'],
   'home.m.patterns': ['Patterns', 'かた の れんしゅう'],
   'pt.title': ['🔁 Patterns — swap one word', '🔁 かた — ことば を ひとつ いれかえる'],
-  'pt.intro': ['A pattern is a sentence frame. Keep the frame, swap the word in ［ A ］, and you can say many things. All words come from this app.', 'かた は ぶん の わく。わく は そのまま、［ A ］ の ことば を いれかえる だけ で、いろいろ いえます。ことば は ぜんぶ この アプリ に ある もの です。'],
+  'pt.intro': ['A pattern is a sentence frame. Keep the frame, swap the word in ［ A ］, and you can say many things. Tap a word below to put it in ［ A ］. All words come from this app.', 'かた は ぶん の わく。わく は そのまま、［ A ］ の ことば を いれかえる だけ で、いろいろ いえます。した の ことば を タップ すると ［ A ］ に はいります。ことば は ぜんぶ この アプリ に ある もの です。'],
   'pt.words': ['Words to put in', 'いれる ことば'],
   'pt.examples': ['Sentences', 'ぶん'],
   'pt.progress': ['Said in practice: {n} / {m}', 'れんしゅう で いえた：{n} / {m}'],
@@ -393,5 +393,11 @@ window.CJ_I18N = {
   'pr.patHint': ['Pattern:', 'かた：'],
   'slot.nightPick': ['Choose one:', 'どちら か えらんで ね：'],
   'slot.nightCards': ['🌙 Night cards', '🌙 よる の カード'],
-  'slot.pat': ['🔁 Patterns', '🔁 かた の れんしゅう']
+  'slot.pat': ['🔁 Patterns', '🔁 かた の れんしゅう'],
+  // v13: 型 の 選択肢
+  'pr.pickA': ['Tap the word that goes in ［ A ］', '［ A ］ に はいる ことば を タップ'],
+  'pr.pickAB': ['Tap the right words for ［ A ］ ・ ［ B ］ (order matters!)', '［ A ］・［ B ］ に はいる ことば を タップ（じゅんばん に ちゅうい！）'],
+  'pr.pickRight': ['⭕ Yes!', '⭕ せいかい！'],
+  'pr.pickWrong': ['❌ Not "{w}"', '❌ 「{w}」 では ない よ'],
+  'pr.saySentence': ['Now say the whole sentence out loud 🗣️', 'ぶん ぜんぶ を こえ に だして いって みよう 🗣️']
 };

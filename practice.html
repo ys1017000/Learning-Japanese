@@ -156,7 +156,55 @@
     renderDrill(); window.scrollTo({ top: 0 });
   }
   function itemKey(o) { return o.x.key + ':' + o.reg; }
+  /* ---------- 型 の 練習：［A］に入る言葉を、選択肢からタップして選ぶ ----------
+     英語を見る → 型の［A］に入る言葉を 4つ の中から選ぶ → 文が完成して読み上げ → つぎへ */
+  function choiceOpts(o) {
+    if (o.opts) return o.opts;
+    const p = ptBy[o.x.pid], idx = Number(o.x.key.split(':')[2]), f = p.fill[idx];
+    const lab = g => g.y ? [g.x, g.y] : [g.x];
+    let others = p.fill.filter((g, i) => i !== idx);
+    const opts = [{ w: lab(f), ok: true }];
+    if (f.y) opts.push({ w: [f.y, f.x], ok: false });   // A と B が逆 → まちがい（順番がだいじ）
+    CJ.shuffle(others).forEach(g => { if (opts.length < 4) opts.push({ w: lab(g), ok: false }); });
+    o.opts = CJ.shuffle(opts);
+    return o.opts;
+  }
+  const wordHtml = w => CJ.showKanji() ? CJ.ruby(w[2]) : esc(w[0]);
+  function frameWith(p, ws, cls) {
+    const f = CJ.showKanji() ? CJ.ruby(p.c[2]) : esc(p.c[0]);
+    const slot = (i, lab) => ws ? '<span class="pt-slot ' + (cls || '') + '">' + wordHtml(ws[i]) + '</span>' : '<span class="pt-slot">［ ' + lab + ' ］</span>';
+    let out = f.split('{X}').join(slot(0, 'A'));
+    if (out.includes('{Y}')) out = out.split('{Y}').join(slot(1, 'B'));
+    return out;
+  }
+  function renderChoice() {
+    const box = $('drill'), o = st.queue[st.i], x = o.x, p = ptBy[x.pid], opts = choiceOpts(o);
+    const picked = st.pick != null ? opts[st.pick] : null, right = opts.find(z => z.ok);
+    let html = '<div class="counter"><span class="muted">' + esc(st.title) + ' · ' + esc(t('pr.round', { r: st.round })) + ' · ' + (st.i + 1) + '/' + st.queue.length + '</span>' +
+      '<button class="tiny-btn" data-a="quit">' + esc(t('pr.quit')) + '</button></div>' +
+      '<div style="text-align:center;"><label class="kj-toggle"><input type="checkbox" data-kanji-toggle' + (CJ.showKanji() ? ' checked' : '') + '> ' + esc(t('rd.kanji')) + '</label></div>' +
+      '<div class="dr-en">“' + esc(x.en) + '”</div>' +
+      '<div class="pt-frame ja" style="text-align:center; margin-bottom:0.8rem;">' + frameWith(p, picked ? right.w : null, picked ? (picked.ok ? 'ok' : 'ng') : '') + '</div>';
+    if (!picked) {
+      html += '<p class="muted" style="text-align:center;">' + esc(t(p.fill[0].y ? 'pr.pickAB' : 'pr.pickA')) + '</p><div class="options">' +
+        opts.map((z, k) => '<button class="option-btn" data-pick="' + k + '" style="text-align:center;"><span class="k ja">' + z.w.map(wordHtml).join(' ・ ') + '</span>' +
+          (CJ.getPrefs().romaji ? '<span class="romaji">' + esc(z.w.map(w => w[1]).join(' ・ ')) + '</span>' : '') + '</button>').join('') + '</div>';
+    } else {
+      const ans = st.pol ? x.p : x.c, same = x.c[0] === x.p[0];
+      html += '<div class="feedback ' + (picked.ok ? 'correct' : 'wrong') + '" style="display:block;">' +
+        '<b>' + esc(picked.ok ? t('pr.pickRight') : t('pr.pickWrong', { w: picked.w.map(w => w[0]).join(' ・ ') })) + '</b>' +
+        '<div class="flip ' + (st.pol ? 'is-p' : 'is-c') + '" data-a="pol" style="border-radius:12px; padding:0.5rem; border:1px solid var(--border); background:#fff; margin-top:0.4rem; text-align:center;">' +
+          '<div class="flip-top" style="justify-content:center;"><span class="reg ' + (st.pol ? 'polite' : 'casual') + '">' + t(st.pol ? 'reg.polite' : 'reg.casual') + '</span>' +
+          '<span class="flip-hint" style="margin-left:6px;">' + esc(t(same ? 'tap.same' : 'tap.short')) + '</span></div>' +
+          '<div class="k ja" style="font-size:1.4rem; font-weight:800;">' + CJ.jaHtml(ans) + '</div><div class="romaji">' + esc(ans[1]) + '</div></div>' +
+        '<div style="text-align:center; margin-top:0.3rem;">' + CJ.sayBtns(ans[0]) + '</div>' +
+        '<p class="muted" style="text-align:center; font-size:0.8rem;">' + esc(t('pr.saySentence')) + '</p>' +
+        '<button class="btn" data-a="pnext" style="margin-top:0.5rem;">' + esc(t('q.next')) + '</button></div>';
+    }
+    box.innerHTML = html;
+  }
   function renderDrill() {
+    if (st.phase === 'card' && st.queue[st.i] && st.queue[st.i].x.src === 'pt') { renderChoice(); return; }
     const box = $('drill'), secs = CJ.drillSecs();
     if (st.phase !== 'card') return renderRoundEnd();
     const o = st.queue[st.i], x = o.x, ans = st.pol ? x.p : x.c, same = x.c[0] === x.p[0];
@@ -212,7 +260,7 @@
     const o = st.queue[st.i];
     st.res.push({ o, ok });
     if (st.round === 1) CJ.recordPrac(o.x.key, ok);
-    st.i++; st.shown = false; st.pol = false;
+    st.i++; st.shown = false; st.pol = false; st.pick = null;
     if (st.i < st.queue.length) { renderDrill(); return; }
     const okSet = st.res.filter(r => r.ok).map(r => itemKey(r.o));
     st.hist.push({ round: st.round, said: okSet.length, total: st.res.length, okSet });
@@ -252,14 +300,22 @@
 
   $('drill').addEventListener('click', e => {
     if (e.target.closest('#drMic')) { micCheck(); return; }
+    // 型：選択肢をタップ
+    const pk = e.target.closest('[data-pick]');
+    if (pk && st && st.pick == null) {
+      st.pick = Number(pk.dataset.pick); st.pol = false; renderChoice();
+      const o = st.queue[st.i]; CJ.autoSpeak(o.x.c[0]);
+      return;
+    }
     if (e.target.closest('[data-say], a, label')) return;
     const b = e.target.closest('[data-a]'); if (!b) return;
     const a = b.dataset.a;
+    if (a === 'pnext') { answer(!!(st.queue[st.i].opts[st.pick] || {}).ok); return; }
     if (a === 'pol') { const x = st.queue[st.i].x; if (x.c[0] !== x.p[0]) { st.pol = !st.pol; renderDrill(); CJ.autoSpeak((st.pol ? x.p : x.c)[0]); } }
     else if (a === 'show') reveal();
     else if (a === 'ok') answer(true);
     else if (a === 'ng') answer(false);
-    else if (a === 'next') { const miss = st.res.filter(r => !r.ok).map(r => r.o); st.round++; st.queue = CJ.shuffle(miss); st.i = 0; st.res = []; st.phase = 'card'; renderDrill(); window.scrollTo({ top: 0 }); }
+    else if (a === 'next') { const miss = st.res.filter(r => !r.ok).map(r => { delete r.o.opts; return r.o; }); st.round++; st.queue = CJ.shuffle(miss); st.i = 0; st.res = []; st.phase = 'card'; renderDrill(); window.scrollTo({ top: 0 }); }
     else if (a === 'end') { st.phase = 'review'; renderDrill(); }
     else if (a === 'again') { st.round = 1; st.queue = CJ.shuffle(st.items); st.i = 0; st.res = []; st.hist = []; st.phase = 'card'; st.slot = null; renderDrill(); window.scrollTo({ top: 0 }); }
     else if (a === 'quit' || a === 'back') { st = null; history.replaceState(null, '', 'practice.html'); renderMenu(); }

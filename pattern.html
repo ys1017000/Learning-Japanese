@@ -56,6 +56,7 @@
   let pid = new URLSearchParams(location.search).get('p');
   if (!PT.PATTERNS.some(p => p.id === pid)) pid = PT.PATTERNS[0].id;
   const flipped = {};
+  let sel = -1;   // タップして ［A］ に入れた ことば（-1 = まだ）
   const cur = () => PT.PATTERNS.find(p => p.id === pid);
   const itemsOf = id => PT.items.filter(it => it.pid === id);
   // この型で、練習カードで「言えた」文の数
@@ -66,8 +67,9 @@
   }
   // 型を大きく表示：［　］ が入れ替える場所
   function slotHtml(form) {
-    const f = CJ.showKanji() ? CJ.ruby(form[2]) : esc(form[0]);
-    return f.split('{X}').join('<span class="pt-slot">［ A ］</span>').split('{Y}').join('<span class="pt-slot">［ B ］</span>');
+    const f = CJ.showKanji() ? CJ.ruby(form[2]) : esc(form[0]), w = sel >= 0 ? cur().fill[sel] : null;
+    const word = v => '<span class="pt-slot ok">' + (CJ.showKanji() ? CJ.ruby(v[2]) : esc(v[0])) + '</span>';
+    return f.split('{X}').join(w ? word(w.x) : '<span class="pt-slot">［ A ］</span>').split('{Y}').join(w ? (w.y ? word(w.y) : '') : '<span class="pt-slot">［ B ］</span>');
   }
   function renderFrame() {
     const p = cur(), g = G.find(x => x.id === p.g), pr = progress(p.id);
@@ -75,8 +77,9 @@
     $('frame').innerHTML = '<div style="text-align:center;"><div style="font-size:1.8rem;">' + p.icon + '</div>' +
       '<div class="muted">' + esc(t('reg.casual')) + '</div><div class="pt-frame ja">' + slotHtml(p.c) + '</div>' +
       '<div class="muted" style="margin-top:0.3rem;">' + esc(t('reg.polite')) + '</div><div class="pt-frame small ja">' + slotHtml(p.p) + '</div>' +
-      '<div style="margin-top:0.4rem; font-weight:700;">' + esc(p.title) + '</div></div>' +
-      '<div style="margin-top:0.7rem; font-weight:700; font-size:0.85rem;">' + esc(t('pt.words')) + '</div><div class="link-row">' + words.map(x => '<span class="link-chip">' + x + '</span>').join('') + '</div>' +
+      '<div style="margin-top:0.4rem; font-weight:700;">' + esc(sel >= 0 ? itemsOf(p.id)[sel].en : p.title) + '</div>' +
+      (sel >= 0 ? CJ.sayBtns(itemsOf(p.id)[sel].c[0]) : '') + '</div>' +
+      '<div style="margin-top:0.7rem; font-weight:700; font-size:0.85rem;">' + esc(t('pt.words')) + '</div><div class="link-row">' + words.map((x, i) => '<button class="link-chip' + (i === sel ? ' on' : '') + '" data-fill="' + i + '">' + x + '</button>').join('') + '</div>' +
       (g ? '<div style="margin-top:0.6rem;"><a class="link-chip" href="grammar.html?g=' + g.id + '">🧩 ' + esc(CJ.tx(g, 'title')) + ' →</a></div>' : '') +
       '<p class="muted" style="margin-top:0.5rem;">' + esc(t('pt.progress', { n: pr.said, m: pr.all })) + '</p>' +
       '<a class="btn" href="practice.html?pt=' + p.id + '" style="margin-top:0.4rem;">' + esc(t('pt.practice')) + '</a>';
@@ -84,7 +87,11 @@
   function renderList() { $('list').innerHTML = itemsOf(pid).map(it => CJ.flipHtml(it.key, it, !!flipped[it.key])).join(''); }
   function render() { renderSel(); renderFrame(); renderList(); }
 
-  $('ptSel').addEventListener('change', e => { pid = e.target.value; render(); });
+  $('ptSel').addEventListener('change', e => { pid = e.target.value; sel = -1; render(); });
+  $('frame').addEventListener('click', e => {
+    const b = e.target.closest('[data-fill]'); if (!b) return;
+    sel = Number(b.dataset.fill); renderFrame(); CJ.autoSpeak(itemsOf(pid)[sel].c[0]);
+  });
   $('list').addEventListener('click', e => {
     if (e.target.closest('[data-say], a')) return;
     const c = e.target.closest('[data-flip]'); if (!c) return;

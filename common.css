@@ -311,3 +311,7 @@ body.hide-furi #detail rt, body.hide-furi #detail .romaji, body.hide-furi .wd-li
 .pt-frame ruby rt { font-size: 0.45em; }
 .pt-slot { display: inline-block; color: var(--primary); background: var(--primary-soft); border-radius: 8px; padding: 0 6px; margin: 0 2px; font-weight: 800; }
 .pt-hint { text-align: center; font-size: 1rem; margin: -0.3rem 0 0.6rem; color: #475569; }
+.pt-slot.ok { background: #dcfce7; color: #15803d; }
+.pt-slot.ng { background: #fee2e2; color: #b91c1c; }
+button.link-chip { cursor: pointer; font-family: inherit; }
+button.link-chip.on { background: var(--primary); color: #fff; border-color: var(--primary); }
