@@ -57,7 +57,7 @@
   function whoQuestion(c, reg) {
     if (!reg) reg = c.pw.length && Math.random() < 0.5 ? 'polite' : 'casual';
     if (reg === 'polite' && !c.pw.length) reg = 'casual';
-    const P = D.PEOPLE[reg === 'polite' ? pick(c.pw) : pick(['yoh', 'friend'])];
+    const P = D.PEOPLE[reg === 'polite' ? pick(c.pw) : (c.s === 'yoh' ? 'yoh' : pick(['yoh', 'friend']))];   // 💕 の カード は ようちゃん だけ
     const right = reg === 'polite' ? c.p : c.c, other = reg === 'polite' ? c.c : c.p;
     const others = CJ.shuffle(D.CARDS.filter(x => x.id !== c.id && x.c[0] !== right[0]));
     const d1 = reg === 'polite' ? others[0].p : others[0].c;   // 同じていねいさ・違う意味
