@@ -21,8 +21,9 @@ window.CJ_I18N = {
 
   // ホーム
   'home.hello': ['Heyy マルちゃん！ 👋', 'Heyy マルちゃん！ 👋'],
-  'home.intro': ['Learn to switch between {p} and {c} Japanese — for work, for shops, and for chatting with Yoh-chan.',
-    '{p} と {c} の にほんご を つかいわけよう — しごと、おみせ、ようちゃん との おしゃべり で。'],
+  'home.intro': ['Speak natural Japanese — with Yoh-chan and friends, at work and in shops. Words, phrases, grammar, kanji and real conversations, a little every day. 🌸',
+    'しぜん な にほんご を はなそう — ようちゃん や ともだち と、しごと や おみせ で。ことば、フレーズ、ぶんぽう、かんじ、かいわ を、まいにち すこし ずつ。🌸'],
+  'home.help': ['How to use this app', 'アプリ の つかいかた'],
   'home.m.cards': ['Polite ⇔ Casual', 'ていねい ⇔ ふつう'],
   'home.m.endings': ['Endings<br>よ・ね・かな', 'ごび<br>よ・ね・かな'],
   'home.m.kanji': ['Kanji', 'かんじ'],

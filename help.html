@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>How to use – マルちゃんのペースでいいよ</title>
+<meta name="theme-color" content="#e0517a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="common.css">
+<style>
+  .tu-dots { display: flex; justify-content: center; gap: 6px; margin: 0.2rem 0 0.8rem; flex-wrap: wrap; }
+  .tu-dots button { width: 9px; height: 9px; border-radius: 50%; border: none; padding: 0; background: #f1d5dd; cursor: pointer; }
+  .tu-dots button.on { background: var(--primary); width: 22px; border-radius: 999px; }
+  .tu-icon { font-size: 3rem; text-align: center; line-height: 1.2; }
+  .tu-title { font-size: 1.3rem; font-weight: 800; text-align: center; margin: 0.3rem 0 0.8rem; }
+  .tu-list { margin: 0; padding-left: 1.2rem; line-height: 1.65; }
+  .tu-list li { margin-bottom: 0.45rem; }
+  .tu-go { margin-top: 0.9rem; }
+  .tu-nav { display: flex; gap: 0.6rem; margin-top: 1rem; }
+  .tu-nav .btn { flex: 1; }
+  .tu-dot-g { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; vertical-align: middle; }
+</style>
+</head>
+<body>
+<header><a class="logo" href="index.html">🌸 マルちゃんのペースでいいよ</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
+
+<main class="container">
+  <div class="card">
+    <div class="counter"><span class="muted" id="tuCount"></span><a class="tiny-btn" href="index.html" id="tuSkip"></a></div>
+    <div class="tu-dots" id="tuDots"></div>
+    <div id="tuBody"></div>
+    <div class="tu-nav">
+      <button class="btn btn-secondary" id="tuBack"></button>
+      <button class="btn" id="tuNext"></button>
+    </div>
+  </div>
+</main>
+
+<nav>
+  <a href="index.html" class="active"><span class="ni">🏠</span><span data-i18n="nav.home">Home</span></a>
+  <a href="practice.html"><span class="ni">🔥</span><span data-i18n="nav.today">Today</span></a>
+  <a href="cards.html"><span class="ni">📚</span><span data-i18n="nav.learn">Learn</span></a>
+  <a href="kanji.html"><span class="ni">✍️</span><span data-i18n="nav.kanji">Kanji</span></a>
+  <a href="read.html"><span class="ni">🗣️</span><span data-i18n="nav.read">Read</span></a>
+  <a href="quiz.html"><span class="ni">❓</span><span data-i18n="nav.quiz">Quiz</span></a>
+</nav>
+
+<script src="i18n.js"></script>
+<script src="common.js"></script>
+<script>
+/* つかいかた（チュートリアル）：1まい ずつ めくって、アプリ の きのう を しょうかい する。
+   ことば は このページ の 中 に 英語／ひらがな で 書く（L(英語, ひらがな)） */
+(function () {
+  const $ = id => document.getElementById(id), t = CJ.t;
+  const L = (en, jp) => CJ.lang() === 'ja' ? jp : en;
+  const P = '<span class="reg polite">' , C = '<span class="reg casual">';
+
+  const STEPS = [
+    () => ({ icon: '🌸', title: L('Welcome, Maru-chan!', 'ようこそ、マルちゃん！'), go: null, items: [
+      L('This app is for <b>speaking</b> natural Japanese — with Yoh-chan and friends, at work, and in shops.', 'この アプリ は、しぜん な にほんご を <b>はなす</b> ため の もの。ようちゃん や ともだち と、しごと で、おみせ で。'),
+      L('You learn words, phrases, grammar, kanji and real conversations — a little every day.', 'ことば、フレーズ、ぶんぽう、かんじ、ほんとう の かいわ を、まいにち すこし ずつ。'),
+      L('No kanji stress: Japanese is shown in hiragana + romaji. You can turn kanji (with furigana) on when you want.', 'かんじ は むり しなくて OK。にほんご は ひらがな ＋ ローマじ。かんじ（ふりがな つき）は すき な とき に だせます。'),
+      L('The name says it all: <b>at your own pace</b> 🌸', 'アプリ の なまえ の とおり、<b>マルちゃん の ペース で いいよ</b> 🌸')
+    ] }),
+    () => ({ icon: '🔥', title: L('Today\'s practice', 'きょう の れんしゅう'), go: 'practice.html', items: [
+      L('Two short sets every day: ☀️ <b>Lunch</b> and 🌙 <b>Night</b>. The cards change every day.', 'まいにち 2かい：☀️ <b>ひる</b> と 🌙 <b>よる</b>。カード は まいにち かわります。'),
+      L('See the English → <b>say it in Japanese out loud</b> within a few seconds → check the answer.', 'えいご を みる → すうびょう で <b>こえ に だして にほんご で いう</b> → こたえ を みる。'),
+      L('Answers are casual first. Tap the answer to see the polite way.', 'こたえ は さいしょ ふつう。タップ すると ていねい に かわります。'),
+      L('At night you can choose: cards or 🔁 patterns (pick the word that fits the sentence).', 'よる は えらべます：カード か 🔁 かた（ぶん に あう ことば を えらぶ）。')
+    ] }),
+    () => ({ icon: '🃏', title: L('Polite and casual', 'ていねい と ふつう'), go: 'cards.html', items: [
+      L(P + 'POLITE</span> = work, shops, people you just met. ' + C + 'CASUAL</span> = Yoh-chan, friends, family.', P + 'ていねい</span> ＝ しごと、おみせ、はじめて の ひと。' + C + 'ふつう</span> ＝ ようちゃん、ともだち、かぞく。'),
+      L('<b>Tap a card</b> to switch between polite and casual.', '<b>カード を タップ</b> すると、ていねい ⇔ ふつう が かわります。'),
+      L('Some sentences have only one way — like a self-introduction (always polite) or "Shall we hold hands?" (only with someone close).', 'かたほう だけ の 文 も あります。じこしょうかい（いつも ていねい）、「て つなご？」（したしい ひと と だけ）など。'),
+      L('💡 <b>Polite vs Casual</b> on the home screen explains the differences and tips.', '💡 ホーム の <b>ていねい と ふつう</b> に、ちがい と コツ が あります。')
+    ] }),
+    () => ({ icon: '🔊', title: L('Listening', 'きく'), go: null, items: [
+      L('🔊 = listen. 🐢 = listen slowly.', '🔊 ＝ きく。🐢 ＝ ゆっくり きく。'),
+      L('A <span class="tu-dot-g"></span> green dot means <b>Yoh-chan recorded it with his own voice</b>. That is the best model for intonation!', '<span class="tu-dot-g"></span> みどり の てん ＝ <b>ようちゃん が じぶん の こえ で ろくおん した</b> 文。イントネーション の おてほん に いちばん！'),
+      L('Other sentences use the computer voice. Its intonation can be a little off sometimes.', 'ほか の 文 は きかい の こえ。イントネーション が すこし へん な とき も あります。'),
+      L('In Settings (bottom of Home) you can choose Yoh-chan\'s voice or the computer voice, and compare them.', 'ホーム の いちばん した の せってい で、ようちゃん の こえ か きかい の こえ を えらべます。ききくらべ も できます。')
+    ] }),
+    () => ({ icon: '📚', title: L('Learn', 'まなぶ'), go: 'grammar.html', items: [
+      L('🧩 <b>Grammar</b>: past, future plans, "want to", comparing… step by step with short examples.', '🧩 <b>ぶんぽう</b>：かこ、よてい、「〜たい」、くらべる…。みじかい れい で 1ステップ ずつ。'),
+      L('🔁 <b>Patterns</b>: one sentence frame, many words. Learn one, say a lot!', '🔁 <b>かた</b>：ぶん の わく は おなじ、ことば を かえる だけ。1つ おぼえて たくさん いえる！'),
+      L('<b>Endings</b> よ・ね・かな…: the little words that make Japanese sound natural.', '<b>ごび</b> よ・ね・かな…：にほんご を しぜん に する ちいさい ことば。'),
+      L('Use the tabs at the top of each page to move around.', 'ページ の うえ の タブ で いどう できます。')
+    ] }),
+    () => ({ icon: '✍️', title: L('Kanji & words', 'かんじ と たんご'), go: 'kanji.html', items: [
+      L('Don\'t memorize lists of readings. <b>Learn words</b> — the reading comes with the word.', 'よみかた の リスト は おぼえなくて いい。<b>ことば で おぼえよう</b>。よみかた は ことば と いっしょ に ついて きます。'),
+      L('Kanji pages help you <b>recognize the meaning</b> (signs, menus) and show words and sentences that use it.', 'かんじ の ページ は、<b>いみ が わかる</b> ように なる ため（かんばん、メニュー）。その かんじ を つかう ことば と 文 も みられます。'),
+      L('Each word shows <span class="rt rt-on">音 on</span> or <span class="rt rt-kun">訓 kun</span>. The reading tips at the top explain how Japanese people guess — yes, they guess too!', 'ことば に <span class="rt rt-on">音</span> か <span class="rt rt-kun">訓</span> が ついて います。うえ の コツ に、にほんじん が どう すいそく して いる か が あります。にほんじん も すいそく して る よ！'),
+      L('📝 <b>Words</b>: everyday words by topic. 🗾 <b>Japan map</b>: prefectures and areas.', '📝 <b>たんご</b>：テーマ べつ の まいにち の ことば。🗾 <b>にほん の ちず</b>：とどうふけん と ちいき。')
+    ] }),
+    () => ({ icon: '🗣️', title: L('Read aloud', 'こえ に だして よむ'), go: 'read.html', items: [
+      L('Short scenes: café, dinner, illuminations, a date, messages…', 'みじかい ばめん：カフェ、ごはん、イルミネーション、デート、メッセージ…'),
+      L('Tap 🎤, read the sentence, and the app shows how close you were.', '🎤 を タップ して 文 を よむ と、どれ くらい ちかい か が でます。'),
+      L('Tap a line to switch polite ⇔ casual, or switch the whole scene at once.', '1ぎょう を タップ で ていねい ⇔ ふつう。ばめん ぜんぶ を いっきに かえる こと も できます。')
+    ] }),
+    () => ({ icon: '❓', title: L('Quiz', 'クイズ'), go: 'quiz.html', items: [
+      L('Who are you talking to? Which ending? Kanji, words, 音 or 訓…', 'だれ と はなしてる？ どの ごび？ かんじ、たんご、音？訓？…'),
+      L('Mistakes are saved. 🎯 <b>My mistakes</b> lets you practice only those.', 'まちがえた もんだい は のこります。🎯 <b>まちがい ふくしゅう</b> で それ だけ れんしゅう できます。')
+    ] }),
+    () => ({ icon: '💌', title: L('Ask Yoh-chan', 'ようちゃん に きく'), go: 'ask.html', items: [
+      L('Not sure about something? Tap 💌 <b>Ask Yoh-chan</b>. Your question is copied, then Instagram DM opens — just paste and send.', 'わからない こと が あったら 💌 <b>ようちゃん に きく</b>。しつもん が コピー されて インスタ の DM が ひらく ので、はりつけて おくる だけ。'),
+      L('You can also ask from a kanji or word page with the 💌 button.', 'かんじ や たんご の ページ の 💌 から も きけます。'),
+      L('🎧 Links to YouTube / YouGlish let you hear how real people say a word.', '🎧 YouTube や YouGlish の リンク で、ほんとう の ひと の いいかた を きけます。')
+    ] }),
+    () => ({ icon: '⚙️', title: L('Settings & tips', 'せってい と コツ'), go: null, items: [
+      L('🌐 The button at the top right switches the screen between English and Japanese (hiragana).', '🌐 みぎうえ の ボタン で、がめん を えいご ⇔ にほんご（ひらがな）に きりかえ。'),
+      L('At the bottom of Home: romaji on/off, auto play, speed, voice, dark mode…', 'ホーム の いちばん した：ローマじ、じどう さいせい、はやさ、こえ、ダークモード…'),
+      L('Your progress is saved on this phone. Add the app to your home screen for easy access (Safari → Share → Add to Home Screen).', 'きろく は この スマホ に のこります。ホーム がめん に ついか すると べんり（Safari → きょうゆう → ホーム画面に追加）。'),
+      L('You can open this guide again anytime from 📘 on Home.', 'この せつめい は、ホーム の 📘 から いつ でも みられます。')
+    ] })
+  ];
+
+  let i = Math.max(0, Math.min(STEPS.length - 1, Number((location.hash || '').replace('#', '')) || 0));
+  try { localStorage.setItem('cj_helpSeen', '1'); } catch (e) {}
+
+  function render() {
+    const s = STEPS[i]();
+    $('tuCount').textContent = (i + 1) + ' / ' + STEPS.length;
+    $('tuSkip').textContent = L('Close ✕', 'とじる ✕');
+    $('tuDots').innerHTML = STEPS.map((x, k) => '<button class="' + (k === i ? 'on' : '') + '" data-k="' + k + '" aria-label="' + (k + 1) + '"></button>').join('');
+    $('tuBody').innerHTML = '<div class="tu-icon">' + s.icon + '</div><div class="tu-title">' + s.title + '</div>' +
+      '<ul class="tu-list">' + s.items.map(x => '<li>' + x + '</li>').join('') + '</ul>' +
+      (s.go ? '<a class="btn btn-secondary tu-go" href="' + s.go + '">' + L('Open it →', 'ひらいて みる →') + '</a>' : '');
+    $('tuBack').style.visibility = i === 0 ? 'hidden' : '';
+    $('tuBack').textContent = L('← Back', '← もどる');
+    $('tuNext').textContent = i === STEPS.length - 1 ? L('🔥 Start today\'s practice', '🔥 きょう の れんしゅう を はじめる') : L('Next →', 'つぎ →');
+    history.replaceState(null, '', '#' + i);
+  }
+  $('tuBack').addEventListener('click', () => { if (i > 0) { i--; render(); window.scrollTo(0, 0); } });
+  $('tuNext').addEventListener('click', () => {
+    if (i === STEPS.length - 1) { location.href = 'practice.html'; return; }
+    i++; render(); window.scrollTo(0, 0);
+  });
+  $('tuDots').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b) { i = Number(b.dataset.k); render(); } });
+  // 左右 スワイプ でも めくれる
+  let x0 = null;
+  $('tuBody').addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+  $('tuBody').addEventListener('touchend', e => {
+    if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if (dx < -60 && i < STEPS.length - 1) { i++; render(); } else if (dx > 60 && i > 0) { i--; render(); }
+  });
+  document.addEventListener('cj:lang', render);
+  render();
+})();
+</script>
+</body>
+</html>

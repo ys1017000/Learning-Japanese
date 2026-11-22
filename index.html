@@ -19,6 +19,7 @@
   <div class="card">
     <div class="hello" data-i18n="home.hello">Heyy マルちゃん！ 👋</div>
     <p class="muted" id="introText"></p>
+    <a class="tiny-btn" href="help.html" id="helpLink" style="display:inline-block; margin-top:0.6rem; text-decoration:none;">📘 <span data-i18n="home.help"></span><span id="helpNew" style="display:none; margin-left:6px; background:var(--primary); color:#fff; border-radius:999px; padding:0 7px; font-size:0.7rem;">NEW</span></a>
   </div>
 
   <div class="card">
@@ -116,7 +117,8 @@
   const D = window.CJ_DATA, K = window.CJ_KANJI, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
 
   function renderIntro() {
-    $('introText').innerHTML = t('home.intro', { p: '<span class="reg polite">' + t('reg.polite') + '</span>', c: '<span class="reg casual">' + t('reg.casual') + '</span>' });
+    $('introText').innerHTML = t('home.intro');
+    try { $('helpNew').style.display = localStorage.getItem('cj_helpSeen') ? 'none' : ''; } catch (e) {}
   }
   function renderStats() {
     const d = CJ.getData();
