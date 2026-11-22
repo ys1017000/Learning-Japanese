@@ -101,7 +101,7 @@
     ['毎', 2, 'every', 'まい', '', 'A mother doing the same thing every single day.', '', [['{毎|まい}{日|にち}', 'mainichi', 'every day'], ['{毎|まい}{週|しゅう}', 'maishuu', 'every week']]],
     ['朝', 2, 'morning', 'ちょう', 'あさ', 'The sun rising between grass, while the moon (月) is still in the sky.', '', [['{朝|あさ}', 'asa', 'morning'], ['{朝|あさ}ごはん', 'asagohan', 'breakfast']]],
     ['昼', 2, 'noon, daytime', 'ちゅう', 'ひる', 'The sun (日) high above the ground.', '', [['{昼|ひる}', 'hiru', 'noon'], ['{昼|ひる}ごはん', 'hirugohan', 'lunch']]],
-    ['夜', 2, 'night', 'や', 'よる', 'A person under a roof, with the moon outside.', '', [['{夜|よる}', 'yoru', 'night'], ['{今|こん}{夜|や}', 'kon\'ya', 'tonight']]],
+    ['夜', 2, 'night', 'や', 'よる・よ', 'A person under a roof, with the moon outside.', '', [['{夜|よる}', 'yoru', 'night'], ['{今|こん}{夜|や}', 'kon\'ya', 'tonight']]],
     ['午', 2, 'noon', 'ご', '', 'Like a clock hand pointing straight up at 12.', '午前 ごぜん = a.m. (before noon), 午後 ごご = p.m. (after noon).', [['{午|ご}{前|ぜん}', 'gozen', 'a.m.'], ['{午|ご}{後|ご}', 'gogo', 'p.m.']]],
     ['前', 2, 'before, front', 'ぜん', 'まえ', 'A boat with its nose pointing forward.', '', [['{前|まえ}', 'mae', 'front, before'], ['{名|な}{前|まえ}', 'namae', 'name']]],
     ['後', 2, 'after, behind', 'ご・こう', 'あと・うし(ろ)', 'A person walking slowly at the back.', '', [['{後|あと}で', 'ato de', 'later'], ['{午|ご}{後|ご}', 'gogo', 'p.m.']]],
@@ -214,7 +214,7 @@
     ['魚', 2, 'fish', 'ぎょ', 'さかな', 'A fish: head, body, and tail (灬).', '', [['{魚|さかな}', 'sakana', 'fish']]],
     ['野', 2, 'field', 'や', 'の', 'A village (里) in the open field.', '', [['{野菜|やさい}', 'yasai', 'vegetables']]],
     ['菜', 0, 'vegetable', 'さい', 'な', 'Plants (艹) picked by hand from a tree (木).', '', [['{野菜|やさい}', 'yasai', 'vegetables']]],
-    ['酒', 0, 'alcohol', 'しゅ', 'さけ', 'Water (氵) + a jar (酉).', '酉 in a kanji = alcohol or fermenting.', [['お{酒|さけ}', 'osake', 'alcohol, sake'], ['{居酒屋|いざかや}', 'izakaya', 'Japanese pub']]],
+    ['酒', 0, 'alcohol', 'しゅ', 'さけ・さか', 'Water (氵) + a jar (酉).', '酉 in a kanji = alcohol or fermenting.', [['お{酒|さけ}', 'osake', 'alcohol, sake'], ['{居酒屋|いざかや}', 'izakaya', 'Japanese pub']]],
     ['員', 0, 'member, worker', 'いん', '', 'A mouth (口) over money (貝) — a worker.', '', [['{店員|てんいん}', 'ten\'in', 'shop staff'], ['{駅員|えきいん}', 'ekiin', 'station staff']]],
     ['約', 0, 'promise; about', 'やく', '', 'A thread (糸) that ties two people together.', '', [['{約束|やくそく}', 'yakusoku', 'promise'], ['{予約|よやく}', 'yoyaku', 'reservation']]],
     ['改', 0, 'change, check', 'かい', 'あらた(める)', 'Self (己) + a hand with a stick — checking again.', '', [['{改札|かいさつ}', 'kaisatsu', 'ticket gate']]],
@@ -267,10 +267,18 @@
 
   /* 漢字を読むときのコツ */
   const KANJI_TIPS = [
-    { en: '<b>Two kinds of readings.</b> Most kanji have a Japanese-style reading (<i>kun</i>) and a Chinese-style reading (<i>on</i>). Alone or with hiragana after it → usually <i>kun</i>: 山 やま. In a kanji + kanji word → usually <i>on</i>: 富士山 ふじさん.',
-      ja: '<b>よみかた は 2しゅるい。</b> おおく の かんじ に は 「くんよみ」（にほん の よみかた） と 「おんよみ」（ちゅうごく から きた よみかた） が あります。かんじ ひとつ や、うしろ に ひらがな が ある とき → たいてい くんよみ。かんじ が ならぶ ことば → たいてい おんよみ。' },
-    { en: '<b>Hiragana after a kanji helps you.</b> 楽しい → たの + しい. The hiragana (<i>okurigana</i>) tells you it\'s a kun reading and which word it is.',
-      ja: '<b>かんじ の うしろ の ひらがな が ヒント。</b> 楽しい → たの ＋ しい。うしろ の ひらがな（おくりがな） で、くんよみ だ と わかります。' },
+    { en: '<b>How do Japanese people know the reading?</b> They don\'t decide kanji by kanji. They know the <b>word</b>. 食事 is しょくじ and 食べる is たべる because they know those words — like you know “read” (now) and “read” (past) from the sentence. So: <b>learn words, not lists of readings.</b>',
+      ja: '<b>にほんじん は どう やって よみかた が わかる の？</b> 1こ ずつ 「これは おんよみ」 と きめて いる わけ では ありません。<b>ことば</b> を しって いる から です。食事 は しょくじ、食べる は たべる、と ことば で おぼえて います。えいご の read（いま） と read（かこ） を 文 で よみわける の と おなじ。だから <b>よみかた の リスト より、ことば で おぼえよう。</b>' },
+    { en: '<b>Two kinds of readings.</b> <span class="rt rt-kun">訓 kun</span> = the Japanese word (山 やま, 食べる たべる). <span class="rt rt-on">音 on</span> = the old Chinese sound (山 さん in 富士山, 食 しょく in 食事). In this app, every word shows which one it uses.',
+      ja: '<b>よみかた は 2しゅるい。</b> <span class="rt rt-kun">訓 くん</span> ＝ にほん の ことば（山 やま、食べる たべる）。<span class="rt rt-on">音 おん</span> ＝ むかし の ちゅうごく の おと（富士山 の さん、食事 の しょく）。この アプリ では、ことば ごと に どっち か が でて います。' },
+    { en: '<b>Clue 1: kanji + hiragana → kun.</b> 食べる, 大きい, 行く. The hiragana after the kanji (<i>okurigana</i>) is a strong sign of a kun reading.',
+      ja: '<b>ヒント1：かんじ ＋ ひらがな → 訓。</b> 食べる、大きい、行く。かんじ の うしろ の ひらがな（おくりがな） が あったら、だいたい 訓 です。' },
+    { en: '<b>Clue 2: one kanji alone → usually kun.</b> 山 やま, 雨 あめ, 花 はな, 手 て. (Some exceptions: 駅 えき, 肉 にく.)',
+      ja: '<b>ヒント2：かんじ 1つ だけ → だいたい 訓。</b> 山 やま、雨 あめ、花 はな、手 て。（れいがい：駅 えき、肉 にく）' },
+    { en: '<b>Clue 3: two or more kanji together → usually on.</b> 食事 しょくじ, 電車 でんしゃ, 大学 だいがく. Exceptions: 手紙 てがみ, 花火 はなび (kun + kun), 焼肉 やきにく (mixed).',
+      ja: '<b>ヒント3：かんじ が 2つ いじょう ならぶ → だいたい 音。</b> 食事 しょくじ、電車 でんしゃ、大学 だいがく。れいがい：手紙 てがみ、花火 はなび（訓＋訓）、焼肉 やきにく（まざってる）。' },
+    { en: '<b>Listen to the sound.</b> On readings are short and often end in ん, う, い, く, つ, き, or have small ゃゅょ (でん, がく, しょう, きゅう). Kun readings sound like normal Japanese words (やま, たべる, はな). With these clues you guess right about 8 times out of 10.',
+      ja: '<b>おと を きいて みよう。</b> 音 は みじかくて、ん・う・い・く・つ・き で おわる こと が おおい。ちいさい ゃゅょ も よく ある（でん、がく、しょう、きゅう）。訓 は ふつう の にほんご の ことば（やま、たべる、はな）。この ヒント で、10かい に 8かい くらい は あたります。' },
     { en: '<b>Look for parts you know.</b> 亻 person, 氵 water, 木 tree, 日 sun, 口 mouth, 言 words, 艹 plants, ⻌ road / moving, 宀 roof. Like German compound words (Hand + Schuh), kanji are built from smaller pieces!',
       ja: '<b>しって いる パーツ を さがそう。</b> 亻 ひと、氵 みず、木 き、日 ひ、口 くち、言 ことば、艹 くさ、⻌ みち、宀 やね。ドイツご の ふくごうご（Hand ＋ Schuh） の ように、かんじ も ちいさい パーツ で できて います！' },
     { en: '<b>Sounds change in words.</b> さん + ひゃく → さんびゃく, いち + ふん → いっぷん, がく + こう → がっこう. Don\'t worry — your ear will learn it.',
@@ -280,6 +288,7 @@
     { en: '<b>You don\'t need to read everything.</b> On signs, find the kanji you know (出口, 北, 円…) and guess the rest from the picture and context.',
       ja: '<b>ぜんぶ よめなくて だいじょうぶ。</b> かんばん では、しって いる かんじ（出口、北、円…） を みつけて、のこり は ばめん から そうぞう しよう。' }
   ];
+
 
   /* {漢字|よみ} の書き方を変換するヘルパー */
   function rubyHtml(s, esc) {
@@ -291,5 +300,72 @@
   function reading(s) { return String(s).replace(/\{([^|}]+)\|([^}]+)\}/g, '$2'); }
   function plain(s) { return String(s).replace(/\{([^|}]+)\|([^}]+)\}/g, '$1'); }
 
-  window.CJ_KANJI = { KANJI, LIFE, KANJI_TIPS, rubyHtml, reading, plain };
+  /* ---- 音読み・訓読み の 見分け（単語ごと）----
+     {学|がっ}{校|こう} のような 書き方 から、それぞれの漢字の よみ が 音 か 訓 か を 調べる。
+     ことばの中では 音がかわる（さん＋ほ→さんぽ、がく→がっ）ので、にごり・小さい っ も 同じ とみなす。
+     どちらでもない まとめ読み（今日 きょう、大人 おとな）は「とくべつ」 */
+  const KBY = {}; KANJI.forEach(x => { KBY[x.k] = x; });
+  // 一覧に のって いない 漢字の よみ（音・訓 の 見分け 用 だけ）
+  const EXTRA = { 港: ['こう', 'みなと'], 誕: ['たん', ''], 有: ['ゆう', 'あ(る)'], 国: ['こく', 'くに'], 信: ['しん', ''], 号: ['ごう', ''], 関: ['かん', 'せき'],
+    銀: ['ぎん', ''], 宿: ['しゅく', 'やど'], 交: ['こう', 'まじ(わる)'], 泉: ['せん', 'いずみ'], 医: ['い', ''], 居: ['きょ', 'い(る)'], 屋: ['おく', 'や'],
+    図: ['ず・と', ''], 授: ['じゅ', ''], 止: ['し', 'と(まる)'], 病: ['びょう', 'やまい'], 心: ['しん', 'こころ'], 客: ['きゃく', ''], 洋: ['よう', ''] };
+  Object.keys(EXTRA).forEach(k => { if (!KBY[k]) KBY[k] = { k, on: EXTRA[k][0], kun: EXTRA[k][1] }; });
+  const VOICE = { か:'が', き:'ぎ', く:'ぐ', け:'げ', こ:'ご', さ:'ざ', し:'じ', す:'ず', せ:'ぜ', そ:'ぞ', た:'だ', ち:'ぢじ', つ:'づず', て:'で', と:'ど', は:'ばぱ', ひ:'びぴ', ふ:'ぶぷ', へ:'べぺ', ほ:'ぼぽ' };
+  function variants(r) {
+    const out = new Set([r]);
+    const add = x => { out.add(x); (VOICE[x[0]] || '').split('').forEach(v => out.add(v + x.slice(1))); };
+    add(r);
+    if (/[くつちきり]$/.test(r) && r.length > 1) add(r.slice(0, -1) + 'っ');   // いち → いっ、がく → がっ
+    if (/ゅう$/.test(r)) add(r.slice(0, -2) + 'っ');                             // じゅう → じっ
+    if (r === 'にち') add('に');                                                  // 日本 にほん
+    return Array.from(out);
+  }
+  function readsOf(k) {
+    const x = KBY[k]; if (!x) return null;
+    const list = [];
+    const push = (str, type) => String(str || '').split('・').filter(Boolean).forEach(r => {
+      const stem = r.replace(/\(.*\)/, ''), ok = /\((.)/.exec(r);
+      if (stem) variants(stem).forEach(v => list.push([type, v, v === stem]));
+      // やく → やき（焼肉）、いる → いり（入口）のように、ことばの中で 送りがな が いっしょに 読まれる 形
+      const I = { く:'き', ぐ:'ぎ', す:'し', つ:'ち', ぬ:'に', ぶ:'び', む:'み', る:'り', う:'い' };
+      if (type === 'kun' && stem && ok && I[ok[1]]) variants(stem + I[ok[1]]).forEach(v => list.push([type, v, false]));
+    });
+    push(x.on, 'on'); push(x.kun, 'kun');
+    return list.sort((a, b) => (b[1].length - a[1].length) || (b[2] - a[2]));   // 長い よみ・そのままの形 を先に
+  }
+  function splitGroup(chars, yomi) {
+    if (!chars.length) return yomi === '' ? [] : null;
+    const k = chars[0] === '々' ? chars.prev : chars[0], list = readsOf(k);
+    if (!list) return undefined;
+    for (const [type, v] of list) {
+      if (!yomi.startsWith(v)) continue;
+      const rest = chars.slice(1); rest.prev = k;
+      const r = splitGroup(rest, yomi.slice(v.length));
+      if (r === undefined) return undefined;
+      if (r) return [[type, k, v]].concat(r);
+    }
+    return null;
+  }
+  // 単語の よみ の種類：'on'（音）、'kun'（訓）、'mix'（音＋訓）、'special'（とくべつ）、null（わからない）
+  // くわしく：[{ k: 漢字, y: よみ, type: 'on'|'kun' }]、まとめ読み は { k: '今日', y: 'きょう', type: 'special' }
+  function readParts(kj) {
+    const groups = []; String(kj).replace(/\{([^|}]+)\|([^}]+)\}/g, (m, k, y) => { groups.push([k, y]); return m; });
+    if (!groups.length) return null;
+    const parts = [];
+    for (const [k, y] of groups) {
+      const chars = Array.from(k), r = splitGroup(chars, y);
+      if (r === undefined) return null;                        // しらない 漢字
+      if (r === null) { if (chars.length > 1) { parts.push({ k, y, type: 'special' }); continue; } return null; }
+      r.forEach(p => parts.push({ k: p[1], y: p[2], type: p[0] }));
+    }
+    return parts;
+  }
+  function readType(kj) {
+    const parts = readParts(kj); if (!parts) return null;
+    if (parts.some(p => p.type === 'special')) return 'special';
+    const on = parts.some(p => p.type === 'on'), kun = parts.some(p => p.type === 'kun');
+    return on && kun ? 'mix' : on ? 'on' : 'kun';
+  }
+
+  window.CJ_KANJI = { KANJI, LIFE, KANJI_TIPS, rubyHtml, reading, plain, readType, readParts };
 })();

@@ -81,6 +81,7 @@
     box.innerHTML =
       '<div class="counter"><span class="muted">' + (i + 1) + ' / ' + list.length + '</span><span>' + CJ.askLink('単語 ' + w.id + '（' + w.kana + '）') + '<span class="learned-mark">' + (learned ? ' ✓' : '') + '</span></span></div>' +
       '<div class="wd-big ja">' + CJ.ruby(w.kj) + '</div>' +
+      '<div style="text-align:center;">' + CJ.rtHtml(w.kj, true) + '</div>' +
       '<div style="text-align:center;"><div class="romaji">' + esc(w.r) + '</div><div style="font-weight:700;">' + esc(w.en) + '</div>' + CJ.sayBtns(w.kana) + '</div>' +
       (ks.length ? '<div style="font-weight:700; margin:0.7rem 0 0.2rem;">' + esc(t('wd.kanji')) + '</div><div class="link-row">' +
         ks.map(k => '<a class="link-chip kj" href="kanji.html?k=' + encodeURIComponent(k) + '">✍️ ' + esc(k) + ' · ' + esc(B.kanjiBy[k].m) + '</a>').join('') + '</div>' : '') +

@@ -315,3 +315,11 @@ body.hide-furi #detail rt, body.hide-furi #detail .romaji, body.hide-furi .wd-li
 .pt-slot.ng { background: #fee2e2; color: #b91c1c; }
 button.link-chip { cursor: pointer; font-family: inherit; }
 button.link-chip.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* 音読み・訓読み の札 */
+.rt { display: inline-block; font-size: 0.68rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; vertical-align: middle; white-space: nowrap; }
+.rt-on { background: #e0f2fe; color: #0369a1; }
+.rt-kun { background: #dcfce7; color: #15803d; }
+.rt-mix { background: #fef3c7; color: #b45309; }
+.rt-special { background: #f3e8ff; color: #7e22ce; }
+.rt-parts { font-size: 0.85rem; margin-top: 0.3rem; color: var(--muted, #6b7280); }

@@ -38,7 +38,7 @@
 (function () {
   const D = window.CJ_DATA, K = window.CJ_KANJI, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
   const ROUND = 10;
-  const MODES = ['who', 'endings', 'kanji', 'words', 'mistakes'];
+  const MODES = ['who', 'endings', 'kanji', 'onkun', 'words', 'mistakes'];
   const WORDS = window.CJ_WORDS.WORDS, wordBy = {}; WORDS.forEach(w => { wordBy[w.id] = w; });
   const cardById = {}; D.CARDS.forEach(c => { cardById[c.id] = c; });
   const endById = {}; D.ENDING_QUIZ.forEach(q => { endById[q.id] = q; });
@@ -115,6 +115,34 @@
         '<div style="margin-top:0.4rem;"><a href="kanji.html?k=' + encodeURIComponent(x.k) + '">✍️ ' + esc(x.k) + ' →</a></div>'
     };
   }
+  /* 音？訓？：ことばの よみ が 音読み か 訓読み か を えらぶ。
+     ことば は 漢字の一覧 と 単語 から、よみ の しゅるい が わかる もの だけ（とくべつ な よみ は のぞく） */
+  const OK_POOL = (() => {
+    const seen = new Set(), out = [];
+    const add = (kj, en) => { if (seen.has(kj)) return; seen.add(kj); const ty = K.readType(kj); if (ty === 'on' || ty === 'kun' || ty === 'mix') out.push({ kj, en, ty }); };
+    K.KANJI.forEach(x => x.words.forEach(w => add(w[0], w[2])));
+    WORDS.forEach(w => add(w.kj, w.en));
+    return out;
+  })();
+  const okBy = {}; OK_POOL.forEach(o => { okBy[o.kj] = o; });
+  function okWhy(o) {
+    const groups = o.kj.match(/\{[^}]+\}/g) || [], kanjiN = Array.from(K.plain(o.kj).replace(/[^\u4e00-\u9fff々]/g, '')).length;
+    const okuri = /\}[\u3041-\u3093]/.test(o.kj);
+    if (o.ty === 'mix') return 'ok.why.mix';
+    if (o.ty === 'kun') return okuri ? 'ok.why.okuri' : kanjiN === 1 ? 'ok.why.single' : 'ok.why.exKun';
+    return kanjiN === 1 ? 'ok.why.exOn' : 'ok.why.multi';
+  }
+  function onkunQuestion(o) {
+    const opt = ty => ({ t: [t('rt.' + ty), ''], ok: ty === o.ty });
+    return {
+      id: 'o:' + o.kj,
+      opts: ['on', 'kun', 'mix'].map(opt),
+      answer: K.reading(o.kj),
+      head: () => '<div class="q-text">' + esc(t('q.onkun')) + '</div><div class="q-word ja">' + CJ.ruby(o.kj) + '</div><div class="muted" style="text-align:center;">' + esc(o.en) + '</div>',
+      why: () => '<div>' + esc(t(okWhy(o))) + '</div>' + CJ.rtHtml(o.kj, true) +
+        '<div style="margin-top:0.4rem;"><a href="kanji.html">✍️ ' + esc(t('kj.tipsTitle')) + ' →</a></div>'
+    };
+  }
   // 単語：いみ を えらぶ
   function wordQuestion(w) {
     const wrong = CJ.shuffle(WORDS.filter(y => y.id !== w.id && y.en !== w.en)).slice(0, 3);
@@ -133,6 +161,7 @@
     if (m[0] === 'e' && endById[m[1]]) return endQuestion(endById[m[1]]);
     if (m[0] === 'k' && kanjiBy[m[1]]) return kanjiQuestion(kanjiBy[m[1]], m[2]);
     if (m[0] === 'w' && wordBy[m[1]]) return wordQuestion(wordBy[m[1]]);
+    if (m[0] === 'o' && okBy[id.slice(2)]) return onkunQuestion(okBy[id.slice(2)]);
     return null;
   }
   function mistakeIds() { return Object.keys(CJ.getData().wrong).filter(id => fromId(id)); }
@@ -146,6 +175,11 @@
       const mine = CJ.shuffle(K.KANJI.filter(x => learned.has(x.k))).slice(0, ROUND / 2);
       const rest = CJ.shuffle(K.KANJI.filter(x => !mine.includes(x))).slice(0, ROUND - mine.length);
       qs = CJ.shuffle(mine.concat(rest)).map(x => kanjiQuestion(x));
+    }
+    else if (mode === 'onkun') {
+      // 音 と 訓 を 半分ずつ くらい、まざってる を 少し
+      const by = ty => CJ.shuffle(OK_POOL.filter(o => o.ty === ty));
+      qs = CJ.shuffle(by('on').slice(0, 4).concat(by('kun').slice(0, 4), by('mix').slice(0, 2))).map(onkunQuestion);
     }
     else if (mode === 'words') {
       const learned = new Set(CJ.getData().words);

@@ -4,7 +4,7 @@
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
-  const APP_VERSION = 'v23';
+  const APP_VERSION = 'v24';
   const DATA_VERSION = 4;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily) / v4: ようちゃんへの質問(asks)・都道府県(pref)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
   const BACKUP_VERSION = 4;           // v1〜v3 のバックアップも読み込める
@@ -588,7 +588,19 @@
   function setDev(on) { try { if (on) localStorage.setItem(KEY_DEV, '1'); else localStorage.removeItem(KEY_DEV); } catch (e) {} applyDev(); }
   function applyDev() { document.querySelectorAll('[data-dev]').forEach(el => { el.style.display = isDev() ? '' : 'none'; }); }
   applyDev(); document.addEventListener('DOMContentLoaded', applyDev);
+  /* 音読み・訓読み の札。detail = true で「食 しょく＝音 ・ 事 じ＝音」の内訳 も出す */
+  function rtHtml(kj, detail) {
+    const K = window.CJ_KANJI; if (!K || !K.readType) return '';
+    const ty = K.readType(kj); if (!ty) return '';
+    let h = '<span class="rt rt-' + ty + '">' + esc(t('rt.' + ty)) + '</span>';
+    if (detail) {
+      const parts = K.readParts(kj) || [];
+      h += '<div class="rt-parts">' + parts.map(p => '<span class="ja">' + esc(p.k) + ' ' + esc(p.y) + '</span> <span class="rt rt-' + p.type + '">' + esc(t('rt.s.' + p.type)) + '</span>').join('　') + '</div>';
+    }
+    return h;
+  }
   window.CJ = {
+    rtHtml,
     isDev, setDev, applyDev, ttsSpeak,
     esc, dateKey, shuffle, getData, saveData, isLearned, toggleLearned, isKanjiLearned, toggleKanji, recordQuiz, recordRead, markStudied,
     calcStreak, updateStreakBadge, getPrefs, setPref, applyPrefs, drillSecs, lang, t, tx, applyI18n, setLang, recordPrac, saveDailySlot,
