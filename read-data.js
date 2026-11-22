@@ -21,7 +21,7 @@
     { id: 'dinner', icon: '🍝', title: 'Dinner & drinks', titleJa: 'ばんごはん と おさけ', lines: [
       ['Italian or yakiniku — which do you want?', ['イタリアン と やきにく、 どっち が いい？', 'itarian to yakiniku, docchi ga ii?', 'イタリアンと{焼肉|やきにく}、どっちがいい？'], ['イタリアン と やきにく、 どちら が いい です か？', 'itarian to yakiniku, dochira ga ii desu ka?', 'イタリアンと{焼肉|やきにく}、どちらがいいですか？']],
       ['I feel like pasta today!', ['きょう は パスタ の きぶん！', 'kyou wa pasuta no kibun!', '{今日|きょう}はパスタの{気分|きぶん}！'], ['きょう は パスタ が たべたい です', 'kyou wa pasuta ga tabetai desu', '{今日|きょう}はパスタが{食|た}べたいです']],
-      ['Let\'s share the pizza.', ['ピザ、 はんぶん こ しよう', 'piza, hanbun ko shiyou', 'ピザ、{半分|はんぶん}こしよう'], ['ピザ を はんぶん ずつ に しましょう', 'piza o hanbun zutsu ni shimashou', 'ピザを{半分|はんぶん}ずつにしましょう']],
+      ['Let\'s share the pizza.', ['ピザ、 はんぶん こ しよう', 'piza, hanbun ko shiyou', 'ピザ、{半分|はんぶん}こしよう'], ['ピザ を はんぶん ずつ に しましょう', 'piza o hanbun zutsu ni shimashou', 'ピザを{半分|はんぶん}ずつにしましょう'], 'c'],
       ['Red wine? Or beer?', ['あか ワイン？ それとも ビール？', 'aka wain? soretomo biiru?', '{赤|あか}ワイン？それともビール？'], ['あか ワイン に します か？ ビール に します か？', 'aka wain ni shimasu ka? biiru ni shimasu ka?', '{赤|あか}ワインにしますか？ビールにしますか？']],
       ['Cheers!', ['かんぱい！', 'kanpai!', 'かんぱい！'], ['かんぱい！', 'kanpai!', 'かんぱい！']],
       ['I\'m so full.', ['おなか いっぱい〜', 'onaka ippai~', 'お{腹|なか}いっぱい〜'], ['おなか が いっぱい です', 'onaka ga ippai desu', 'お{腹|なか}がいっぱいです']]] },
@@ -33,14 +33,14 @@
       ['Let\'s take a photo!', ['しゃしん とろう！', 'shashin torou!', '{写真|しゃしん}{撮|と}ろう！'], ['しゃしん を とりましょう', 'shashin o torimashou', '{写真|しゃしん}を{撮|と}りましょう']],
       ['Next spring, I want to see the cherry blossom light-up too.', ['らいねん の はる は、 よざくら の ライトアップ も みたい な', 'rainen no haru wa, yozakura no raitoappu mo mitai na', '{来年|らいねん}の{春|はる}は、{夜桜|よざくら}のライトアップも{見|み}たいな'], ['らいねん の はる は、 よざくら の ライトアップ も みたい です', 'rainen no haru wa, yozakura no raitoappu mo mitai desu', '{来年|らいねん}の{春|はる}は、{夜桜|よざくら}のライトアップも{見|み}たいです']]] },
     { id: 'nature', icon: '⛰️', title: 'Hiking & nature', titleJa: 'ハイキング と しぜん', lines: [
-      ['Want to go hiking this weekend?', ['こんど の しゅうまつ、 ハイキング いかない？', 'kondo no shuumatsu, haikingu ikanai?', '{今度|こんど}の{週末|しゅうまつ}、ハイキング{行|い}かない？'], ['こんど の しゅうまつ、 ハイキング に いきません か？', 'kondo no shuumatsu, haikingu ni ikimasen ka?', '{今度|こんど}の{週末|しゅうまつ}、ハイキングに{行|い}きませんか？']],
+      ['Want to go hiking this weekend?', ['こんど の しゅうまつ、 ハイキング いかない？', 'kondo no shuumatsu, haikingu ikanai?', '{今度|こんど}の{週末|しゅうまつ}、ハイキング{行|い}かない？'], ['こんど の しゅうまつ、 ハイキング に いきません か？', 'kondo no shuumatsu, haikingu ni ikimasen ka?', '{今度|こんど}の{週末|しゅうまつ}、ハイキングに{行|い}きませんか？'], 'c'],
       ['The mountain air feels so good.', ['やま の くうき、 きもち いい ね', 'yama no kuuki, kimochi ii ne', '{山|やま}の{空気|くうき}、{気持|きも}ちいいね'], ['やま の くうき は きもち いい です ね', 'yama no kuuki wa kimochi ii desu ne', '{山|やま}の{空気|くうき}は{気持|きも}ちいいですね']],
       ['Look, there\'s moss here!', ['みて、 ここ に コケ が ある よ！', 'mite, koko ni koke ga aru yo!', '{見|み}て、ここにコケがあるよ！'], ['みて ください、 ここ に コケ が あります よ', 'mite kudasai, koko ni koke ga arimasu yo', '{見|み}てください、ここにコケがありますよ']],
       ['The river water is so clear.', ['かわ の みず、 すごく きれい', 'kawa no mizu, sugoku kirei', '{川|かわ}の{水|みず}、すごくきれい'], ['かわ の みず が とても きれい です', 'kawa no mizu ga totemo kirei desu', '{川|かわ}の{水|みず}がとてもきれいです']],
       ['The autumn leaves are bright red!', ['こうよう、 まっか だね', 'kouyou, makka da ne', '{紅葉|こうよう}、{真|ま}っ{赤|か}だね'], ['こうよう が まっか です ね', 'kouyou ga makka desu ne', '{紅葉|こうよう}が{真|ま}っ{赤|か}ですね']],
-      ['Next time, let\'s go camping by the river.', ['こんど は かわ の ちかく で キャンプ しよう', 'kondo wa kawa no chikaku de kyanpu shiyou', '{今度|こんど}は{川|かわ}の{近|ちか}くでキャンプしよう'], ['こんど は かわ の ちかく で キャンプ を しましょう', 'kondo wa kawa no chikaku de kyanpu o shimashou', '{今度|こんど}は{川|かわ}の{近|ちか}くでキャンプをしましょう']]] },
+      ['Next time, let\'s go camping by the river.', ['こんど は かわ の ちかく で キャンプ しよう', 'kondo wa kawa no chikaku de kyanpu shiyou', '{今度|こんど}は{川|かわ}の{近|ちか}くでキャンプしよう'], ['こんど は かわ の ちかく で キャンプ を しましょう', 'kondo wa kawa no chikaku de kyanpu o shimashou', '{今度|こんど}は{川|かわ}の{近|ちか}くでキャンプをしましょう'], 'c']] },
     { id: 'movie', icon: '🔮', title: 'Horror movie & tarot night', titleJa: 'ホラー えいが と タロット', lines: [
-      ['Let\'s watch a horror movie tonight!', ['こんや、 ホラー えいが みよう！', 'kon\'ya, horaa eiga miyou!', '{今夜|こんや}、ホラー{映画|えいが}{見|み}よう！'], ['こんや は ホラー えいが を みましょう', 'kon\'ya wa horaa eiga o mimashou', '{今夜|こんや}はホラー{映画|えいが}を{見|み}ましょう']],
+      ['Let\'s watch a horror movie tonight!', ['こんや、 ホラー えいが みよう！', 'kon\'ya, horaa eiga miyou!', '{今夜|こんや}、ホラー{映画|えいが}{見|み}よう！'], ['こんや は ホラー えいが を みましょう', 'kon\'ya wa horaa eiga o mimashou', '{今夜|こんや}はホラー{映画|えいが}を{見|み}ましょう'], 'c'],
       ['Are you scared?', ['こわい の？', 'kowai no?', '{怖|こわ}いの？'], ['こわい です か？', 'kowai desu ka?', '{怖|こわ}いですか？']],
       ['I\'m not scared at all!', ['ぜんぜん こわく ない よ！', 'zenzen kowaku nai yo!', 'ぜんぜん{怖|こわ}くないよ！'], ['ぜんぜん こわく ない です', 'zenzen kowaku nai desu', 'ぜんぜん{怖|こわ}くないです']],
       ['Shall I read your tarot?', ['タロット で うらなって あげよう か？', 'taroto de uranatte ageyou ka?', 'タロットで{占|うらな}ってあげようか？'], ['タロット で うらないましょう か？', 'taroto de uranaimashou ka?', 'タロットで{占|うらな}いましょうか？']],

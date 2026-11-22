@@ -214,6 +214,8 @@ window.CJ_I18N = {
   'tap.short': ['tap ⇄', 'タップ ⇄'],
   'tap.onlyP': ['always polite here', 'ここ では いつも ていねい'],
   'tap.onlyC': ['only with someone close', 'したしい ひと と だけ'],
+  'who.p': ['work · shops · new people', 'しごと・おみせ・はじめて の ひと'],
+  'who.c': ['Yoh-chan · friends', 'ようちゃん・ともだち'],
   'tap.same': ['same in both', 'どちら も おなじ'],
   'rd.allC': ['All casual', 'ぜんぶ ふつう'],
   'rd.allP': ['All polite', 'ぜんぶ ていねい'],

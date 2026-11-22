@@ -323,3 +323,5 @@ button.link-chip.on { background: var(--primary); color: #fff; border-color: var
 .rt-mix { background: #fef3c7; color: #b45309; }
 .rt-special { background: #f3e8ff; color: #7e22ce; }
 .rt-parts { font-size: 0.85rem; margin-top: 0.3rem; color: var(--muted, #6b7280); }
+.flip-who { font-size: 0.68rem; color: var(--text-muted); }
+.flip-top { flex-wrap: wrap; row-gap: 2px; }

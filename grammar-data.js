@@ -38,9 +38,10 @@
       howJa: 'ふつう の 「〜しよう」：いく → いこう、たべる → たべよう、する → しよう。ていねい は 「ましょう」。やさしく さそう なら 「〜ない？」 ／ 「〜ません か？」。',
       table: [['いく', 'いこう', 'いきましょう'], ['たべる', 'たべよう', 'たべましょう'], ['する', 'しよう', 'しましょう'], ['のむ', 'のもう', 'のみましょう']],
       ex: [['Let\'s go to a café!', 'カフェ いこう！', 'kafe ikou!', 'カフェ に いきましょう', 'kafe ni ikimashou', 'カフェ{行|い}こう！', 'カフェに{行|い}きましょう'],
-        ['Do you want to go hiking together?', 'いっしょ に ハイキング しない？', 'issho ni haikingu shinai?', 'いっしょ に ハイキング しません か？', 'issho ni haikingu shimasen ka?', 'いっしょにハイキングしない？', 'いっしょにハイキングしませんか？'],
+        ['Do you want to go hiking together?', 'いっしょ に ハイキング しない？', 'issho ni haikingu shinai?', 'いっしょ に ハイキング しません か？', 'issho ni haikingu shimasen ka?', 'いっしょにハイキングしない？', 'いっしょにハイキングしませんか？', 'c'],
         ['Let\'s have yakiniku tonight!', 'こんや は やきにく たべよう！', 'kon\'ya wa yakiniku tabeyou!', 'こんや は やきにく を たべましょう', 'kon\'ya wa yakiniku o tabemashou', '{今夜|こんや}は{焼肉|やきにく}{食|た}べよう！', '{今夜|こんや}は{焼肉|やきにく}を{食|た}べましょう'],
-        ['Shall we have some wine?', 'ワイン のもう か？', 'wain nomou ka?', 'ワイン を のみましょう か？', 'wain o nomimashou ka?', 'ワイン{飲|の}もうか？', 'ワインを{飲|の}みましょうか？']] },
+        ['Shall we have some wine?', 'ワイン のもう か？', 'wain nomou ka?', 'ワイン を のみましょう か？', 'wain o nomimashou ka?', 'ワイン{飲|の}もうか？', 'ワインを{飲|の}みましょうか？'],
+        ['Would you like to have lunch together? (to a coworker)', 'いっしょ に ランチ いかない？', 'issho ni ranchi ikanai?', 'いっしょ に ランチ に いきません か？', 'issho ni ranchi ni ikimasen ka?', 'いっしょにランチ{行|い}かない？', 'いっしょにランチに{行|い}きませんか？']] },
     { id: 'te', tag: '〜て', title: 'Please do: 〜て', titleJa: 'おねがい：〜て',
       form: '〜て ／ 〜て ください',
       how: 'The て-form asks someone to do something. Casual: just 〜て (add ね to sound softer). Polite: 〜て ください.',
@@ -120,5 +121,7 @@
         ['I think so too.', 'わたし も そう おもう', 'watashi mo sou omou', 'わたし も そう おもいます', 'watashi mo sou omoimasu', '{私|わたし}もそう{思|おも}う', '{私|わたし}もそう{思|おも}います'],
         ['I think a little differently.', 'わたし は ちょっと ちがう と おもう な', 'watashi wa chotto chigau to omou na', 'わたし は すこし ちがう と おもいます', 'watashi wa sukoshi chigau to omoimasu', '{私|わたし}はちょっと{違|ちが}うと{思|おも}うな', '{私|わたし}は{少|すこ}し{違|ちが}うと{思|おも}います']] }
   ];
+  // 8番目 = only（'c' = したしい ひと と だけ、'p' = いつも ていねい）。もう一方 は 同じ文 にする
+  GRAMMAR.forEach(g => g.ex.forEach(e => { if (e[7] === 'c') { e[3] = e[1]; e[4] = e[2]; e[6] = e[5]; } else if (e[7] === 'p') { e[1] = e[3]; e[2] = e[4]; e[5] = e[6]; } }));
   window.CJ_GRAMMAR = { GRAMMAR };
 })();

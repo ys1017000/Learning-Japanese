@@ -92,6 +92,29 @@
       L('<b>Shops use extra-polite Japanese (keigo)</b> to you: いらっしゃいませ, しょうしょう おまち ください. You don\'t need to talk like that — normal polite is perfect.', '<b>おみせ の ひと は もっと ていねい な けいご で はなします</b>（いらっしゃいませ・しょうしょう おまち ください）。あなた は ふつう の ていねい で じゅうぶん。'),
       L('<b>Messages:</b> DMs with Yoh-chan → casual + emoji. Email to school → polite.', '<b>メッセージ：</b> ようちゃん との DM → ふつう ＋ えもじ。がっこう への メール → ていねい。')
     ].map(x => '<li>' + x + '</li>').join('') + '</ul>');
+    // 場面 で きまる（だれ に・どこ で）
+    const SC = [
+      [L('Introducing yourself', 'じこしょうかい'), 'p', 'はじめまして、マル です。'],
+      [L('Ordering, paying, asking staff', 'ちゅうもん・おかいけい・てんいん に きく'), 'p', 'おかいけい おねがい します。'],
+      [L('Inviting a coworker to lunch', 'どうりょう を ランチ に さそう'), 'p', 'いっしょ に ランチ に いきません か？'],
+      [L('Inviting Yoh-chan or friends (hiking, movie night)', 'ようちゃん や ともだち を さそう（ハイキング・えいが）'), 'c', 'しゅうまつ、 ハイキング いかない？'],
+      [L('DMs with Yoh-chan', 'ようちゃん との DM'), 'c', 'いま おわった よ！'],
+      [L('Friends of friends', 'ともだち の ともだち'), 'pc', L('start polite → casual when they are', 'さいしょ ていねい → あいて が ふつう に なったら ふつう')]
+    ];
+    html += sec(L('5. It depends on the scene', '5. ばめん で きまる'),
+      '<p>' + L('It is less about grammar and more about <b>who</b> and <b>where</b>. Some scenes are almost always one way:', 'ぶんぽう より、<b>だれ に</b>・<b>どこ で</b> が だいじ。ほとんど いつも どちらか に きまって いる ばめん も あります：') + '</p>' +
+      '<table class="gd-table"><tr><th>' + L('Scene', 'ばめん') + '</th><th></th></tr>' +
+      SC.map(r => '<tr><td>' + esc(r[0]) + '<div class="muted ja" style="font-size:0.8rem;">' + esc(r[2]) + '</div></td><td>' +
+        (r[1] === 'pc' ? '<span class="reg polite">' + t('reg.polite') + '</span> → <span class="reg casual">' + t('reg.casual') + '</span>' : '<span class="reg ' + (r[1] === 'p' ? 'polite' : 'casual') + '">' + t(r[1] === 'p' ? 'reg.polite' : 'reg.casual') + '</span>') +
+        '</td></tr>').join('') + '</table>' +
+      '<p style="margin-top:0.5rem;">' + L('〜ませんか？ (polite invitation) is from textbooks and is fine at work. But for personal plans with close people, Japanese people use 〜ない？ or 〜しよう.', '「〜ません か？」（ていねい な さそいかた） は しょくば なら OK。でも したしい ひと との プライベート な よてい は 「〜ない？」「〜しよう」 を つかいます。') + '</p>');
+    html += sec(L('6. Like du and Sie in German?', '6. ドイツご の du と Sie に にてる？'),
+      '<p>' + L('Yes, a little! Polite ≈ <b>Sie</b>, casual ≈ <b>du</b>. But there are some differences:', 'すこし にてる！ ていねい ≈ <b>Sie</b>、ふつう ≈ <b>du</b>。でも ちがう ところ も あります：') + '</p><ul>' + [
+        L('<b>No "let\'s say du" moment.</b> In Japanese, nobody says "let\'s talk casually now". People slowly switch as they get closer. Easy rule: <b>when they talk casually to you, you can too.</b>', '<b>「du で はなそう」 と いう しゅんかん が ない。</b> にほんご では 「ふつう で はなそう」 と あまり いいません。したしく なる と だんだん かわります。かんたん な ルール：<b>あいて が ふつう に なったら、あなた も ふつう で OK。</b>'),
+        L('<b>Mixing is normal.</b> Even in polite talk, people often say short casual reactions: えー、すごい！ そうなんだ！', '<b>まぜる の は ふつう。</b> ていねい な かいわ でも、みじかい リアクション は ふつう に なる こと が おおい：えー、すごい！ そうなんだ！'),
+        L('<b>Same age doesn\'t mean casual.</b> At work and in shops, people stay polite even with people their own age.', '<b>おなじ とし でも ふつう とは かぎらない。</b> しょくば や おみせ では、おなじ とし でも ていねい。'),
+        L('<b>With your partner, always casual.</b> Polite Japanese to a partner sounds distant — or like a joke. So with Yoh-chan: casual all the way! 😊', '<b>こいびと には いつも ふつう。</b> こいびと に ていねい だと、きょり が ある ように きこえる（か、じょうだん）。だから ようちゃん には ずっと ふつう で！ 😊')
+      ].map(x => '<li>' + x + '</li>').join('') + '</ul>');
     html += '<div class="card gd-sec"><h3>' + esc(t('gd.examples')) + '</h3><div class="tap-hint">' + esc(t('tap.hint')) + '</div>' +
       EXAMPLE_KEYS.map(k => B.byKey[k]).filter(Boolean).map(it => CJ.flipHtml(it.key, it, !!flipped[it.key])).join('') + '</div>';
     $('guide').innerHTML = html;

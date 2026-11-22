@@ -55,7 +55,7 @@
     ['e43', 'I\'m a grad student now.', ['いま は だいがくいん の がくせい だよ', 'ima wa daigakuin no gakusei da yo', '{今|いま}は{大学院|だいがくいん}の{学生|がくせい}だよ'], ['いま は だいがくいん の がくせい です', 'ima wa daigakuin no gakusei desu', '{今|いま}は{大学院|だいがくいん}の{学生|がくせい}です']],
     // ---- しゅみ・あそび ----
     ['e44', 'I want to take a trip to Kyoto.', ['きょうと に りょこう したい な', 'kyouto ni ryokou shitai na', '{京都|きょうと}に{旅行|りょこう}したいな'], ['きょうと に りょこう したい です', 'kyouto ni ryokou shitai desu', '{京都|きょうと}に{旅行|りょこう}したいです']],
-    ['e45', 'Want to take a day trip to the mountains?', ['やま に ひがえり で いかない？', 'yama ni higaeri de ikanai?', '{山|やま}に{日帰|ひがえ}りで{行|い}かない？'], ['やま に ひがえり で いきません か？', 'yama ni higaeri de ikimasen ka?', '{山|やま}に{日帰|ひがえ}りで{行|い}きませんか？']],
+    ['e45', 'Want to take a day trip to the mountains?', ['やま に ひがえり で いかない？', 'yama ni higaeri de ikanai?', '{山|やま}に{日帰|ひがえ}りで{行|い}かない？'], ['やま に ひがえり で いきません か？', 'yama ni higaeri de ikimasen ka?', '{山|やま}に{日帰|ひがえ}りで{行|い}きませんか？'], 'c'],
     ['e46', 'Let\'s take a walk along the river.', ['かわ の ちかく を さんぽ しよう', 'kawa no chikaku o sanpo shiyou', '{川|かわ}の{近|ちか}くを{散歩|さんぽ}しよう'], ['かわ の ちかく を さんぽ しましょう', 'kawa no chikaku o sanpo shimashou', '{川|かわ}の{近|ちか}くを{散歩|さんぽ}しましょう']],
     ['e47', 'What kind of music do you like?', ['どんな おんがく が すき？', 'donna ongaku ga suki?', 'どんな{音楽|おんがく}が{好|す}き？'], ['どんな おんがく が すき です か？', 'donna ongaku ga suki desu ka?', 'どんな{音楽|おんがく}が{好|す}きですか？']],
     // ---- かんじ の れいぶん（すうじ・ようび・まち・からだ など） ----
@@ -100,7 +100,7 @@
     ['e86', 'Let\'s meet at the east exit.', ['ひがしぐち で あおう', 'higashiguchi de aou', '{東口|ひがしぐち}で{会|あ}おう'], ['ひがしぐち で あいましょう', 'higashiguchi de aimashou', '{東口|ひがしぐち}で{会|あ}いましょう']],
     ['e87', 'West exit? Or south exit?', ['にしぐち？ それとも みなみぐち？', 'nishiguchi? soretomo minamiguchi?', '{西口|にしぐち}？それとも{南口|みなみぐち}？'], ['にしぐち です か？ みなみぐち です か？', 'nishiguchi desu ka? minamiguchi desu ka?', '{西口|にしぐち}ですか？{南口|みなみぐち}ですか？']],
     ['e88', 'What did you just say?', ['いま なんて いった？', 'ima nante itta?', '{今|いま}なんて{言|い}った？'], ['いま なんと いいました か？', 'ima nan to iimashita ka?', '{今|いま}なんと{言|い}いましたか？']],
-    ['e89', 'Let\'s talk on the phone tonight.', ['こんや、 でんわ で はなそう', 'kon\'ya, denwa de hanasou', '{今夜|こんや}、{電話|でんわ}で{話|はな}そう'], ['こんや、 でんわ で はなしましょう', 'kon\'ya, denwa de hanashimashou', '{今夜|こんや}、{電話|でんわ}で{話|はな}しましょう']],
+    ['e89', 'Let\'s talk on the phone tonight.', ['こんや、 でんわ で はなそう', 'kon\'ya, denwa de hanasou', '{今夜|こんや}、{電話|でんわ}で{話|はな}そう'], ['こんや、 でんわ で はなしましょう', 'kon\'ya, denwa de hanashimashou', '{今夜|こんや}、{電話|でんわ}で{話|はな}しましょう'], 'c'],
     ['e90', 'Let\'s go to the new café!', ['あたらしい カフェ に いこう！', 'atarashii kafe ni ikou!', '{新|あたら}しいカフェに{行|い}こう！'], ['あたらしい カフェ に いきましょう', 'atarashii kafe ni ikimashou', '{新|あたら}しいカフェに{行|い}きましょう']]
   ];
   // 5番目 = only（'p' = お店の人 など いつも ていねい、'c' = したしい ひと と だけ）。もう一方は 同じ文 にする
