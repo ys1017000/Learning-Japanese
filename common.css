@@ -340,3 +340,4 @@ button.link-chip.on { background: var(--primary); color: #fff; border-color: var
 .pt-dots span.cur { background: var(--primary); }
 .pt-dots span.ok { background: #22c55e; }
 .pt-dots span.ng { background: #ef4444; }
+.pt-fw { color: var(--text-muted); font-weight: 600; }

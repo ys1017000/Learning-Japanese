@@ -66,7 +66,9 @@
     const x = f.x, y = f.y || ['', '', '', ''];
     const sub = (s, i) => s.split('{X}').join(x[i]).split('{Y}').join(y[i]);
     const mk = form => [sub(form[0], 0), sub(form[1], 1), sub(form[2], 2)];
-    return { c: mk(pt.c), p: mk(pt.p), en: pt.en.split('{x}').join(x[3]).split('{y}').join(y[3]) };
+    // 「I'm at on the train」 に ならない ように（at/to ＋ on/in → on/in）
+    const en = pt.en.split('{x}').join(x[3]).split('{y}').join(y[3]).replace(/\b(at|to) (on|in) /g, '$2 ');
+    return { c: mk(pt.c), p: mk(pt.p), en };
   }
   // 練習カード用の文：key = 'pt:型ID:番号'
   const items = [];

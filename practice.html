@@ -158,17 +158,41 @@
   function itemKey(o) { return o.x.key + ':' + o.reg; }
   /* ---------- 型 の 練習：［A］に入る言葉を、選択肢からタップして選ぶ ----------
      英語を見る → 型の［A］に入る言葉を 4つ の中から選ぶ → 文が完成して読み上げ → つぎへ */
+  /* 型 の 練習：ことば（パスタ）は 見せて、型（が たべたい な）を かくす。
+     英語 の 文 を 見て、ことば に つづく 型 を 4つ から えらぶ → 「パスタ が たべたい な」が すっと 出る ように する。
+     まちがい の 選択肢 は ほかの 型（にた 型 を 先に）＝「パスタ が のみたい な」(I want to drink pasta.) のように いみ が ちがう */
+  const NEAR = {
+    tabetai: ['nomitai', 'ni-suru', 'suki'], nomitai: ['tabetai', 'ni-suru', 'suki'], ikou: ['shiyou', 'imairu', 'doko'],
+    shiyou: ['ikou', 'kotoaru', 'haretara'], suki: ['tabetai', 'kirei', 'omou'], doko: ['ikou', 'imairu', 'aou'],
+    'ni-suru': ['tabetai', 'nomitai', 'suki'], imairu: ['ikou', 'doko', 'aou'], aou: ['ikou', 'imairu', 'ni-suru'],
+    kotoaru: ['shiyou', 'haretara', 'suki'], haretara: ['shiyou', 'ikou', 'kotoaru'], kirei: ['suki', 'omou', 'doko'], omou: ['suki', 'kirei', 'tabetai']
+  };
   function choiceOpts(o) {
     if (o.opts) return o.opts;
-    // 英語アプリ と おなじ：選択肢 は ぜんぶ 同じ型 の ことば（文法 は どれも OK）。英語 の いみ を 見て、合う ことば を すばやく えらぶ
     const p = ptBy[o.x.pid], idx = Number(o.x.key.split(':')[2]), f = p.fill[idx];
-    const lab = g => g.y ? [g.x, g.y] : [g.x];
-    const opts = [{ w: lab(f), ok: true }];
-    if (f.y) opts.push({ w: [f.y, f.x], ok: false, rev: true });   // A と B が 逆（いみ が 反対）
-    CJ.shuffle(p.fill.filter((g, k) => k !== idx)).forEach(g => { if (opts.length < 4) opts.push({ w: lab(g), ok: false }); });
+    const mk = (pt, fill, ok, rev) => ({ pt, f: fill, b: PT.build(pt, fill), ok: !!ok, rev: !!rev });
+    const opts = [mk(p, f, true)];
+    if (f.y) {   // A より B の ほう が すき：逆の順番 と、「A が すき」「B が すき」
+      opts.push(mk(p, { x: f.y, y: f.x }, false, true));
+      if (ptBy.suki) { opts.push(mk(ptBy.suki, { x: f.x })); opts.push(mk(ptBy.suki, { x: f.y })); }
+    } else {
+      const near = (NEAR[p.id] || []).filter(id => ptBy[id]).slice(0, 2);
+      const rest = CJ.shuffle(PT.PATTERNS.filter(q => q.id !== p.id && q.id !== 'hou' && !near.includes(q.id)).map(q => q.id));
+      near.concat(rest).forEach(id => { if (opts.length < 4) opts.push(mk(ptBy[id], { x: f.x })); });
+    }
     o.opts = CJ.shuffle(opts);
     return o.opts;
   }
+  // 選択肢 の 文：ことば の ぶぶん は うすく、型 の ぶぶん を こく
+  function optHtml(z) {
+    const k = CJ.showKanji(), form = z.pt.c[k ? 2 : 0], y = z.f.y;
+    const w = v => '<span class="pt-fw">' + (k ? CJ.ruby(v[2]) : esc(v[0])) + '</span>';
+    const parts = (k ? form : esc(form)).split('{X}');
+    let h = parts.map(x => k ? CJ.ruby(x) : x).join(w(z.f.x));
+    if (y) h = h.split('{Y}').join(w(y));
+    return h;
+  }
+
 
 
   const wordHtml = w => CJ.showKanji() ? CJ.ruby(w[2]) : esc(w[0]);
@@ -193,17 +217,18 @@
     const dots = '<div class="pt-dots">' + st.queue.map((q, k) => '<span class="' + (k < st.i ? (st.res[k] && st.res[k].ok ? 'ok' : 'ng') : k === st.i ? 'cur' : '') + '"></span>').join('') + '</div>';
     let html = '<div class="counter"><span class="muted">' + esc(st.title) + ' · ' + (st.i + 1) + '/' + st.queue.length + (picked ? '' : ' · <b id="ptSecs"></b>') + '</span>' +
       '<button class="tiny-btn" data-a="quit">' + esc(t('pr.quit')) + '</button></div>' +
-      '<div class="pt-box"><div class="pt-frame ja">' + frameWith(p, picked ? right.w : null, picked ? (picked.ok ? 'ok' : 'ng') : '') + '</div></div>' +
-      '<div class="pt-mean">' + esc(p.title) + '</div>' +
-      '<div class="pt-cue">+ ' + esc(f.y ? 'A: ' + f.x[3] + '  B: ' + f.y[3] : f.x[3]) + '</div>';
+      '<div class="dr-en">“' + esc(x.en) + '”</div>' +
+      '<div class="pt-box"><div class="pt-frame ja">' + (picked ? CJ.jaHtml(x.c) :
+        (f.y ? wordHtml(f.x) + ' ・ ' + wordHtml(f.y) : wordHtml(f.x)) + ' <span class="pt-slot">［ ？ ］</span>') + '</div></div>' +
+      (picked ? '' : '<div class="pt-mean">' + esc(t('pr.pickPat')) + '</div>');
     if (!picked) {
-      html += '<div class="pt-grid">' + opts.map((z, k) => '<button class="option-btn" data-pick="' + k + '"><span class="k ja">' + z.w.map(wordHtml).join(' ・ ') + '</span></button>').join('') + '</div>' +
+      html += '<div class="options">' + opts.map((z, k) => '<button class="option-btn" data-pick="' + k + '" style="text-align:center;"><span class="k ja">' + optHtml(z) + '</span></button>').join('') + '</div>' +
         '<div class="pt-bar"><div id="ptBar"></div></div>' + dots +
         '<button class="btn btn-secondary" data-a="ppause" style="margin-top:0.6rem;">' + (st.paused ? '▶️ ' + esc(t('pr.resume')) : '⏸️ ' + esc(t('pr.pause'))) + '</button>' +
         '<div style="text-align:center; margin-top:0.5rem;"><label class="kj-toggle"><input type="checkbox" data-kanji-toggle' + (CJ.showKanji() ? ' checked' : '') + '> ' + esc(t('rd.kanji')) + '</label></div>';
     } else {
       const ans = st.pol ? x.p : x.c, same = x.c[0] === x.p[0];
-      const head = picked.ok ? t('pr.pickRight') : picked.timeout ? t('pr.timeUp') : picked.rev ? t('pr.pickWrongHou') : t('pr.pickWrong2', { w: picked.w.map(w => w[0]).join(' ・ '), e: picked.w.map(w => w[3]).join(' / ') });
+      const head = picked.ok ? t('pr.pickRight') : picked.timeout ? t('pr.timeUp') : picked.rev ? t('pr.pickWrongHou') : t('pr.pickWrong2', { w: picked.b.c[0], e: picked.b.en });
       html += '<div class="feedback ' + (picked.ok ? 'correct' : 'wrong') + '" style="display:block;">' +
         '<b>' + esc(head) + '</b>' +
         '<div class="flip ' + (st.pol ? 'is-p' : 'is-c') + '" data-a="pol" style="border-radius:12px; padding:0.5rem; border:1px solid var(--border); background:#fff; margin-top:0.4rem; text-align:center;">' +
