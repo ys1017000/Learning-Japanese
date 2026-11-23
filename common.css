@@ -341,3 +341,5 @@ button.link-chip.on { background: var(--primary); color: #fff; border-color: var
 .pt-dots span.ok { background: #22c55e; }
 .pt-dots span.ng { background: #ef4444; }
 .pt-fw { color: var(--text-muted); font-weight: 600; }
+.pt-frm { color: var(--primary); background: var(--primary-soft); border-radius: 8px; padding: 0 6px; font-weight: 800; }
+.pt-word { display: inline-block; min-width: 2.2em; text-align: center; color: var(--text-muted); border-bottom: 2px dashed #d1d5db; margin: 0 2px; font-weight: 700; }

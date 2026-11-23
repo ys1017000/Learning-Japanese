@@ -66,11 +66,17 @@
     $('ptSel').innerHTML = PT.PATTERNS.map(p => { const pr = progress(p.id); return '<option value="' + p.id + '"' + (p.id === pid ? ' selected' : '') + '>' + p.icon + ' ' + esc(CJ.tx(p, 'title')) + '（' + pr.said + '/' + pr.all + '）</option>'; }).join('');
   }
   // 型を大きく表示：［　］ が入れ替える場所
+  // 覚える のは 型 の ぶぶん（が たべたい な）→ ピンク で 目立たせる。ことば の ところ は うすい ＿＿（タップ した ことば が 入る）
   function slotHtml(form) {
-    const f = CJ.showKanji() ? CJ.ruby(form[2]) : esc(form[0]), w = sel >= 0 ? cur().fill[sel] : null;
-    const word = v => '<span class="pt-slot ok">' + (CJ.showKanji() ? CJ.ruby(v[2]) : esc(v[0])) + '</span>';
-    return f.split('{X}').join(w ? word(w.x) : '<span class="pt-slot">［ A ］</span>').split('{Y}').join(w ? (w.y ? word(w.y) : '') : '<span class="pt-slot">［ B ］</span>');
+    const k = CJ.showKanji(), raw = k ? form[2] : form[0], w = sel >= 0 ? cur().fill[sel] : null;
+    const word = (v, lab) => '<span class="pt-word">' + (v ? (k ? CJ.ruby(v[2]) : esc(v[0])) : lab) + '</span>';
+    return raw.split(/(\{X\}|\{Y\})/).map(seg => {
+      if (seg === '{X}') return word(w && w.x, raw.includes('{Y}') ? 'A' : '＿＿');
+      if (seg === '{Y}') return word(w && w.y, 'B');
+      return seg.trim() ? '<span class="pt-frm">' + (k ? CJ.ruby(seg) : esc(seg)) + '</span>' : seg;
+    }).join('');
   }
+
   function renderFrame() {
     const p = cur(), g = G.find(x => x.id === p.g), pr = progress(p.id);
     const words = p.fill.map(f => f.y ? CJ.esc(f.x[0]) + ' ⇄ ' + CJ.esc(f.y[0]) : CJ.esc(f.x[0]));
