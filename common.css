@@ -325,3 +325,18 @@ button.link-chip.on { background: var(--primary); color: #fff; border-color: var
 .rt-parts { font-size: 0.85rem; margin-top: 0.3rem; color: var(--muted, #6b7280); }
 .flip-who { font-size: 0.68rem; color: var(--text-muted); }
 .flip-top { flex-wrap: wrap; row-gap: 2px; }
+
+/* 型 の 練習（英語アプリ と おなじ 形） */
+.pt-box { background: #fdf2f6; border: 1px solid #f6cfdc; border-radius: 16px; padding: 0.9rem 0.6rem; text-align: center; margin: 0.4rem 0 0.6rem; }
+.pt-box .pt-frame { font-size: 1.5rem; font-weight: 800; }
+.pt-mean { text-align: center; font-size: 1.05rem; font-weight: 700; color: var(--text-muted); }
+.pt-cue { text-align: center; font-size: 1.6rem; font-weight: 800; color: var(--primary); margin: 0.2rem 0 0.8rem; }
+.pt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.pt-grid .option-btn { text-align: center; margin: 0; padding: 0.7rem 0.3rem; }
+.pt-bar { height: 8px; background: #eee; border-radius: 999px; margin-top: 0.8rem; overflow: hidden; }
+.pt-bar > div { height: 100%; background: var(--primary); width: 100%; transition: width 0.1s linear; }
+.pt-dots { display: flex; justify-content: center; gap: 6px; margin-top: 0.6rem; flex-wrap: wrap; }
+.pt-dots span { width: 9px; height: 9px; border-radius: 50%; background: #e5e7eb; }
+.pt-dots span.cur { background: var(--primary); }
+.pt-dots span.ok { background: #22c55e; }
+.pt-dots span.ng { background: #ef4444; }
