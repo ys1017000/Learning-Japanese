@@ -50,6 +50,7 @@
 <script src="common.js"></script>
 <script src="pattern-data.js"></script>
 <script src="bank.js"></script>
+<script src="hints-data.js"></script>
 <script>
 (function () {
   const D = window.CJ_DATA, G = window.CJ_GRAMMAR.GRAMMAR, R = window.CJ_READ.PASSAGES;
@@ -226,6 +227,7 @@
     const dots = '<div class="pt-dots">' + st.queue.map((q, k) => '<span class="' + (k < st.i ? (st.res[k] && st.res[k].ok ? 'ok' : 'ng') : k === st.i ? 'cur' : '') + '"></span>').join('') + '</div>';
     let html = '<div class="counter"><span class="muted">' + esc(st.title) + ' · ' + (st.i + 1) + '/' + st.queue.length + (picked ? '' : ' · <b id="ptSecs"></b>') + '</span>' +
       '<button class="tiny-btn" data-a="quit">' + esc(t('pr.quit')) + '</button></div>' +
+      sceneHtml(x) +
       '<div class="dr-en">“' + esc(x.en) + '”</div>' +
       '<div class="pt-box"><div class="pt-frame ja">' + (picked ? CJ.jaHtml(x.c) :
         (f.y ? wordHtml(f.x) + ' ・ ' + wordHtml(f.y) : wordHtml(f.x)) + ' <span class="pt-slot">［ ？ ］</span>') + '</div></div>' +
@@ -242,7 +244,7 @@
       // 似た型 の ちがい（自然 だけど いみ が ちがう とき）
       const diff = picked.nat ? '<div style="margin-top:0.3rem; font-size:0.88rem;">💡 ' + esc(t('ptm.' + picked.pt.id)) + '<br>💡 ' + esc(t('ptm.' + p.id)) + '</div>' : '';
       html += '<div class="feedback ' + (picked.ok ? 'correct' : picked.nat ? 'near' : 'wrong') + '" style="display:block;">' +
-        '<b>' + esc(head) + '</b>' + diff +
+        '<b>' + esc(head) + '</b>' + diff + hintHtml(x) +
         '<div class="flip ' + (st.pol ? 'is-p' : 'is-c') + '" data-a="pol" style="border-radius:12px; padding:0.5rem; border:1px solid var(--border); background:#fff; margin-top:0.4rem; text-align:center;">' +
           '<div class="flip-top" style="justify-content:center; gap:6px;">' + CJ.regTop(x.only, st.pol, same) + '</div>' +
           '<div class="k ja" style="font-size:1.4rem; font-weight:800;">' + CJ.jaHtml(ans) + '</div><div class="romaji">' + esc(ans[1]) + '</div>' +
@@ -276,6 +278,7 @@
     box.innerHTML = '<div class="counter"><span class="muted">' + esc(st.title) + ' · ' + esc(t('pr.round', { r: st.round })) + ' · ' + (st.i + 1) + '/' + st.queue.length + '</span>' +
       '<button class="tiny-btn" data-a="quit">' + esc(t('pr.quit')) + '</button></div>' +
       '<div style="text-align:center;"><label class="kj-toggle"><input type="checkbox" data-kanji-toggle' + (CJ.showKanji() ? ' checked' : '') + '> ' + esc(t('rd.kanji')) + '</label></div>' +
+      sceneHtml(x) +
       '<div class="dr-en">“' + esc(x.en) + '”</div>' +
       (x.pid && ptBy[x.pid] ? '<div class="pt-hint ja">' + esc(t('pr.patHint')) + ' ' + ptHint(ptBy[x.pid]) + '</div>' : '') +
       '<div class="dr-timer"><div id="tfill"></div></div>' +
@@ -286,15 +289,42 @@
             '<div class="k ja">' + CJ.jaHtml(ans) + '</div><div class="romaji">' + esc(ans[1]) + '</div></div>' +
           (same ? '' : '<div class="muted" style="font-size:0.78rem; margin-top:0.2rem;">' + esc(t('pr.tapPolite')) + '</div>') +
           (x.tag ? '<div style="margin-top:0.3rem;"><span class="gr-tag">🧩 ' + esc(x.tag) + '</span></div>' : '') +
-          '<div style="margin-top:0.4rem;">' + CJ.sayBtns(ans[0]) +
-            (CJ.recognitionSupported ? '<button class="mic-btn" id="drMic" aria-label="' + esc(t('rd.mic')) + '">🎙️</button>' : '') + '</div>' +
-          '<div class="rd-result" id="drRes"></div>' +
+          hintHtml(x) +
+          '<div id="drRes">' + voiceResHtml(st.vres) + '</div>' +
+          // 答え の あと：🔊 お手本 ／ 🎙️ もう一回 チェック ／ 🔴 録音 ／ 👂 自分の声（入らない とき は 折り返す）
+          '<div class="vc-tools">' +
+            '<button class="tiny-btn" data-say="' + esc(ans[0]) + '">🔊 ' + esc(t('vc.model')) + '</button>' +
+            '<button class="tiny-btn" data-say="' + esc(ans[0]) + '" data-slow="1">🐢 ' + esc(t('vc.slow')) + '</button>' +
+            (CJ.recognitionSupported ? '<button class="tiny-btn" data-a="vcheck" id="vcBtn">🎙️ ' + esc(t('vc.again')) + '</button>' : '') +
+            (CJ.recSupported ? '<button class="tiny-btn' + (st.recOn ? ' rec-on' : '') + '" data-a="rec">' + (st.recOn ? '⏹ ' + esc(t('vc.stop')) : '🔴 ' + esc(t('vc.rec'))) + '</button>' +
+              '<button class="tiny-btn" data-a="mine"' + (st.recUrl ? '' : ' disabled') + '>👂 ' + esc(t('vc.mine')) + '</button>' : '') +
+          '</div>' +
           '<div style="text-align:left;">' + B.linksHtml(x, 6) + CJ.extLinks(ans) + '<div style="text-align:right;">' + CJ.askLink(ans[0] + ' (' + x.en + ')') + '</div></div>' +
           '<div class="btn-row"><button class="btn btn-ok" data-a="ok">' + esc(t('pr.ok')) + '</button><button class="btn" data-a="ng" style="background:#be123c;">' + esc(t('pr.ng')) + '</button></div></div>'
-        : '<button class="btn" data-a="show" style="margin-top:0.6rem;">' + esc(t('pr.show')) + '</button>');
+        : '<div id="drRes">' + voiceResHtml(st.vres) + '</div>' +
+          '<button class="btn" data-a="show" style="margin-top:0.6rem;">' + esc(t('pr.show')) + '</button>' +
+          // 答える 前：声 で 答える（タイマー を 止めて 聞き取る → 自動 で 答え を 出す）
+          (CJ.recognitionSupported
+            ? '<button class="btn btn-secondary" data-a="vanswer" id="vaBtn" style="margin-top:0.5rem;">🎙️ ' + esc(t('vc.answer')) + '</button>'
+            : '<button class="btn btn-secondary" disabled style="margin-top:0.5rem;">🎙️ ' + esc(t('vc.answer')) + '</button><div class="muted" style="font-size:0.78rem; text-align:center;">' + esc(t('vc.noSupport')) + '</div>'));
     const f = $('tfill');
-    if (!st.shown) { f.style.transition = 'none'; f.style.width = '100%'; void f.offsetWidth; f.style.transition = 'width ' + secs + 's linear'; f.style.width = '0%'; }
+    if (st.frozen != null && !st.shown) { f.style.transition = 'none'; f.style.width = st.frozen + 'px'; }
+    else if (!st.shown) { f.style.transition = 'none'; f.style.width = '100%'; void f.offsetWidth; f.style.transition = 'width ' + secs + 's linear'; f.style.width = '0%'; }
     else f.style.width = '0%';
+  }
+  // 場面（問題 の 上）と 言いかえ ヒント（答え の 下）
+  const HN = window.CJ_HINTS;
+  const sceneHtml = x => { const h = HN && HN.get(x.key, x.pid); return h ? '<div class="dr-scene">📍 ' + esc(h[0]) + '</div>' : ''; };
+  const hintHtml = x => { const h = HN && HN.get(x.key, x.pid); return h ? '<div class="dr-hint">💡 ' + esc(h[1]) + '</div>' : ''; };
+  // 声 の 採点 結果：点数・聞き取った 文・文字ごと の 〇×
+  function voiceResHtml(v) {
+    if (!v) return '';
+    if (v.err) return '<div class="rd-result show">' + esc(v.err) + '</div>';
+    const ok = v.score >= CJ.PASS_SCORE;
+    return '<div class="rd-result show"><span class="sc ' + (ok ? 'ok' : 'ng') + '">' + esc(t(ok ? 'rd.pass' : 'rd.retry', { s: v.score })) + '</span>' +
+      '<div class="muted">' + esc(t('rd.heard', { t: v.heard })) + '</div>' +
+      (v.marks ? '<div class="vc-marks ja">' + v.marks.map(m => '<span class="' + (m.ok ? 'o' : 'x') + '">' + esc(m.ch) + '<i>' + (m.ok ? '〇' : '×') + '</i></span>').join('') + '</div>' : '') +
+      '<div class="muted" style="font-size:0.75rem;">' + esc(t('vc.guide')) + '</div></div>';
   }
   // 型のヒント：「［ A ］ が たべたい な」
   function ptHint(p) {
@@ -302,25 +332,42 @@
     return f.split('{X}').join('<span class="pt-slot">［ A ］</span>').split('{Y}').join('<span class="pt-slot">［ B ］</span>');
   }
   function reveal() {
+    CJ.abortListen();
     st.shown = true; st.pol = false; renderDrill();
     const o = st.queue[st.i];
     CJ.autoSpeak(o.x.c[0]);
   }
-  function micCheck() {
-    const o = st.queue[st.i], ans = st.pol ? o.x.p : o.x.c, res = $('drRes'), btn = $('drMic');
-    res.className = 'rd-result show'; res.textContent = t('rd.listening'); btn.classList.add('on');
+  // 声 で 聞き取って 採点（答え の「表記」と「ひらがな」の 両方 と くらべる）
+  function voiceListen(btn, done) {
+    const o = st.queue[st.i], ans = st.pol ? o.x.p : o.x.c, res = $('drRes');
+    if (st.recOn) CJ.stopRec();
+    res.innerHTML = '<div class="rd-result show">' + esc(t('rd.listening')) + '</div>';
+    if (btn) btn.classList.add('on');
     const rec = CJ.listen({
-      onInterim: s => { res.textContent = t('rd.listening') + ' ' + s; },
-      onFinal: alts => {
-        const r = CJ.scoreJa([ans[0], CJ.plain(ans[2])], alts), ok = r.score >= CJ.PASS_SCORE;
-        res.innerHTML = '<span class="sc ' + (ok ? 'ok' : 'ng') + '">' + esc(t(ok ? 'rd.pass' : 'rd.retry', { s: r.score })) + '</span><div class="muted">' + esc(t('rd.heard', { t: r.heard })) + '</div>';
-      },
-      onError: m => { res.textContent = m; },
+      onInterim: s => { res.innerHTML = '<div class="rd-result show">' + esc(t('rd.listening') + ' ' + s) + '</div>'; },
+      onFinal: alts => { st.vres = CJ.scoreJa([ans[0], CJ.plain(ans[2])], alts); done(true); },
+      onError: m => { st.vres = { err: m }; done(false); },
       onState: on => { if (!on && btn) btn.classList.remove('on'); }
     });
-    if (!rec) { btn.classList.remove('on'); res.textContent = t('err.recog'); }
+    if (!rec) { st.vres = { err: t('err.recog') }; done(false); }
+  }
+  // 答える 前 の 🎙️：タイマー を 止めて 聞く → 聞き取れたら 答え を 出す
+  function voiceAnswer() {
+    const f = $('tfill'); if (f) st.frozen = f.getBoundingClientRect().width;
+    if (f) { f.style.transition = 'none'; f.style.width = st.frozen + 'px'; }
+    voiceListen($('vaBtn'), ok => {
+      if (ok) { st.shown = true; renderDrill(); }
+      else renderDrill();
+    });
+  }
+  // 録音 を 止めて、メモリ の 録音 も すてる（次 の カード・やめる とき）
+  function resetVoice() {
+    if (CJ.isRecording()) { st && (st.dropRec = true); CJ.stopRec(); }
+    CJ.abortListen();
+    if (st) { if (st.recUrl) URL.revokeObjectURL(st.recUrl); st.recUrl = null; st.recOn = false; st.vres = null; st.frozen = null; }
   }
   function answer(ok) {
+    resetVoice();
     const o = st.queue[st.i];
     st.res.push({ o, ok });
     if (st.round === 1) CJ.recordPrac(o.x.key, ok);
@@ -363,7 +410,6 @@
   }
 
   $('drill').addEventListener('click', e => {
-    if (e.target.closest('#drMic')) { micCheck(); return; }
     // 型：選択肢をタップ
     const pk = e.target.closest('[data-pick]');
     if (pk && st && st.pick == null) {
@@ -378,12 +424,31 @@
     if (a === 'ppause') { if (st.paused) { st.paused = false; } else { st.paused = true; } renderChoice(); return; }
     if (a === 'pol') { const x = st.queue[st.i].x; if (x.c[0] !== x.p[0]) { st.pol = !st.pol; renderDrill(); CJ.autoSpeak((st.pol ? x.p : x.c)[0]); } }
     else if (a === 'show') reveal();
+    else if (a === 'vanswer') voiceAnswer();
+    else if (a === 'vcheck') voiceListen($('vcBtn'), () => renderDrill());
+    else if (a === 'rec') {
+      // 🔴 で 開始 ／ ⏹ で 停止。止めたら 自分の声 を 1回 自動 で 再生
+      if (st.recOn) { CJ.stopRec(); return; }
+      const me = st;
+      CJ.startRec({
+        maxSec: 15,
+        onStart: () => { me.recOn = true; if (st === me) renderDrill(); },
+        onStop: url => {
+          me.recOn = false;
+          if (me.dropRec || st !== me) { me.dropRec = false; if (url) URL.revokeObjectURL(url); return; }
+          if (me.recUrl) URL.revokeObjectURL(me.recUrl);
+          me.recUrl = url; renderDrill(); if (url) CJ.playUrl(url);
+        },
+        onError: m => { st.vres = { err: m }; renderDrill(); }
+      });
+    }
+    else if (a === 'mine') { if (st.recUrl) CJ.playUrl(st.recUrl); }
     else if (a === 'ok') answer(true);
     else if (a === 'ng') answer(false);
     else if (a === 'next') { const miss = st.res.filter(r => !r.ok).map(r => { delete r.o.opts; return r.o; }); st.round++; st.queue = CJ.shuffle(miss); st.i = 0; st.res = []; st.phase = 'card'; renderDrill(); window.scrollTo({ top: 0 }); }
     else if (a === 'end') { st.phase = 'review'; renderDrill(); }
     else if (a === 'again') { st.round = 1; st.queue = CJ.shuffle(st.items); st.i = 0; st.res = []; st.hist = []; st.phase = 'card'; st.slot = null; renderDrill(); window.scrollTo({ top: 0 }); }
-    else if (a === 'quit' || a === 'back') { st = null; history.replaceState(null, '', 'practice.html'); renderMenu(); }
+    else if (a === 'quit' || a === 'back') { resetVoice(); st = null; history.replaceState(null, '', 'practice.html'); renderMenu(); }
   });
   $('slots').addEventListener('click', e => {
     const b = e.target.closest('[data-slot]'); if (!b) return;

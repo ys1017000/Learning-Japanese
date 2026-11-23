@@ -4,7 +4,7 @@
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
-  const APP_VERSION = 'v32';
+  const APP_VERSION = 'v33';
   const DATA_VERSION = 4;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily) / v4: ようちゃんへの質問(asks)・都道府県(pref)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
   const BACKUP_VERSION = 4;           // v1〜v3 のバックアップも読み込める
@@ -391,6 +391,7 @@
   function listen(opts) {
     if (!recognitionSupported) return null;
     if (activeRec) { try { activeRec.abort(); } catch (e) {} activeRec = null; }
+    stopRec();     // 録音 と 同時 に 使わない
     stopSpeak();   // お手本の音声を拾わないように
     const rec = new SR();
     rec.lang = 'ja-JP'; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 5;
@@ -432,18 +433,67 @@
     return prev[n];
   }
   // 正解（ひらがな・漢字の書き方など複数）と聞き取り候補を1文字ずつ比べて、いちばん近い点数（0〜100）を返す
+  /* 採点：答え の「表記（漢字まじり）」と「ひらがな読み」の 両方 と くらべて、高い方 を つかう。
+     日本語 は スペース で 区切らない ので 文字ごと に くらべる（句読点・！？・スペース は 無視）。
+     marks：答え の 1文字ずつ が 聞き取れた（true）か どうか（〇×表示 用） */
+  function charMarks(a, b) {
+    const n = a.length, m = b.length, D = [];
+    for (let i = 0; i <= n; i++) { D.push(new Array(m + 1).fill(0)); D[i][0] = i; }
+    for (let j = 0; j <= m; j++) D[0][j] = j;
+    for (let i = 1; i <= n; i++) for (let j = 1; j <= m; j++)
+      D[i][j] = Math.min(D[i - 1][j] + 1, D[i][j - 1] + 1, D[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    const marks = new Array(n).fill(false);
+    let i = n, j = m;
+    while (i > 0 && j > 0) {
+      if (a[i - 1] === b[j - 1] && D[i][j] === D[i - 1][j - 1]) { marks[i - 1] = true; i--; j--; }
+      else if (D[i][j] === D[i - 1][j - 1] + 1) { i--; j--; }
+      else if (D[i][j] === D[i - 1][j] + 1) i--;
+      else j--;
+    }
+    return Array.from(a).map((ch, k) => ({ ch, ok: marks[k] }));
+  }
   function scoreJa(targets, heardList) {
-    let best = { score: 0, heard: heardList[0] || '' };
+    let best = { score: -1, heard: heardList[0] || '', target: normJa(targets[0] || ''), marks: null };
     targets.forEach(tg => {
       const a = normJa(tg); if (!a) return;
       heardList.forEach(h => {
         const b = normJa(h);
         const sc = Math.max(0, Math.round((1 - levenshtein(a, b) / Math.max(a.length, b.length)) * 100));
-        if (sc > best.score) best = { score: sc, heard: h };
+        if (sc > best.score) best = { score: sc, heard: h, target: a, marks: null, b };
       });
     });
+    if (best.score < 0) best.score = 0;
+    best.marks = charMarks(best.target, best.b || normJa(best.heard));
     return best;
   }
+
+  /* 自分の声 を 録音 して 聞きくらべ（メモリ の 中 だけ。保存・バックアップ は しない）。
+     音声認識 と 同時 に マイク を 使わない（Android で 取り合い に なる ため） */
+  const recSupported = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+  let mr = null, mrStream = null, mrTimer = 0;
+  function abortListen() { if (activeRec) { try { activeRec.abort(); } catch (e) {} activeRec = null; } }
+  async function startRec(opts) {
+    if (!recSupported) return false;
+    abortListen(); stopSpeak();
+    try { mrStream = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch (e) { opts.onError && opts.onError(t('err.mic')); return false; }
+    const chunks = [];
+    mr = new MediaRecorder(mrStream);
+    mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    mr.onstop = () => {
+      clearTimeout(mrTimer); mrTimer = 0;
+      if (mrStream) mrStream.getTracks().forEach(tr => tr.stop()); mrStream = null; mr = null;
+      const blob = new Blob(chunks, { type: chunks[0] ? chunks[0].type : 'audio/webm' });
+      opts.onStop && opts.onStop(blob.size ? URL.createObjectURL(blob) : null);
+    };
+    mr.start();
+    mrTimer = setTimeout(() => stopRec(), (opts.maxSec || 15) * 1000);   // 15秒 で 自動 で 止める
+    opts.onStart && opts.onStart();
+    return true;
+  }
+  function stopRec() { if (mr && mr.state !== 'inactive') { try { mr.stop(); } catch (e) {} } }
+  const isRecording = () => !!(mr && mr.state === 'recording');
+  let myAudio = null;
+  function playUrl(url) { stopSpeak(); if (myAudio) { try { myAudio.pause(); } catch (e) {} } myAudio = new Audio(url); myAudio.play().catch(() => {}); }
   const PASS_SCORE = 75;
 
   /* ---------- 漢字の書き方（{漢字|よみ}） ---------- */
@@ -606,7 +656,7 @@
     isDev, setDev, applyDev, ttsSpeak,
     esc, dateKey, shuffle, getData, saveData, isLearned, toggleLearned, isKanjiLearned, toggleKanji, recordQuiz, recordRead, markStudied,
     calcStreak, updateStreakBadge, getPrefs, setPref, applyPrefs, drillSecs, lang, t, tx, applyI18n, setLang, recordPrac, saveDailySlot,
-    speak, stopSpeak, autoSpeak, voiceId, voiceUrl, hasVoice, saveLocalVoice, deleteLocalVoice, localVoiceRecords, siteVoiceIds, voicesReady, markVoiceButtons, VOICE_DIR, hasJaVoice, jaVoices, utterText, speechText, recognitionSupported, listen, normJa, scoreJa, PASS_SCORE,
+    speak, stopSpeak, autoSpeak, voiceId, voiceUrl, hasVoice, saveLocalVoice, deleteLocalVoice, localVoiceRecords, siteVoiceIds, voicesReady, markVoiceButtons, VOICE_DIR, hasJaVoice, jaVoices, utterText, speechText, recognitionSupported, listen, abortListen, normJa, scoreJa, PASS_SCORE, recSupported, startRec, stopRec, isRecording, playUrl,
     sayBtns, regTop, toast, downloadBackup, importBackup, ruby, reading, plain, showKanji, jaHtml, syncKanjiToggles, extLinks, askLink, flipHtml,
     addAsk, updateAsk, ASK_TYPES, togglePref, toggleWord, APP_VERSION
   };
