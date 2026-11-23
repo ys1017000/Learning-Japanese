@@ -4,10 +4,11 @@
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
-  const APP_VERSION = 'v33';
+  const APP_VERSION = 'v34';
   const DATA_VERSION = 4;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily) / v4: ようちゃんへの質問(asks)・都道府県(pref)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
-  const BACKUP_VERSION = 4;           // v1〜v3 のバックアップも読み込める
+  const BACKUP_VERSION = 5;           // v5：型 の 記録（patterns）を 追加。v1〜v4 の バックアップ も 読み込める
+  const KEY_PT = 'cj_pt';             // 🔁 型 の 記録（⭕△❌ の 回数・最後 の 結果・日付）。バックアップ 対象
 
   /* ---------- 基本ユーティリティ ---------- */
   function esc(s) {
@@ -267,7 +268,7 @@
     if (W) W.WORDS.forEach(w => addKj(w.kana, w.kj));
     if (K) K.KANJI.forEach(k => k.words.forEach(w => addKj(reading(w[0]), w[0])));
     if (P) P.PREFS.forEach(x => { addKj(reading(x.kj), x.kj); addKj(reading(x.cap), x.cap); });
-    if (window.CJ_PATTERNS) window.CJ_PATTERNS.items.forEach(it => { addKj(it.c[0], it.c[2]); addKj(it.p[0], it.p[2]); });
+    if (window.CJ_PATTERNS && window.CJ_PATTERNS.items) window.CJ_PATTERNS.items.forEach(it => { addKj(it.c[0], it.c[2]); });
   }
   function naturalText(kj) {
     return String(kj).replace(/\{([^|}]+)\|([^}]+)\}/g, (m, b, r) => FORCE_KANA.has(b + '|' + r) ? r : b);
@@ -570,9 +571,23 @@
     clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 2400);
   }
 
+  /* ---------- 🔁 型 の 記録 ----------
+     { 型ID: { ok, mid, ng（⭕△❌ の 回数）, l（最後 の 結果 'ok'|'mid'|'ng'）, d（日付）, said, total（カード で 言えた 数 ／ ぜんぶ） } } */
+  function getPtRec() { try { const o = JSON.parse(safeGet(KEY_PT)); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } }
+  function savePtRec(o) { return safeSet(KEY_PT, JSON.stringify(o || {})); }
+  function recordPattern(pid, res, said, total) {
+    const all = getPtRec(), r = all[pid] || { ok: 0, mid: 0, ng: 0, l: '', d: '', said: 0, total: 0 };
+    if (res) { r[res] = (r[res] || 0) + 1; r.l = res; }
+    if (total) { r.said = (r.said || 0) + said; r.total = (r.total || 0) + total; }
+    r.d = dateKey(); all[pid] = r; savePtRec(all);
+    return r;
+  }
+  // 苦手：最後 が △❌、または 言えた 率 が 7割 未満
+  function isWeakPattern(r) { if (!r) return false; return r.l === 'mid' || r.l === 'ng' || (r.total > 0 && r.said / r.total < 0.7); }
+
   /* ---------- バックアップ ---------- */
   function buildBackup() {
-    return { app: BACKUP_APP_ID, version: BACKUP_VERSION, exportedAt: new Date().toISOString(), data: getData() };
+    return { app: BACKUP_APP_ID, version: BACKUP_VERSION, exportedAt: new Date().toISOString(), data: getData(), patterns: getPtRec() };
   }
   function downloadBackup() {
     const blob = new Blob([JSON.stringify(buildBackup(), null, 2)], { type: 'application/json' });
@@ -621,6 +636,21 @@
       });
     }
     if (!saveData(out)) throw new Error(t('err.save'));
+    // 型 の 記録（v5 から）。v4 以前 の ファイル には ない ので、今 の 記録 を そのまま 残す
+    if (obj.patterns && typeof obj.patterns === 'object') {
+      if (mode === 'replace') savePtRec(obj.patterns);
+      else {
+        const cur = getPtRec();
+        Object.keys(obj.patterns).forEach(k => {
+          const a = cur[k], b = obj.patterns[k]; if (!b) return;
+          if (!a) { cur[k] = b; return; }
+          const later = (b.d || '') > (a.d || '');
+          cur[k] = { ok: Math.max(a.ok || 0, b.ok || 0), mid: Math.max(a.mid || 0, b.mid || 0), ng: Math.max(a.ng || 0, b.ng || 0),
+            said: Math.max(a.said || 0, b.said || 0), total: Math.max(a.total || 0, b.total || 0), l: later ? b.l : a.l, d: later ? b.d : a.d };
+        });
+        savePtRec(cur);
+      }
+    }
     updateStreakBadge();
     return normalizeData(out);
   }
@@ -652,6 +682,7 @@
     return h;
   }
   window.CJ = {
+    getPtRec, recordPattern, isWeakPattern,
     rtHtml,
     isDev, setDev, applyDev, ttsSpeak,
     esc, dateKey, shuffle, getData, saveData, isLearned, toggleLearned, isKanjiLearned, toggleKanji, recordQuiz, recordRead, markStudied,

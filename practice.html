@@ -22,6 +22,7 @@
     </div>
     <div id="dayHead"></div>
     <div class="slot-row" id="slots"></div>
+    <a class="btn btn-secondary" href="pattern.html" style="margin-top:0.6rem;"><span data-i18n="sub.patterns"></span></a>
     <div class="card" style="margin-top:1rem;">
       <h2 data-i18n="pr.week"></h2>
       <p class="muted" style="font-size:0.8rem;" data-i18n="pr.weekHint"></p>
@@ -63,8 +64,7 @@
   // 型（かた）の文も、練習カードとして使えるようにする（文の倉庫とは別にしておく）
   const PT = window.CJ_PATTERNS;
   const byKey = Object.assign({}, B.byKey);
-  PT.items.forEach(it => { it.txt = CJ.plain(it.c[2]) + '\n' + CJ.plain(it.p[2]); byKey[it.key] = it; });
-  const ptBy = {}; PT.PATTERNS.forEach(p => { ptBy[p.id] = p; });
+  const ptBy = {};   // 🔁 型 の 練習 は pattern.html に うつした（v34）
 
   /* ---------- 日付で決まる乱数（同じ日は同じカード） ---------- */
   function seedRand(str) {
@@ -80,20 +80,8 @@
      ひる：前に出なかった文 2 枚 ＋ まだ練習していない文（日替わりの順番）
      よる：きょう出なかった文（ひるの まちがい） ＋ 前に出なかった文 ＋ ひるに出ていない新しい文 */
   /* 型 の よる：2つ の 型 × 4枚。まだ言えていない文が多い型を先に。同じ日は同じ型 */
-  function buildPatSlot(date) {
-    const prac = CJ.getData().prac, rnd = seedRand(date + ':pat');
-    const score = p => PT.items.filter(it => it.pid === p.id && prac[it.key] && prac[it.key].l === 'ok').length / p.fill.length;
-    const order = seededShuffle(PT.PATTERNS, rnd).sort((a, b) => score(a) - score(b));
-    const pick = [];
-    order.slice(0, 2).forEach(p => {
-      const its = PT.items.filter(it => it.pid === p.id);
-      const weak = its.filter(it => !prac[it.key] || prac[it.key].l === 'ng');
-      seededShuffle(weak, rnd).concat(seededShuffle(its.filter(it => !weak.includes(it)), rnd)).slice(0, 4).forEach(it => pick.push(it));
-    });
-    return { k: pick.map(x => x.key), r: pick.map(() => 'c'), s: null };
-  }
   function buildSlot(date, slot) {
-    if (slot === 'pat') return buildPatSlot(date);
+    if (slot === 'pat') return { k: [], r: [], s: null };   // 型 は pattern.html で 練習（結果 だけ ここ に 記録）
     const d = CJ.getData(), prac = d.prac, rnd = seedRand(date + ':' + slot);
     const today = d.daily[date] || {};
     const lunchKeys = new Set(today.lunch ? today.lunch.k : []);
@@ -165,111 +153,7 @@
   function itemKey(o) { return o.x.key + ':' + o.reg; }
   /* ---------- 型 の 練習：［A］に入る言葉を、選択肢からタップして選ぶ ----------
      英語を見る → 型の［A］に入る言葉を 4つ の中から選ぶ → 文が完成して読み上げ → つぎへ */
-  /* 型 の 練習：ことば（パスタ）は 見せて、型（が たべたい な）を かくす。
-     英語 の 文 を 見て、ことば に つづく 型 を 4つ から えらぶ → 「パスタ が たべたい な」が すっと 出る ように する。
-     まちがい の 選択肢 は ほかの 型（にた 型 を 先に）＝「パスタ が のみたい な」(I want to drink pasta.) のように いみ が ちがう */
-  const NEAR = {
-    tabetai: ['nomitai', 'ni-suru', 'suki'], nomitai: ['tabetai', 'ni-suru', 'suki'], ikou: ['shiyou', 'imairu', 'doko'],
-    shiyou: ['ikou', 'kotoaru', 'haretara'], suki: ['tabetai', 'kirei', 'omou'], doko: ['ikou', 'imairu', 'aou'],
-    'ni-suru': ['tabetai', 'nomitai', 'suki'], imairu: ['ikou', 'doko', 'aou'], aou: ['ikou', 'imairu', 'ni-suru'],
-    kotoaru: ['shiyou', 'haretara', 'suki'], haretara: ['shiyou', 'ikou', 'kotoaru'], kirei: ['suki', 'omou', 'doko'], omou: ['suki', 'kirei', 'tabetai']
-  };
-  function choiceOpts(o) {
-    if (o.opts) return o.opts;
-    const p = ptBy[o.x.pid], idx = Number(o.x.key.split(':')[2]), f = p.fill[idx];
-    // nat：まちがい だけど 日本語 として は 自然（おみず に する ＝ I'll have water）。その型 の ことば に ふくまれる か で 判断
-    const natural = pt => pt.fill.some(g => g.x[0] === f.x[0]) || (pt.id === 'suki' && !['omou', 'aou'].includes(p.id)) ||
-      (pt.id === 'ni-suru' && ['tabetai', 'nomitai'].includes(p.id));   // 食べもの・飲みもの は「〜 に する」で 注文 できる
-    const mk = (pt, fill, ok, rev) => ({ pt, f: fill, b: PT.build(pt, fill), ok: !!ok, rev: !!rev, nat: !ok && !rev && natural(pt) });
-    const opts = [mk(p, f, true)];
-    if (f.y) {   // A より B の ほう が すき：逆の順番 と、「A が すき」「B が すき」
-      opts.push(mk(p, { x: f.y, y: f.x }, false, true));
-      if (ptBy.suki) { opts.push(mk(ptBy.suki, { x: f.x })); opts.push(mk(ptBy.suki, { x: f.y })); }
-    } else {
-      const near = (NEAR[p.id] || []).filter(id => ptBy[id]).slice(0, 2);
-      const rest = CJ.shuffle(PT.PATTERNS.filter(q => q.id !== p.id && q.id !== 'hou' && !near.includes(q.id)).map(q => q.id));
-      near.concat(rest).forEach(id => { if (opts.length < 4) opts.push(mk(ptBy[id], { x: f.x })); });
-    }
-    o.opts = CJ.shuffle(opts);
-    return o.opts;
-  }
-  // 選択肢 の 文：ことば の ぶぶん は うすく、型 の ぶぶん を こく
-  function optHtml(z) {
-    const k = CJ.showKanji(), form = z.pt.c[k ? 2 : 0], y = z.f.y;
-    const w = v => '<span class="pt-fw">' + (k ? CJ.ruby(v[2]) : esc(v[0])) + '</span>';
-    const parts = (k ? form : esc(form)).split('{X}');
-    let h = parts.map(x => k ? CJ.ruby(x) : x).join(w(z.f.x));
-    if (y) h = h.split('{Y}').join(w(y));
-    return h;
-  }
-
-
-
-  const wordHtml = w => CJ.showKanji() ? CJ.ruby(w[2]) : esc(w[0]);
-  function frameWith(p, ws, cls) {
-    const f = CJ.showKanji() ? CJ.ruby(p.c[2]) : esc(p.c[0]);
-    const slot = (i, lab) => ws ? '<span class="pt-slot ' + (cls || '') + '">' + wordHtml(ws[i]) + '</span>' : '<span class="pt-slot">［ ' + lab + ' ］</span>';
-    let out = f.split('{X}').join(slot(0, f.includes('{Y}') ? 'A' : '＿＿'));
-    if (out.includes('{Y}')) out = out.split('{Y}').join(slot(1, 'B'));
-    return out;
-  }
-  /* 型 の 練習（英語アプリ と おなじ 形）：
-     上 に 型（［ ＿＿ ］ が たべたい な）、その いみ（I want to eat ___）、赤 で 入れる ことば の いみ（+ pasta）。
-     4つ の ことば から 時間内 に タップ。時間切れ は まちがい あつかい */
-  // 選択肢 には ローマじ を 出さない（ローマじ だと 英語 と 同じ で かんたん すぎる ため。答え の あと に 出る）
-  let ptTimer = 0;
-  function stopPtTimer() { clearInterval(ptTimer); ptTimer = 0; }
-  function renderChoice() {
-    stopPtTimer();
-    const box = $('drill'), o = st.queue[st.i], x = o.x, p = ptBy[x.pid], opts = choiceOpts(o);
-    const idx = Number(x.key.split(':')[2]), f = p.fill[idx];
-    const picked = st.pick != null ? (st.pick < 0 ? { ok: false, timeout: true } : opts[st.pick]) : null, right = opts.find(z => z.ok);
-    const dots = '<div class="pt-dots">' + st.queue.map((q, k) => '<span class="' + (k < st.i ? (st.res[k] && st.res[k].ok ? 'ok' : 'ng') : k === st.i ? 'cur' : '') + '"></span>').join('') + '</div>';
-    let html = '<div class="counter"><span class="muted">' + esc(st.title) + ' · ' + (st.i + 1) + '/' + st.queue.length + (picked ? '' : ' · <b id="ptSecs"></b>') + '</span>' +
-      '<button class="tiny-btn" data-a="quit">' + esc(t('pr.quit')) + '</button></div>' +
-      sceneHtml(x) +
-      '<div class="dr-en">“' + esc(x.en) + '”</div>' +
-      '<div class="pt-box"><div class="pt-frame ja">' + (picked ? CJ.jaHtml(x.c) :
-        (f.y ? wordHtml(f.x) + ' ・ ' + wordHtml(f.y) : wordHtml(f.x)) + ' <span class="pt-slot">［ ？ ］</span>') + '</div></div>' +
-      (picked ? '' : '<div class="pt-mean">' + esc(t('pr.pickPat')) + '</div>');
-    if (!picked) {
-      html += '<div class="options">' + opts.map((z, k) => '<button class="option-btn" data-pick="' + k + '" style="text-align:center;"><span class="k ja">' + optHtml(z) + '</span></button>').join('') + '</div>' +
-        '<div class="pt-bar"><div id="ptBar"></div></div>' + dots +
-        '<button class="btn btn-secondary" data-a="ppause" style="margin-top:0.6rem;">' + (st.paused ? '▶️ ' + esc(t('pr.resume')) : '⏸️ ' + esc(t('pr.pause'))) + '</button>' +
-        '<div style="text-align:center; margin-top:0.5rem;"><label class="kj-toggle"><input type="checkbox" data-kanji-toggle' + (CJ.showKanji() ? ' checked' : '') + '> ' + esc(t('rd.kanji')) + '</label></div>';
-    } else {
-      const ans = st.pol ? x.p : x.c, same = x.c[0] === x.p[0];
-      const head = picked.ok ? t('pr.pickRight') : picked.timeout ? t('pr.timeUp') : picked.rev ? t('pr.pickWrongHou') :
-        picked.nat ? t('pr.pickNat', { w: picked.b.c[0], e: picked.b.en }) : t('pr.pickWrong2', { w: picked.b.c[0], e: picked.b.en });
-      // 似た型 の ちがい（自然 だけど いみ が ちがう とき）
-      const diff = picked.nat ? '<div style="margin-top:0.3rem; font-size:0.88rem;">💡 ' + esc(t('ptm.' + picked.pt.id)) + '<br>💡 ' + esc(t('ptm.' + p.id)) + '</div>' : '';
-      html += '<div class="feedback ' + (picked.ok ? 'correct' : picked.nat ? 'near' : 'wrong') + '" style="display:block;">' +
-        '<b>' + esc(head) + '</b>' + diff + hintHtml(x) +
-        '<div class="flip ' + (st.pol ? 'is-p' : 'is-c') + '" data-a="pol" style="border-radius:12px; padding:0.5rem; border:1px solid var(--border); background:#fff; margin-top:0.4rem; text-align:center;">' +
-          '<div class="flip-top" style="justify-content:center; gap:6px;">' + CJ.regTop(x.only, st.pol, same) + '</div>' +
-          '<div class="k ja" style="font-size:1.4rem; font-weight:800;">' + CJ.jaHtml(ans) + '</div><div class="romaji">' + esc(ans[1]) + '</div>' +
-          '<div class="muted" style="font-size:0.85rem;">' + esc(x.en) + '</div></div>' +
-        '<div style="text-align:center; margin-top:0.3rem;">' + CJ.sayBtns(ans[0]) + '</div>' +
-        '<p class="muted" style="text-align:center; font-size:0.8rem;">' + esc(t('pr.saySentence')) + '</p>' +
-        '<button class="btn" data-a="pnext" style="margin-top:0.5rem;">' + esc(t('q.next')) + '</button></div>' + dots;
-    }
-    box.innerHTML = html;
-    if (!picked) {
-      // タイマー：設定 の 秒数（3・5・8）。一時停止 できる
-      const total = CJ.drillSecs() * 1000, cur = st.i;
-      if (st.left == null) st.left = total;
-      const draw = () => { const b = $('ptBar'), n = $('ptSecs'); if (b) b.style.width = Math.max(0, st.left / total * 100) + '%'; if (n) n.textContent = Math.ceil(Math.max(0, st.left) / 1000) + t('pr.sec'); };
-      draw();
-      if (!st.paused) ptTimer = setInterval(() => {
-        if (!st || st.i !== cur || st.pick != null || st.phase !== 'card') { stopPtTimer(); return; }
-        st.left -= 100; draw();
-        if (st.left <= 0) { stopPtTimer(); st.pick = -1; st.pol = false; renderChoice(); CJ.autoSpeak(x.c[0]); }
-      }, 100);
-    }
-  }
-
   function renderDrill() {
-    if (st.phase === 'card' && st.queue[st.i] && st.queue[st.i].x.src === 'pt') { renderChoice(); return; }
     const box = $('drill'), secs = CJ.drillSecs();
     if (st.phase !== 'card') return renderRoundEnd();
     const o = st.queue[st.i], x = o.x;
@@ -410,18 +294,9 @@
   }
 
   $('drill').addEventListener('click', e => {
-    // 型：選択肢をタップ
-    const pk = e.target.closest('[data-pick]');
-    if (pk && st && st.pick == null) {
-      st.pick = Number(pk.dataset.pick); st.pol = false; stopPtTimer(); renderChoice();
-      const o = st.queue[st.i]; CJ.autoSpeak(o.x.c[0]);
-      return;
-    }
     if (e.target.closest('[data-say], a, label')) return;
     const b = e.target.closest('[data-a]'); if (!b) return;
     const a = b.dataset.a;
-    if (a === 'pnext') { const ok = st.pick >= 0 && !!(st.queue[st.i].opts[st.pick] || {}).ok; st.left = null; answer(ok); return; }
-    if (a === 'ppause') { if (st.paused) { st.paused = false; } else { st.paused = true; } renderChoice(); return; }
     if (a === 'pol') { const x = st.queue[st.i].x; if (x.c[0] !== x.p[0]) { st.pol = !st.pol; renderDrill(); CJ.autoSpeak((st.pol ? x.p : x.c)[0]); } }
     else if (a === 'show') reveal();
     else if (a === 'vanswer') voiceAnswer();
@@ -452,7 +327,9 @@
   });
   $('slots').addEventListener('click', e => {
     const b = e.target.closest('[data-slot]'); if (!b) return;
-    const sl = b.dataset.slot, v = getSlot(selDate, sl);
+    const sl = b.dataset.slot;
+    if (sl === 'pat') { location.href = 'pattern.html?daily=' + selDate; return; }   // 🔁 型 は 型 の ページ で（終わったら その日 の よる に 記録）
+    const v = getSlot(selDate, sl);
     startDrill(sl === 'pat' ? t('slot.pat') : t('slot.' + sl), v.k, v.r, sl, selDate);
   });
   // こんしゅう の 日 を タップ → その日 を えらぶ（上 の ひる／よる が その日 の セット に なる）
@@ -463,12 +340,10 @@
 
   // ?g=文法ID：その文法の例文を ふつう と ていねい の両方で練習（日替わりの記録には入れない）
   const qs = new URLSearchParams(location.search);
-  const gid = qs.get('g'), gr = G.find(g => g.id === gid), pp = ptBy[qs.get('pt')];
+  const gid = qs.get('g'), gr = G.find(g => g.id === gid);
   // ?pt=型ID：その型の文を ぜんぶ 練習（日替わりの記録には入れない）
-  if (pp) {
-    const keys = PT.items.filter(it => it.pid === pp.id).map(it => it.key);
-    startDrill(pp.icon + ' ' + CJ.tx(pp, 'title'), keys, keys.map(() => 'c'), null);
-  } else if (gr) {
+  if (qs.get('pt')) { location.replace('pattern.html?p=' + encodeURIComponent(qs.get('pt'))); return; }
+  if (gr) {
     const keys = [], regs = [];
     gr.ex.forEach((e, i) => { keys.push('gr:' + gr.id + ':' + i); regs.push('c'); });
     startDrill('🧩 ' + gr.tag, keys, regs, null);

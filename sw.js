@@ -1,9 +1,9 @@
 /* オフライン対応：一度開いたページ・ファイルを端末に保存して、電波がなくても使えるようにする
    v11：ネットにつながっているときは「いつも最新」を先に取りに行く（古い画面が出つづける問題の対策）。
         つながらない・遅い（3秒）ときだけ、保存しておいたものを使う */
-const CACHE = 'maru-pace-v33';
+const CACHE = 'maru-pace-v34';
 const ASSETS = ['./', 'index.html', 'practice.html', 'cards.html', 'endings.html', 'grammar.html', 'guide.html', 'help.html', 'kanji.html', 'words.html', 'map.html',
-  'read.html', 'quiz.html', 'ask.html', 'record.html', 'pattern.html', 'pattern-data.js', 'i18n.js', 'data.js', 'grammar-data.js', 'read-data.js', 'examples-data.js', 'kanji-data.js', 'words-data.js', 'pref-data.js',
+  'read.html', 'quiz.html', 'ask.html', 'record.html', 'pattern.html', 'pattern-data.js', 'pattern-run.js', 'i18n.js', 'data.js', 'grammar-data.js', 'read-data.js', 'examples-data.js', 'kanji-data.js', 'words-data.js', 'pref-data.js',
   'common.js', 'bank.js', 'hints-data.js', 'common.css', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'index.json'];
 
 self.addEventListener('install', e => {
