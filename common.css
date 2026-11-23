@@ -343,3 +343,12 @@ button.link-chip.on { background: var(--primary); color: #fff; border-color: var
 .pt-fw { color: var(--text-muted); font-weight: 600; }
 .pt-frm { color: var(--primary); background: var(--primary-soft); border-radius: 8px; padding: 0 6px; font-weight: 800; }
 .pt-word { display: inline-block; min-width: 2.2em; text-align: center; color: var(--text-muted); border-bottom: 2px dashed #d1d5db; margin: 0 2px; font-weight: 700; }
+
+/* 2しゅうかん の カレンダー（タップ で その日 を やりなおす） */
+.rm-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 0.5rem; }
+.rm-day { border: 1px solid var(--border); background: #fff; border-radius: 10px; padding: 4px 0; font-size: 0.75rem; color: var(--text-muted); cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.rm-day b { font-size: 0.7rem; font-weight: 400; }
+.rm-day.today { border-color: var(--primary); color: var(--primary); font-weight: 700; }
+.rm-day.sel { background: var(--primary-soft); }
+.past-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-weight: 800; color: var(--primary); margin: 0.6rem 0 0.4rem; }
+.feedback.near { background: #fef9c3; border-color: #fde047; color: #854d0e; }

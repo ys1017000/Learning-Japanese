@@ -71,7 +71,7 @@
     const k = CJ.showKanji(), raw = k ? form[2] : form[0], w = sel >= 0 ? cur().fill[sel] : null;
     const word = (v, lab) => '<span class="pt-word">' + (v ? (k ? CJ.ruby(v[2]) : esc(v[0])) : lab) + '</span>';
     return raw.split(/(\{X\}|\{Y\})/).map(seg => {
-      if (seg === '{X}') return word(w && w.x, raw.includes('{Y}') ? 'A' : '＿＿');
+      if (seg === '{X}') return word(w && w.x, raw.includes('{Y}') ? 'A' : '&nbsp;');
       if (seg === '{Y}') return word(w && w.y, 'B');
       return seg.trim() ? '<span class="pt-frm">' + (k ? CJ.ruby(seg) : esc(seg)) + '</span>' : seg;
     }).join('');
