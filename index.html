@@ -25,6 +25,7 @@
   <div class="card">
     <h2 data-i18n="home.today"></h2>
     <p class="muted" style="margin-bottom:0.7rem;" data-i18n="home.todayDesc"></p>
+    <div id="homeFocus"></div>
     <div class="slot-row" id="homeSlots"></div>
   </div>
 
@@ -166,13 +167,15 @@
   // きょう の れんしゅう（ひる／よる）の状況
   function renderToday() {
     const v = CJ.getData().daily[CJ.dateKey()] || {}, nowSlot = new Date().getHours() < 16 ? 'lunch' : 'night';
+    $('homeFocus').innerHTML = CJ.focusChips(CJ.dateKey());
     $('homeSlots').innerHTML = ['lunch', 'night'].map(sl => {
       // よる は「カード」か「型」のどちらか おわれば できた
       const x = sl === 'night' ? ((v.night && v.night.s) ? v.night : v.pat) : v[sl], done = x && x.s;
       return '<a class="slot' + (done ? ' done' : '') + (sl === nowSlot && !done ? ' now' : '') + '" href="practice.html" style="text-decoration:none; color:inherit;">' +
-        '<div class="nm">' + esc(t('slot.' + sl)) + '</div><div class="st" style="margin-bottom:0;">' + esc(done ? t('slot.done', { s: x.s[0], t: x.s[1] }) : t('slot.start')) + '</div></a>';
+        '<div class="nm">' + esc(t('slot.' + sl)) + (sl === 'lunch' ? ' ' + CJ.FOCUS_ICON[CJ.focusOf(CJ.dateKey())] : '') + '</div><div class="st" style="margin-bottom:0;">' + esc(done ? t('slot.done', { s: x.s[0], t: x.s[1] }) : t('slot.start')) + '</div></a>';
     }).join('');
   }
+  $('homeFocus').addEventListener('click', e => { const b = e.target.closest('[data-focus]'); if (b) { CJ.setFocus(CJ.dateKey(), b.dataset.focus); renderToday(); } });
   $('langSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) CJ.setLang(b.dataset.lang); });
   $('optRomaji').addEventListener('change', e => CJ.setPref('romaji', e.target.checked));
   $('optAuto').addEventListener('change', e => CJ.setPref('autoSpeak', e.target.checked));

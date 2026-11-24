@@ -380,3 +380,10 @@ button.link-chip.on { background: var(--primary); color: #fff; border-color: var
 .pt-row-rec { font-size: 0.75rem; }
 .pt-sum-row { display: flex; gap: 8px; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
 .pt-sum-mk { font-size: 1.1rem; }
+
+/* 今日 の 重点 と 聞く・読む */
+.focus-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0.3rem 0 0.4rem; }
+.focus-row .chip { margin: 0; }
+.u-listen { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 0.6rem 0; }
+.u-play { width: 88px; height: 88px; border-radius: 50%; border: none; background: var(--primary); color: #fff; font-size: 2.4rem; cursor: pointer; box-shadow: 0 6px 16px rgba(224,81,122,0.3); }
+.u-ja { text-align: center; font-size: 1.6rem; font-weight: 800; margin: 0.5rem 0 0.2rem; }

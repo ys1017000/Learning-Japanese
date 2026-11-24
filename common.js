@@ -4,7 +4,7 @@
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
-  const APP_VERSION = 'v35';
+  const APP_VERSION = 'v36';
   const DATA_VERSION = 4;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily) / v4: ようちゃんへの質問(asks)・都道府県(pref)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
   const BACKUP_VERSION = 5;           // v5：型 の 記録（patterns）を 追加。v1〜v4 の バックアップ も 読み込める
@@ -588,6 +588,27 @@
     clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 2400);
   }
 
+  /* ---------- 今日 の 重点（ひる の 練習 の やり方）----------
+     'speak' 🗣️ 話す（英語 → 日本語 で 言う）／ 'listen' 👂 聞く（音 だけ → 意味 を えらぶ）／ 'read' 📖 読む（日本語 を 読む → 意味 を えらぶ）
+     えらばない 日 は 曜日 で 自動（かたよらない ように）。えらんだ 日 は prefs.focus に { 日付: モード }（端末ごと） */
+  const FOCUS_AUTO = ['speak', 'speak', 'listen', 'read', 'speak', 'listen', 'read'];   // 日・月・火・水・木・金・土
+  const FOCUS_ICON = { speak: '🗣️', listen: '👂', read: '📖' };
+  function focusOf(date) {
+    const m = (getPrefs().focus || {})[date];
+    if (m && FOCUS_ICON[m]) return m;
+    return FOCUS_AUTO[new Date(date + 'T00:00:00').getDay()];
+  }
+  function setFocus(date, mode) {
+    const f = Object.assign({}, getPrefs().focus || {}); f[date] = mode;
+    Object.keys(f).sort().slice(0, -30).forEach(k => delete f[k]);   // 30日分 だけ のこす
+    setPref('focus', f);
+  }
+  function focusChips(date) {
+    const cur = focusOf(date);
+    return '<div class="focus-row"><span class="muted">' + esc(t('focus.title')) + '</span>' + ['speak', 'listen', 'read'].map(m =>
+      '<button class="chip' + (m === cur ? ' active' : '') + '" data-focus="' + m + '">' + FOCUS_ICON[m] + ' ' + esc(t('focus.' + m)) + '</button>').join('') + '</div>';
+  }
+
   /* ---------- 🔁 型 の 記録 ----------
      { 型ID: { ok, mid, ng（⭕△❌ の 回数）, l（最後 の 結果 'ok'|'mid'|'ng'）, d（日付）, said, total（カード で 言えた 数 ／ ぜんぶ） } } */
   function getPtRec() { try { const o = JSON.parse(safeGet(KEY_PT)); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } }
@@ -699,6 +720,7 @@
     return h;
   }
   window.CJ = {
+    focusOf, setFocus, focusChips, FOCUS_ICON,
     jaText, jaStyle,
     getPtRec, recordPattern, isWeakPattern,
     rtHtml,

@@ -21,6 +21,7 @@
       <p class="muted" style="margin-top:0.4rem;" data-i18n="pr.tapPolite"></p>
     </div>
     <div id="dayHead"></div>
+    <div id="focusBox"></div>
     <div class="slot-row" id="slots"></div>
     <a class="btn btn-secondary" href="pattern.html" style="margin-top:0.6rem;"><span data-i18n="sub.patterns"></span></a>
     <div class="card" style="margin-top:1rem;">
@@ -115,13 +116,15 @@
     const sd = new Date(selDate + 'T00:00:00');
     $('dayHead').innerHTML = past ? '<div class="past-head">📅 ' + esc(t('pr.pastDay', { d: (sd.getMonth() + 1) + '/' + sd.getDate() })) + ' <button class="tiny-btn" data-today="1">' + esc(t('pr.backToday')) + '</button></div>' : '';
     const nowSlot = past ? '' : new Date().getHours() < 16 ? 'lunch' : 'night';
+    const fm = CJ.focusOf(selDate);
+    $('focusBox').innerHTML = CJ.focusChips(selDate) + '<div class="muted" style="font-size:0.78rem;">' + esc(t('focus.note')) + '</div>';
     // ひる：1つ。よる：「よる の カード」 か 「型 の れんしゅう」 を えらぶ（どちらか おわれば よる は できた）
     const lv = day.lunch, ldone = lv && lv.s, nv = day.night, pv = day.pat;
     const ndone = (nv && nv.s) || (pv && pv.s);
     $('slots').innerHTML =
       '<div class="slot' + (ldone ? ' done' : '') + (nowSlot === 'lunch' && !ldone ? ' now' : '') + '">' +
-        '<div class="nm">' + esc(t('slot.lunch')) + '</div>' +
-        '<div class="st">' + esc(ldone ? t('slot.done', { s: lv.s[0], t: lv.s[1] }) : t('slot.lunchDesc') + ' · ' + t('slot.todo', { n: N })) + '</div>' +
+        '<div class="nm">' + esc(t('slot.lunch')) + ' ' + CJ.FOCUS_ICON[fm] + '</div>' +
+        '<div class="st">' + esc(ldone ? t('slot.done', { s: lv.s[0], t: lv.s[1] }) : t('focus.desc.' + fm) + ' · ' + t('slot.todo', { n: N })) + '</div>' +
         '<button class="btn' + (ldone ? ' btn-secondary' : '') + '" data-slot="lunch">' + esc(t(ldone ? 'slot.redo' : 'slot.start')) + '</button></div>' +
       '<div class="slot' + (ndone ? ' done' : '') + (nowSlot === 'night' && !ndone ? ' now' : '') + '">' +
         '<div class="nm">' + esc(t('slot.night')) + '</div>' +
@@ -146,14 +149,49 @@
   function startDrill(title, keys, regs, slot, date) {
     const seen = new Set();
     const items = keys.map(k => ({ x: byKey[k], reg: 'c' })).filter(o => o.x && !seen.has(o.x.key) && seen.add(o.x.key));
-    st = { title, slot, date: date || CJ.dateKey(), items, round: 1, queue: CJ.shuffle(items), i: 0, res: [], hist: [], phase: 'card', shown: false, pol: false };
+    const dt = date || CJ.dateKey();
+    st = { title, slot, date: dt, focus: slot === 'lunch' ? CJ.focusOf(dt) : 'speak', items, round: 1, queue: CJ.shuffle(items), i: 0, res: [], hist: [], phase: 'card', shown: false, pol: false };
     $('menu').style.display = 'none'; $('drill').style.display = '';
     renderDrill(); window.scrollTo({ top: 0 });
   }
   function itemKey(o) { return o.x.key + ':' + o.reg; }
   /* ---------- 型 の 練習：［A］に入る言葉を、選択肢からタップして選ぶ ----------
      英語を見る → 型の［A］に入る言葉を 4つ の中から選ぶ → 文が完成して読み上げ → つぎへ */
+  /* 👂 聞く ／ 📖 読む：意味 を 4つ から えらぶ（自動 で ⭕❌）
+     聞く：文字 は 出さず 音 だけ（ようちゃん の 声 が あれば それ）。読む：日本語 を 見せて、ローマ字 は 答え の あと */
+  function meanOpts(o) {
+    if (o.mopts) return o.mopts;
+    const en = o.x.en, others = CJ.shuffle(POOL.filter(y => y.en && y.en !== en && y.key !== o.x.key)).slice(0, 3);
+    o.mopts = CJ.shuffle([{ en, ok: true }].concat(others.map(y => ({ en: y.en }))));
+    return o.mopts;
+  }
+  function renderUnderstand() {
+    const box = $('drill'), o = st.queue[st.i], x = o.x, f = st.pol ? x.p : x.c, opts = meanOpts(o), listen = st.focus === 'listen';
+    const picked = st.mpick != null ? opts[st.mpick] : null;
+    let h = '<div class="counter"><span class="muted">' + CJ.FOCUS_ICON[st.focus] + ' ' + esc(st.title) + ' · ' + esc(t('pr.round', { r: st.round })) + ' · ' + (st.i + 1) + '/' + st.queue.length + '</span>' +
+      '<button class="tiny-btn" data-a="quit">' + esc(t('pr.quit')) + '</button></div>' + (picked ? sceneHtml(x) : '');   // 場面 は 答え の あと（先 に 出すと ヒント に なりすぎる）
+    if (listen && !picked) {
+      h += '<div class="u-listen"><button class="u-play" data-say="' + esc(f[0]) + '" aria-label="' + esc(t('u.play')) + '">🔊</button>' +
+        '<button class="tiny-btn" data-say="' + esc(f[0]) + '" data-slow="1">🐢 ' + esc(t('vc.slow')) + '</button></div>' +
+        '<div class="muted" style="text-align:center;">' + esc(t('u.listen')) + '</div>';
+    } else {
+      h += '<div style="text-align:center;"><label class="kj-toggle"><input type="checkbox" data-kanji-toggle' + (CJ.showKanji() ? ' checked' : '') + '> ' + esc(t('rd.kanji')) + '</label></div>' +
+        '<div class="u-ja ja">' + CJ.jaHtml(f) + '</div>' +
+        (picked ? '<div class="romaji" style="text-align:center;">' + esc(f[1]) + '</div><div style="text-align:center;">' + CJ.sayBtns(f[0]) + '</div>' : '<div class="muted" style="text-align:center;">' + esc(t('u.read')) + '</div>');
+    }
+    if (!picked) {
+      h += '<div class="q-text" style="text-align:center; margin-top:0.6rem;">' + esc(t('u.mean')) + '</div><div class="options">' +
+        opts.map((z, k) => '<button class="option-btn" data-mpick="' + k + '">' + esc(z.en) + '</button>').join('') + '</div>';
+    } else {
+      h += '<div class="feedback ' + (picked.ok ? 'correct' : 'wrong') + '" style="display:block;"><b>' + esc(picked.ok ? t('u.ok') : t('u.ng')) + '</b> ' + esc(x.en) +
+        (listen ? '<div class="u-ja ja" style="font-size:1.3rem;">' + CJ.jaHtml(f) + '</div><div class="romaji">' + esc(f[1]) + '</div><div>' + CJ.sayBtns(f[0]) + '</div>' : '') +
+        hintHtml(x) + '<button class="btn" data-a="mnext" style="margin-top:0.6rem;">' + esc(t('q.next')) + '</button></div>';
+    }
+    box.innerHTML = h;
+    if (listen && !picked && !st.played) { st.played = true; setTimeout(() => CJ.speak(f[0]), 300); }
+  }
   function renderDrill() {
+    if (st.phase === 'card' && st.focus && st.focus !== 'speak') { renderUnderstand(); return; }
     const box = $('drill'), secs = CJ.drillSecs();
     if (st.phase !== 'card') return renderRoundEnd();
     const o = st.queue[st.i], x = o.x;
@@ -255,7 +293,7 @@
     const o = st.queue[st.i];
     st.res.push({ o, ok });
     if (st.round === 1) CJ.recordPrac(o.x.key, ok);
-    st.i++; st.shown = false; st.pol = false; st.pick = null;
+    st.i++; st.shown = false; st.pol = false; st.pick = null; st.mpick = null; st.played = false;
     if (st.i < st.queue.length) { renderDrill(); return; }
     const okSet = st.res.filter(r => r.ok).map(r => itemKey(r.o));
     st.hist.push({ round: st.round, said: okSet.length, total: st.res.length, okSet });
@@ -294,11 +332,14 @@
   }
 
   $('drill').addEventListener('click', e => {
+    const mp = e.target.closest('[data-mpick]');
+    if (mp && st && st.mpick == null) { st.mpick = Number(mp.dataset.mpick); renderDrill(); return; }
     if (e.target.closest('[data-say], a, label')) return;
     const b = e.target.closest('[data-a]'); if (!b) return;
     const a = b.dataset.a;
     if (a === 'pol') { const x = st.queue[st.i].x; if (x.c[0] !== x.p[0]) { st.pol = !st.pol; renderDrill(); CJ.autoSpeak((st.pol ? x.p : x.c)[0]); } }
     else if (a === 'show') reveal();
+    else if (a === 'mnext') { const o = st.queue[st.i]; answer(!!(o.mopts[st.mpick] || {}).ok); }
     else if (a === 'vanswer') voiceAnswer();
     else if (a === 'vcheck') voiceListen($('vcBtn'), () => renderDrill());
     else if (a === 'rec') {
@@ -334,7 +375,10 @@
   });
   // こんしゅう の 日 を タップ → その日 を えらぶ（上 の ひる／よる が その日 の セット に なる）
   $('week').addEventListener('click', e => { const b = e.target.closest('[data-day]'); if (!b) return; selDate = b.dataset.day; renderMenu(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
-  $('menu').addEventListener('click', e => { if (e.target.closest('[data-today]')) { selDate = CJ.dateKey(); renderMenu(); } });
+  $('menu').addEventListener('click', e => {
+    if (e.target.closest('[data-today]')) { selDate = CJ.dateKey(); renderMenu(); return; }
+    const fb = e.target.closest('[data-focus]'); if (fb) { CJ.setFocus(selDate, fb.dataset.focus); renderMenu(); }
+  });
   document.addEventListener('cj:lang', () => { if (st) renderDrill(); else renderMenu(); });
   document.addEventListener('cj:kanji', () => { if (st) renderDrill(); });
 
