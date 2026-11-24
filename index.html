@@ -16,10 +16,10 @@
 <header><a class="logo" href="index.html">🌸 マルちゃんのペースでいいよ</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
 
 <main class="container">
-  <div class="card">
-    <div class="hello" data-i18n="home.hello">Heyy マルちゃん！ 👋</div>
-    <p class="muted" id="introText"></p>
-    <a class="tiny-btn" href="help.html" id="helpLink" style="display:inline-block; margin-top:0.6rem; text-decoration:none;">📘 <span data-i18n="home.help"></span><span id="helpNew" style="display:none; margin-left:6px; background:var(--primary); color:#fff; border-radius:999px; padding:0 7px; font-size:0.7rem;">NEW</span></a>
+  <div class="card streak-card">
+    <div class="streak-big"><span class="fire">🔥</span><span id="skNum">0</span><span class="unit" id="skUnit"></span></div>
+    <div class="streak-week" id="skWeek"></div>
+    <p class="muted streak-msg" id="skMsg"></p>
   </div>
 
   <div class="card">
@@ -27,27 +27,6 @@
     <p class="muted" style="margin-bottom:0.7rem;" data-i18n="home.todayDesc"></p>
     <div class="slot-row" id="homeSlots"></div>
   </div>
-
-  <h3 class="menu-sec" data-i18n="home.secLearn"></h3>
-  <div class="menu-grid">
-    <a class="menu-btn" href="guide.html"><span class="icon">💡</span><span data-i18n="home.m.guide"></span></a>
-    <a class="menu-btn" href="basics.html"><span class="icon">🧱</span><span data-i18n="home.m.basics"></span></a>
-    <a class="menu-btn" href="grammar.html"><span class="icon">🧩</span><span data-i18n="home.m.grammar"></span></a>
-    <a class="menu-btn" href="endings.html"><span class="icon">💬</span><span data-i18n="home.m.endings"></span></a>
-    <a class="menu-btn" href="map.html"><span class="icon">🗾</span><span data-i18n="home.m.map"></span></a>
-  </div>
-  <h3 class="menu-sec" data-i18n="home.secPractice"></h3>
-  <div class="menu-grid">
-    <a class="menu-btn" href="cards.html"><span class="icon">🃏</span><span data-i18n="home.m.cards"></span></a>
-    <a class="menu-btn" href="switch.html"><span class="icon">🔄</span><span data-i18n="home.m.switch"></span></a>
-    <a class="menu-btn" href="pattern.html"><span class="icon">🔁</span><span data-i18n="home.m.patterns"></span></a>
-    <a class="menu-btn" href="read.html"><span class="icon">📜</span><span data-i18n="home.m.read"></span></a>
-    <a class="menu-btn" href="kanji.html"><span class="icon">✍️</span><span data-i18n="home.m.kanji"></span></a>
-    <a class="menu-btn" href="words.html"><span class="icon">📝</span><span data-i18n="home.m.words"></span></a>
-    <a class="menu-btn" href="quiz.html"><span class="icon">❓</span><span data-i18n="home.m.quiz"></span></a>
-  </div>
-  <a class="btn btn-insta" href="ask.html" style="margin-bottom:0.5rem;">💌 <span data-i18n="home.m.ask"></span></a>
-  <a class="btn btn-secondary" href="record.html" style="margin-bottom:1rem; display:none;" data-dev data-i18n="rec.link"></a>
 
   <div class="card">
     <h2 data-i18n="home.progress"></h2>
@@ -57,7 +36,6 @@
       <div><div class="stat-number" id="stWords">0</div><div class="stat-label" data-i18n="st.words"></div></div>
       <div><div class="stat-number" id="stPref">0</div><div class="stat-label">🗾 / 47</div></div>
       <div><div class="stat-number" id="stAcc">–</div><div class="stat-label" data-i18n="st.acc"></div></div>
-      <div><div class="stat-number" id="stStreak">0</div><div class="stat-label" data-i18n="st.streak"></div></div>
     </div>
     <a class="btn" id="mistakeBtn" href="quiz.html?mode=mistakes" style="display:none; margin-top:1rem; background:#be123c;"></a>
   </div>
@@ -79,9 +57,18 @@
 (function () {
   const D = window.CJ_DATA, K = window.CJ_KANJI, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
 
-  function renderIntro() {
-    $('introText').innerHTML = t('home.intro');
-    try { $('helpNew').style.display = localStorage.getItem('cj_helpSeen') ? 'none' : ''; } catch (e) {}
+  // 🔥 れんぞく きろく：日数 と、この 1週間 の ○●
+  function renderStreak() {
+    const d = CJ.getData(), n = CJ.calcStreak(d.history), today = CJ.dateKey();
+    $('skNum').textContent = n;
+    $('skUnit').textContent = t(n === 1 ? 'sk.day' : 'sk.days');
+    const days = [];
+    for (let i = 6; i >= 0; i--) { const x = new Date(); x.setHours(12, 0, 0, 0); x.setDate(x.getDate() - i); days.push(x); }
+    $('skWeek').innerHTML = days.map(x => {
+      const k = CJ.dateKey(x), on = !!d.history[k];
+      return '<span class="sk-day' + (on ? ' on' : '') + (k === today ? ' today' : '') + '"><i>' + (on ? '🔥' : '・') + '</i>' + esc(t('sk.wd').split('|')[x.getDay()]) + '</span>';
+    }).join('');
+    $('skMsg').textContent = t(d.history[today] ? 'sk.doneToday' : n ? 'sk.keep' : 'sk.start');
   }
   function renderStats() {
     const d = CJ.getData();
@@ -92,7 +79,6 @@
     $('stWords').textContent = d.words.filter(x => ws.has(x)).length + '/' + ws.size;
     $('stPref').textContent = d.pref.length;
     $('stAcc').textContent = d.quiz.total ? Math.round(d.quiz.correct / d.quiz.total * 100) + '%' : '–';
-    $('stStreak').textContent = CJ.calcStreak(d.history);
     const nWrong = Object.keys(d.wrong).length;
     $('mistakeBtn').style.display = nWrong ? '' : 'none';
     $('mistakeBtn').textContent = t('home.mistakes', { n: nWrong });
@@ -120,7 +106,7 @@
         '<div class="nm">' + esc(t('slot.' + sl)) + (sl === 'lunch' ? ' ' + CJ.FOCUS_ICON[CJ.focusOf(CJ.dateKey())] : '') + '</div><div class="st" style="margin-bottom:0;">' + esc(done ? t('slot.done', { s: x.s[0], t: x.s[1] }) : t('slot.start')) + '</div></a>';
     }).join('');
   }
-  function renderAll() { renderToday(); renderIntro(); renderStats(); renderTip(); }
+  function renderAll() { renderStreak(); renderToday(); renderStats(); renderTip(); }
   document.addEventListener('cj:lang', renderAll);
   renderAll();
 })();

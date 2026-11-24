@@ -628,3 +628,12 @@ Object.assign(window.CJ_I18N, {
 Object.assign(window.CJ_I18N, {
   'menu.settings': ['Settings', 'せってい']
 });
+/* ホーム の 🔥 れんぞく きろく */
+Object.assign(window.CJ_I18N, {
+  'sk.day': ['day in a row', 'にち れんぞく'],
+  'sk.days': ['days in a row', 'にち れんぞく'],
+  'sk.wd': ['Sun|Mon|Tue|Wed|Thu|Fri|Sat', 'にち|げつ|か|すい|もく|きん|ど'],
+  'sk.doneToday': ['Done for today — great job! 🌸', 'きょう も できた！ えらい 🌸'],
+  'sk.keep': ['Do a little today to keep it going!', 'きょう も ちょっと だけ やって、つづけよう！'],
+  'sk.start': ['Start today — just one practice is enough.', 'きょう から はじめよう。1かい だけ で OK。']
+});
