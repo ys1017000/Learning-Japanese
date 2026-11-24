@@ -13,7 +13,8 @@
     { id: 'msg', label: '💬 Messages / DM', labelJa: '💬 メッセージ・DM' },
     { id: 'yoh', label: '💕 With Yoh-chan', labelJa: '💕 ようちゃん と' },   // ようちゃん（恋人）に だけ 使う ことば。ぜんぶ ふつう だけ
     { id: 'care', label: '🤍 Caring', labelJa: '🤍 きづかい' },
-    { id: 'daily', label: '☀️ Everyday', labelJa: '☀️ まいにち' }
+    { id: 'daily', label: '☀️ Everyday', labelJa: '☀️ まいにち' },
+    { id: 'work', label: '🏫 At work', labelJa: '🏫 しょくば' }   // しょくば の きまり もんく（ぜんぶ ていねい だけ）
   ];
 
   /* 話す相手（クイズ用）。reg: 'casual' = ふつう（タメ口） / 'polite' = ていねい */
@@ -146,6 +147,42 @@
       note: 'ほんと？ with a surprised voice ↗ = "No way, really?!"', noteJa: 'おどろいた こえ で 「ほんと？」↗ ＝「えっ、ほんとう に？！」',
       pw: ['boss', 'teacher', 'new'] },
     { id: 'iiyo', s: 'daily', p: ['いい です よ', 'ii desu yo', 'いいですよ'], c: ['いい よ！', 'ii yo!', 'いいよ！'], en: 'Sure! / That\'s fine!',
+      pw: ['boss', 'teacher', 'new'] },
+    { id: 'otsukare', s: 'work', only: 'p', p: ['おつかれさま です', 'otsukaresama desu', 'お{疲|つか}れさまです'], c: ['おつかれさま です', 'otsukaresama desu', 'お{疲|つか}れさまです'], en: 'Thanks for your hard work. (greeting at work)',
+      note: 'The all-purpose work greeting: passing a coworker, after a meeting, when someone leaves. Casual with friends: おつかれ！',
+      noteJa: 'しょくば の ばんのう あいさつ。すれちがう とき、かいぎ の あと、かえる ひと に。ともだち には 「おつかれ！」。',
+      r: [['おつかれさま です', 'otsukaresama desu', 'Thanks, you too.', 'お{疲|つか}れさまです']],
+      pw: ['boss', 'teacher', 'new'] },
+    { id: 'yoroshiku', s: 'work', only: 'p', p: ['よろしく おねがい します', 'yoroshiku onegai shimasu', 'よろしくお{願|ねが}いします'], c: ['よろしく おねがい します', 'yoroshiku onegai shimasu', 'よろしくお{願|ねが}いします'], en: 'Nice to work with you. / Thanks in advance.',
+      note: 'Used on the first day, when you ask for help, and at the end of emails. Very important in Japan.',
+      noteJa: 'はじめて の ひ、なにか を たのむ とき、メール の さいご に。にほん で とても だいじ な ことば。',
+      r: [['こちら こそ、よろしく おねがい します', 'kochira koso, yoroshiku onegai shimasu', 'Likewise, nice to work with you.', 'こちらこそ、よろしくお{願|ねが}いします']],
+      pw: ['boss', 'teacher', 'new'] },
+    { id: 'osaki', s: 'work', only: 'p', p: ['おさき に しつれい します', 'osaki ni shitsurei shimasu', 'お{先|さき}に{失礼|しつれい}します'], c: ['おさき に しつれい します', 'osaki ni shitsurei shimasu', 'お{先|さき}に{失礼|しつれい}します'], en: 'Excuse me for leaving before you. (leaving work)',
+      note: 'Say it when you go home before others. They answer おつかれさま です.',
+      noteJa: 'ほか の ひと より さき に かえる とき に。こたえ は 「おつかれさま です」。',
+      r: [['おつかれさま でした', 'otsukaresama deshita', 'Good work today.', 'お{疲|つか}れさまでした']],
+      pw: ['boss', 'teacher', 'new'] },
+    { id: 'shitsurei', s: 'work', only: 'p', p: ['しつれい します', 'shitsurei shimasu', '{失礼|しつれい}します'], c: ['しつれい します', 'shitsurei shimasu', '{失礼|しつれい}します'], en: 'Excuse me. (entering a room)',
+      note: 'Knock, open the door, and say this when you enter the teachers\' room or an office.',
+      noteJa: 'しょくいんしつ や へや に はいる とき、ノック して この ことば。',
+      pw: ['boss', 'teacher', 'new'] },
+    { id: 'chotto', s: 'work', only: 'p', p: ['すみません、 いま ちょっと いい です か？', 'sumimasen, ima chotto ii desu ka?', 'すみません、{今|いま}ちょっといいですか？'], c: ['すみません、 いま ちょっと いい です か？', 'sumimasen, ima chotto ii desu ka?', 'すみません、{今|いま}ちょっといいですか？'], en: 'Excuse me, do you have a minute?',
+      note: 'The polite way to start a question to a busy coworker.',
+      noteJa: 'いそがしい どうりょう に しつもん する まえ の ひとこと。',
+      r: [['はい、 どうぞ', 'hai, douzo', 'Sure, go ahead.', 'はい、どうぞ']],
+      pw: ['boss', 'teacher', 'new'] },
+    { id: 'tasukarimasu', s: 'work', only: 'p', p: ['ありがとう ございます、 たすかります', 'arigatou gozaimasu, tasukarimasu', 'ありがとうございます、{助|たす}かります'], c: ['ありがとう ございます、 たすかります', 'arigatou gozaimasu, tasukarimasu', 'ありがとうございます、{助|たす}かります'], en: 'Thank you, that really helps.',
+      note: 'たすかります = "you saved me". Warmer than just ありがとう ございます.',
+      noteJa: '「たすかります」 ＝ たすけて くれて うれしい。ありがとう だけ より あたたかい。',
+      pw: ['boss', 'teacher', 'new'] },
+    { id: 'kakunin', s: 'work', only: 'p', p: ['かくにん します', 'kakunin shimasu', '{確認|かくにん}します'], c: ['かくにん します', 'kakunin shimasu', '{確認|かくにん}します'], en: 'I\'ll check.',
+      note: 'Useful when you are not sure yet. Also: しらべて みます (I\'ll look into it).',
+      noteJa: 'まだ わからない とき に べんり。「しらべて みます」 も。',
+      pw: ['boss', 'teacher', 'new'] },
+    { id: 'shoushou', s: 'work', only: 'p', p: ['しょうしょう おまち ください', 'shoushou omachi kudasai', '{少々|しょうしょう}お{待|ま}ちください'], c: ['しょうしょう おまち ください', 'shoushou omachi kudasai', '{少々|しょうしょう}お{待|ま}ちください'], en: 'One moment, please.',
+      note: 'Very polite "please wait". Also: ちょっと まって ください (less formal).',
+      noteJa: 'とても ていねい な 「まって ください」。',
       pw: ['boss', 'teacher', 'new'] }
   ];
 

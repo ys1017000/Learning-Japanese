@@ -369,6 +369,15 @@ window.CJ_I18N = {
   'map.tapHint': ['Tap a prefecture', 'けん を タップ して ね'],
 
   // v4: クイズ
+  'mode.particles': ['🧷 Particles', '🧷 じょし'],
+  'mode.sounds': ['👂 っ / long sounds', '👂 っ・のばす おと'],
+  'q.particle': ['Which particle goes in the blank?', 'あいて いる ところ に はいる じょし は？'],
+  'q.sound': ['Listen. Which word is it?', 'きいて。どっち の ことば？'],
+  'q.soundWhy': ['Small っ = a tiny stop. Long sounds are held twice as long. Listen again with 🐢.', 'ちいさい っ ＝ ちいさく とまる。のばす おと は 2ばい ながく。🐢 で もう いちど きいて みて ね。'],
+  'sub.basics': ['🧱 Basics', '🧱 きほん'],
+  'bs.title': ['Basics — the tricky parts', 'きほん — つまずき やすい ところ'],
+  'bs.intro': ['Particles, verb types, casual shortcuts, leaving words out, numbers and sounds. Tap a section to open it.', 'じょし、どうし の しゅるい、はなしことば、はぶく ことば、かず、おと。タップ して ひらいて ね。'],
+  'home.m.basics': ['Basics', 'きほん'],
   'mode.words': ['📝 Words', '📝 たんご'],
   'q.wMeaning': ['What does this word mean?', 'この ことば の いみ は？'],
   // v6: 声

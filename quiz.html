@@ -33,12 +33,13 @@
 <script src="data.js"></script>
 <script src="kanji-data.js"></script>
 <script src="words-data.js"></script>
+<script src="basics-data.js"></script>
 <script src="common.js"></script>
 <script>
 (function () {
   const D = window.CJ_DATA, K = window.CJ_KANJI, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
   const ROUND = 10;
-  const MODES = ['who', 'endings', 'kanji', 'onkun', 'words', 'mistakes'];
+  const MODES = ['who', 'endings', 'particles', 'sounds', 'kanji', 'onkun', 'words', 'mistakes'];
   const WORDS = window.CJ_WORDS.WORDS, wordBy = {}; WORDS.forEach(w => { wordBy[w.id] = w; });
   const cardById = {}; D.CARDS.forEach(c => { cardById[c.id] = c; });
   const endById = {}; D.ENDING_QUIZ.forEach(q => { endById[q.id] = q; });
@@ -158,10 +159,39 @@
         '<div style="margin-top:0.4rem;"><a href="words.html?w=' + encodeURIComponent(w.id) + '">📝 ' + esc(w.id) + ' →</a></div>'
     };
   }
+  /* 🧷 助詞：［　］に 入る 助詞 を えらぶ */
+  const BS = window.CJ_BASICS;
+  function particleQuestion(i) {
+    const q = BS.PARTICLE_Q[i];
+    return {
+      id: 'pa:' + i,
+      opts: CJ.shuffle([{ t: [q[1], ''], ok: true }].concat(q[4].map(x => ({ t: [x, ''] })))),
+      answer: q[0] + ' ' + q[1] + ' ' + q[2],
+      head: () => '<div class="q-text">' + esc(t('q.particle')) + '</div><div class="muted" style="text-align:center;">' + esc(q[3]) + '</div>' +
+        '<div class="q-word ja">' + esc(q[0]) + ' <span class="pt-blank">　</span> ' + esc(q[2]) + '</div>',
+      why: () => '<div class="ja" style="font-weight:700;">' + esc(q[0] + ' ' + q[1] + ' ' + q[2]) + ' ' + CJ.sayBtns(q[0] + ' ' + q[1] + ' ' + q[2]) + '</div><div>💡 ' + esc(q[5]) + '</div>' +
+        '<div style="margin-top:0.3rem;"><a href="basics.html?s=particles">🧷 ' + esc(t('sub.basics')) + ' →</a></div>'
+    };
+  }
+  /* 👂 おと：きいて、どっち の ことば か えらぶ（ちいさい っ・のばす おと・ん） */
+  function soundQuestion(i, k) {
+    const pr = BS.SOUNDS[i], w = pr[k];
+    return {
+      id: 'so:' + i + ':' + k,
+      opts: CJ.shuffle(pr.map((x, j) => ({ t: [x[0] + '  (' + x[1] + ')', ''], ok: j === k }))),
+      answer: w[0],
+      head: () => '<div class="q-text">' + esc(t('q.sound')) + '</div><div class="u-listen"><button class="u-play" data-say="' + esc(w[0]) + '">🔊</button>' +
+        '<button class="tiny-btn" data-say="' + esc(w[0]) + '" data-slow="1">🐢</button></div>',
+      why: () => '<div>💡 ' + esc(t('q.soundWhy')) + '</div><div style="margin-top:0.3rem;"><a href="basics.html?s=sounds">👂 ' + esc(t('sub.basics')) + ' →</a></div>',
+      autoSay: w[0]
+    };
+  }
   function fromId(id) {
     const m = id.split(':');
     if (m[0] === 'c' && cardById[m[1]]) return whoQuestion(cardById[m[1]], m[2]);
     if (m[0] === 'e' && endById[m[1]]) return endQuestion(endById[m[1]]);
+    if (m[0] === 'pa' && BS.PARTICLE_Q[+m[1]]) return particleQuestion(+m[1]);
+    if (m[0] === 'so' && BS.SOUNDS[+m[1]]) return soundQuestion(+m[1], +m[2] || 0);
     if (m[0] === 'k' && kanjiBy[m[1]]) return kanjiQuestion(kanjiBy[m[1]], m[2]);
     if (m[0] === 'w' && wordBy[m[1]]) return wordQuestion(wordBy[m[1]]);
     if (m[0] === 'o' && okBy[id.slice(2)]) return onkunQuestion(okBy[id.slice(2)]);
@@ -184,6 +214,8 @@
       const by = ty => CJ.shuffle(OK_POOL.filter(o => o.ty === ty));
       qs = CJ.shuffle(by('on').slice(0, 4).concat(by('kun').slice(0, 4), by('mix').slice(0, 2))).map(onkunQuestion);
     }
+    else if (mode === 'particles') qs = CJ.shuffle(BS.PARTICLE_Q.map((x, i) => i)).slice(0, 10).map(particleQuestion);
+    else if (mode === 'sounds') qs = CJ.shuffle(BS.SOUNDS.map((x, i) => i)).slice(0, 10).map(i => soundQuestion(i, Math.random() < 0.5 ? 0 : 1));
     else if (mode === 'words') {
       const learned = new Set(CJ.getData().words);
       const mine = CJ.shuffle(WORDS.filter(w => learned.has(w.id))).slice(0, ROUND / 2);
@@ -222,6 +254,7 @@
         (o.t[1] ? '<span class="romaji">' + esc(o.t[1]) + '</span>' : '') + '</button>';
     }).join('') + '</div><div class="feedback" id="fb"></div>';
     if (answered >= 0) renderFeedback();
+    if (q.autoSay && answered < 0 && !q.played) { q.played = true; setTimeout(() => CJ.speak(q.autoSay), 300); }   // きく クイズ は 自動 で 1回 ながす
   }
 
   function renderFeedback() {

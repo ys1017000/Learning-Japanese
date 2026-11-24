@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Basics – マルちゃんのペースでいいよ</title>
+<meta name="theme-color" content="#e0517a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<header><a class="logo" href="index.html">🌸 マルちゃんのペースでいいよ</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
+
+<main class="container">
+  <div class="subnav">
+    <a href="cards.html" data-i18n="sub.cards">Polite ⇔ Casual</a>
+    <a href="pattern.html" data-i18n="sub.patterns">Patterns</a>
+    <a href="grammar.html" data-i18n="sub.grammar">Grammar</a>
+    <a href="basics.html" class="active" data-i18n="sub.basics">Basics</a>
+    <a href="endings.html" data-i18n="sub.endings">Endings</a>
+    <a href="guide.html" data-i18n="sub.guide">Tips</a>
+  </div>
+  <div class="card">
+    <h2>🧱 <span data-i18n="bs.title"></span></h2>
+    <p class="muted" data-i18n="bs.intro"></p>
+    <label class="kj-toggle"><input type="checkbox" data-kanji-toggle> <span data-i18n="rd.kanji"></span></label>
+  </div>
+  <div id="secs"></div>
+</main>
+<nav>
+  <a href="index.html"><span class="ni">🏠</span><span data-i18n="nav.home">Home</span></a>
+  <a href="practice.html"><span class="ni">🔥</span><span data-i18n="nav.today">Today</span></a>
+  <a href="cards.html" class="active"><span class="ni">📚</span><span data-i18n="nav.learn">Learn</span></a>
+  <a href="kanji.html"><span class="ni">✍️</span><span data-i18n="nav.kanji">Kanji</span></a>
+  <a href="read.html"><span class="ni">🗣️</span><span data-i18n="nav.read">Read</span></a>
+  <a href="quiz.html"><span class="ni">❓</span><span data-i18n="nav.quiz">Quiz</span></a>
+</nav>
+<script src="i18n.js"></script>
+<script src="basics-data.js"></script>
+<script src="common.js"></script>
+<script>
+/* 🧱 きほん：つまずきやすい ところ を 1ページ に（助詞・動詞・はなしことば・はぶく・かず・おと）。
+   セクション は タップ で ひらく。例文 は 🔊 で きける。助詞 と おと は クイズ へ */
+(function () {
+  const B = window.CJ_BASICS, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
+  const ja = () => CJ.lang() === 'ja';
+  const L = (en, jp) => ja() ? CJ.jaText(jp) : en;
+  const open = new Set([new URLSearchParams(location.search).get('s') || 'particles']);
+  function rowHtml(r) {
+    const f = [r[2], r[3], r[5]];
+    return '<div class="bs-row"><div class="bs-lbl ja">' + esc(r[0]) + '</div><div class="muted" style="font-size:0.85rem;">' + esc(r[1]) + '</div>' +
+      '<div class="bs-ex"><div><div class="k ja">' + CJ.jaHtml(f) + '</div><div class="romaji">' + esc(r[3]) + '</div><div class="e">' + esc(r[4]) + '</div></div>' + CJ.sayBtns(r[2]) + '</div></div>';
+  }
+  function render() {
+    $('secs').innerHTML = B.SECTIONS.map(s =>
+      '<details class="card gr" data-s="' + s.id + '"' + (open.has(s.id) ? ' open' : '') + '><summary><span class="gr-num">' + s.icon + '</span><span style="flex:1;"><b>' + esc(CJ.tx(s, 'title')) + '</b></span></summary>' +
+      '<div class="gr-body"><p>' + esc(CJ.tx(s, 'intro')) + '</p>' +
+      (s.table ? '<div style="overflow-x:auto;"><table class="gr-table ja bs-table"><tr>' + s.table.head.map(h => '<th>' + esc(h) + '</th>').join('') + '</tr>' +
+        s.table.rows.map(r => '<tr>' + r.map((c, i) => '<td' + (i ? ' data-say="' + esc(c.replace(/[⚠️\s]/g, '').replace('⚠', '')) + '"' : '') + '>' + esc(c) + '</td>').join('') + '</tr>').join('') + '</table></div>' +
+        '<div class="muted" style="font-size:0.75rem;">' + esc(L('Tap a word to hear it.', 'ことば を タップ すると きけます。')) + '</div>' : '') +
+      (s.rows ? s.rows.map(rowHtml).join('') : '') +
+      (s.tips ? '<ul class="bs-tips">' + s.tips.map(x => '<li>💡 ' + esc(L(x[0], x[1])) + '</li>').join('') + '</ul>' : '') +
+      (s.pairsTitle ? '<div class="bs-pairs">' + B.SOUNDS.map(p => '<div class="bs-pair">' + p.map(w => '<div><b class="ja">' + esc(w[0]) + '</b> ' + CJ.sayBtns(w[0]) + '<div class="muted" style="font-size:0.8rem;">' + esc(w[1]) + '</div></div>').join('<span class="bs-vs">↔</span>') + '</div>').join('') + '</div>' : '') +
+      (s.id === 'particles' ? '<a class="btn" href="quiz.html?mode=particles" style="margin-top:0.6rem;">🧷 ' + esc(L('Particle quiz', 'じょし クイズ')) + '</a>' : '') +
+      (s.id === 'sounds' ? '<a class="btn" href="quiz.html?mode=sounds" style="margin-top:0.6rem;">👂 ' + esc(L('Listening quiz: which one?', 'きく クイズ：どっち？')) + '</a>' : '') +
+      '</div></details>').join('');
+  }
+  $('secs').addEventListener('toggle', e => { const d = e.target.closest && e.target.closest('details[data-s]'); if (!d) return; if (d.open) { open.add(d.dataset.s); CJ.markStudied && CJ.markStudied(); } else open.delete(d.dataset.s); }, true);
+  document.addEventListener('cj:lang', render);
+  document.addEventListener('cj:kanji', render);
+  render();
+})();
+</script>
+</body>
+</html>
