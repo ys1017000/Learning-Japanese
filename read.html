@@ -75,7 +75,7 @@
 
   // 会話は「えらぶ」（セレクト）にする
   function renderTabs() {
-    $('pSel').innerHTML = R.PASSAGES.map(p => '<option value="' + p.id + '"' + (p.id === pid ? ' selected' : '') + '>' + p.icon + ' ' + esc(CJ.tx(p, 'title')) + '</option>').join('');
+    $('pSel').innerHTML = R.PASSAGES.map(p => '<option value="' + p.id + '"' + (p.id === pid ? ' selected' : '') + '>' + p.icon + ' ' + esc(CJ.tx(p, 'title')) + (p.only === 'c' ? ' · 💕' : p.only === 'p' ? ' · 🏫' : ' · 🔀') + '</option>').join('');
   }
 
   function resultHtml(n) {

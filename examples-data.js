@@ -14,7 +14,7 @@
     ['e07', 'Meat or fish — which one?', ['にく と さかな、 どっち に する？', 'niku to sakana, docchi ni suru?', '{肉|にく}と{魚|さかな}、どっちにする？'], ['にく と さかな、 どちら に します か？', 'niku to sakana, dochira ni shimasu ka?', '{肉|にく}と{魚|さかな}、どちらにしますか？']],
     ['e08', 'I want to eat more vegetables.', ['もっと やさい を たべたい な', 'motto yasai o tabetai na', 'もっと{野菜|やさい}を{食|た}べたいな'], ['もっと やさい を たべたい です', 'motto yasai o tabetai desu', 'もっと{野菜|やさい}を{食|た}べたいです']],
     ['e09', 'Can you drink alcohol?', ['おさけ、 のめる？', 'osake, nomeru?', 'お{酒|さけ}、{飲|の}める？'], ['おさけ は のめます か？', 'osake wa nomemasu ka?', 'お{酒|さけ}は{飲|の}めますか？']],
-    ['e10', 'One draft beer, please!', ['なまビール ひとつ！', 'nama biiru hitotsu!', '{生|なま}ビール{一|ひと}つ！'], ['なまビール を ひとつ ください', 'nama biiru o hitotsu kudasai', '{生|なま}ビールを{一|ひと}つください']],
+    ['e10', 'One draft beer, please!', ['なまビール ひとつ！', 'nama biiru hitotsu!', '{生|なま}ビール{一|ひと}つ！'], ['なまビール を ひとつ ください', 'nama biiru o hitotsu kudasai', '{生|なま}ビールを{一|ひと}つください'], 'p'],
     ['e11', 'Let\'s ask the staff.', ['てんいん さん に きいて みよう', 'ten\'in san ni kiite miyou', '{店員|てんいん}さんに{聞|き}いてみよう'], ['てんいん さん に きいて みましょう', 'ten\'in san ni kiite mimashou', '{店員|てんいん}さんに{聞|き}いてみましょう']],
     ['e12', 'I made a reservation for seven o\'clock.', ['しちじ に よやく した よ', 'shichiji ni yoyaku shita yo', '{七|しち}{時|じ}に{予約|よやく}したよ'], ['しちじ に よやく しました', 'shichiji ni yoyaku shimashita', '{七|しち}{時|じ}に{予約|よやく}しました']],
     // ---- まち・えき ----
@@ -30,8 +30,8 @@
     ['e22', 'You pull it to open it.', ['ひいて あける んだよ', 'hiite akeru n da yo', '{引|ひ}いて{開|あ}けるんだよ'], ['ひいて あけて ください', 'hiite akete kudasai', '{引|ひ}いて{開|あ}けてください']],
     ['e23', 'It\'s no smoking inside.', ['なか は きんえん だよ', 'naka wa kin\'en da yo', '{中|なか}は{禁煙|きんえん}だよ'], ['なか は きんえん です', 'naka wa kin\'en desu', '{中|なか}は{禁煙|きんえん}です']],
     ['e24', 'Water is free here.', ['ここ、 おみず は むりょう だよ', 'koko, omizu wa muryou da yo', 'ここ、お{水|みず}は{無料|むりょう}だよ'], ['ここ は おみず が むりょう です', 'koko wa omizu ga muryou desu', 'ここはお{水|みず}が{無料|むりょう}です']],
-    ['e25', 'Can I use a card? Or cash only?', ['カード つかえる？ げんきん だけ？', 'kaado tsukaeru? genkin dake?', 'カード{使|つか}える？{現金|げんきん}だけ？'], ['カード は つかえます か？ げんきん だけ です か？', 'kaado wa tsukaemasu ka? genkin dake desu ka?', 'カードは{使|つか}えますか？{現金|げんきん}だけですか？']],
-    ['e26', 'Where is the restroom?', ['おてあらい、 どこ？', 'otearai, doko?', 'お{手洗|てあら}い、どこ？'], ['おてあらい は どこ です か？', 'otearai wa doko desu ka?', 'お{手洗|てあら}いはどこですか？']],
+    ['e25', 'Can I use a card? Or cash only?', ['カード つかえる？ げんきん だけ？', 'kaado tsukaeru? genkin dake?', 'カード{使|つか}える？{現金|げんきん}だけ？'], ['カード は つかえます か？ げんきん だけ です か？', 'kaado wa tsukaemasu ka? genkin dake desu ka?', 'カードは{使|つか}えますか？{現金|げんきん}だけですか？'], 'p'],
+    ['e26', 'Where is the restroom?', ['おてあらい、 どこ？', 'otearai, doko?', 'お{手洗|てあら}い、どこ？'], ['おてあらい は どこ です か？', 'otearai wa doko desu ka?', 'お{手洗|てあら}いはどこですか？'], 'p'],
     ['e27', 'Is there a café nearby?', ['ちかく に カフェ ある？', 'chikaku ni kafe aru?', '{近|ちか}くにカフェある？'], ['ちかく に カフェ は あります か？', 'chikaku ni kafe wa arimasu ka?', '{近|ちか}くにカフェはありますか？']],
     // ---- じかん・よてい ----
     ['e28', 'Are you busy this week?', ['こんしゅう いそがしい？', 'konshuu isogashii?', '{今週|こんしゅう}{忙|いそが}しい？'], ['こんしゅう は いそがしい です か？', 'konshuu wa isogashii desu ka?', '{今週|こんしゅう}は{忙|いそが}しいですか？']],
@@ -104,6 +104,9 @@
     ['e90', 'Let\'s go to the new café!', ['あたらしい カフェ に いこう！', 'atarashii kafe ni ikou!', '{新|あたら}しいカフェに{行|い}こう！'], ['あたらしい カフェ に いきましょう', 'atarashii kafe ni ikimashou', '{新|あたら}しいカフェに{行|い}きましょう']]
   ];
   // 5番目 = only（'p' = お店の人 など いつも ていねい、'c' = したしい ひと と だけ）。もう一方は 同じ文 にする
+  /* 💕 したしい ひと と だけ（デート・おでかけ・ふたり の じかん） */
+  const CLOSE = ['e06', 'e31', 'e33', 'e35', 'e42', 'e46', 'e54', 'e64', 'e65', 'e68', 'e70', 'e80'];
+  EXAMPLES.forEach(e => { if (!e[4] && CLOSE.includes(e[0])) e[4] = 'c'; });
   EXAMPLES.forEach(e => { if (e[4] === 'p') e[2] = e[3]; else if (e[4] === 'c') e[3] = e[2]; });
   window.CJ_EXAMPLES = { EXAMPLES };
 })();

@@ -122,6 +122,9 @@
         ['I think a little differently.', 'わたし は ちょっと ちがう と おもう な', 'watashi wa chotto chigau to omou na', 'わたし は すこし ちがう と おもいます', 'watashi wa sukoshi chigau to omoimasu', '{私|わたし}はちょっと{違|ちが}うと{思|おも}うな', '{私|わたし}は{少|すこ}し{違|ちが}うと{思|おも}います']] }
   ];
   // 8番目 = only（'c' = したしい ひと と だけ、'p' = いつも ていねい）。もう一方 は 同じ文 にする
+  /* 💕 したしい ひと と だけ の 例文（ハイキング・デート など）。データ の 8番目 に 'c' を つける */
+  const ONLY = {'past': {'1': 'c', '2': 'c', '3': 'c'}, 'neg': {'0': 'c'}, 'want': {'1': 'c', '2': 'c'}, 'lets': {'2': 'c', '3': 'c'}, 'te': {'2': 'c'}, 'teiru': {'1': 'c'}, 'kara': {'1': 'c', '2': 'c'}, 'kedo': {'0': 'c'}, 'tara': {'1': 'c', '2': 'c'}};
+  GRAMMAR.forEach(g => { const m = ONLY[g.id]; if (m) g.ex.forEach((e, i) => { if (m[i] && !e[7]) e[7] = m[i]; }); });
   GRAMMAR.forEach(g => g.ex.forEach(e => { if (e[7] === 'c') { e[3] = e[1]; e[4] = e[2]; e[6] = e[5]; } else if (e[7] === 'p') { e[1] = e[3]; e[2] = e[4]; e[5] = e[6]; } }));
   window.CJ_GRAMMAR = { GRAMMAR };
 })();

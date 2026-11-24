@@ -80,12 +80,12 @@
       note: 'Say it to the restaurant staff when you leave — they will be happy. To Yoh-chan when he cooks or pays, too!',
       noteJa: 'おみせ を でる とき に おみせ の ひと に いう と よろこばれます。ようちゃん が りょうり したり、はらって くれた とき にも！',
       pw: ['boss', 'teacher', 'shop', 'new'] },
-    { id: 'kirei', s: 'date', p: ['きれい です ね', 'kirei desu ne', 'きれいですね'], c: ['きれい だね！', 'kirei da ne!', 'きれいだね！'], en: 'It\'s beautiful, isn\'t it?',
-      note: 'Perfect for looking at the Christmas lights together — casual with Yoh-chan or friends, polite with coworkers. ね = "isn\'t it?" — you share the feeling.',
-      noteJa: 'イルミネーション を いっしょ に みる とき に ぴったり。ようちゃん や ともだち には ふつう、どうりょう には ていねい。「ね」 で きもち を わけあいます。',
+    { id: 'kirei', s: 'date', only: 'c', p: ['きれい です ね', 'kirei desu ne', 'きれいですね'], c: ['きれい だね！', 'kirei da ne!', 'きれいだね！'], en: 'It\'s beautiful, isn\'t it?',
+      note: 'Perfect for looking at the Christmas lights together. ね = "isn\'t it?" — you share the feeling.',
+      noteJa: 'イルミネーション を いっしょ に みる とき に ぴったり。「ね」 で きもち を わけあいます。',
       pw: ['boss', 'teacher', 'new'] },
-    { id: 'tanoshikatta', s: 'date', p: ['たのしかった です', 'tanoshikatta desu', '{楽|たの}しかったです'], c: ['たのしかった！', 'tanoshikatta!', '{楽|たの}しかった！'], en: 'That was fun!',
-      note: 'After a date or a trip: きょう たのしかった ね！ (kyou tanoshikatta ne!) = "Today was fun, wasn\'t it?" After a work party, say it politely: たのしかった です.', noteJa: 'デート や りょこう の あと に：「きょう たのしかった ね！」。しょくば の のみかい の あと は ていねい に：「たのしかった です」。',
+    { id: 'tanoshikatta', s: 'date', only: 'c', p: ['たのしかった です', 'tanoshikatta desu', '{楽|たの}しかったです'], c: ['たのしかった！', 'tanoshikatta!', '{楽|たの}しかった！'], en: 'That was fun!',
+      note: 'After a date or a trip: きょう たのしかった ね！ (kyou tanoshikatta ne!) = "Today was fun, wasn\'t it?"', noteJa: 'デート や りょこう の あと に：「きょう たのしかった ね！」。',
       pw: ['boss', 'teacher', 'new'] },
     { id: 'samui', s: 'date', p: ['さむい です ね', 'samui desu ne', '{寒|さむ}いですね'], c: ['さむい ね〜', 'samui ne~', '{寒|さむ}いね〜'], en: 'It\'s cold, isn\'t it?',
       note: 'The weather is the easiest small talk in Japan — with anyone!', noteJa: 'てんき の はなし は、だれ と でも つかえる いちばん かんたん な ざつだん です。',
@@ -115,7 +115,7 @@
     { id: 'ohayou', s: 'msg', p: ['おはよう ございます', 'ohayou gozaimasu', 'おはようございます'], c: ['おはよう！', 'ohayou!', 'おはよう！'], en: 'Good morning!',
       note: 'At work, people say おはよう ございます all morning — even to coworkers.', noteJa: 'しょくば では、ごぜん ちゅう は ずっと 「おはよう ございます」。どうりょう にも つかいます。',
       pw: ['boss', 'teacher', 'new'] },
-    { id: 'oyasumi', s: 'msg', p: ['おやすみ なさい', 'oyasumi nasai', 'おやすみなさい'], c: ['おやすみ〜', 'oyasumi~', 'おやすみ〜'], en: 'Good night.',
+    { id: 'oyasumi', s: 'msg', only: 'c', p: ['おやすみ なさい', 'oyasumi nasai', 'おやすみなさい'], c: ['おやすみ〜', 'oyasumi~', 'おやすみ〜'], en: 'Good night.',
       r: [['おやすみ！ また あした ね', 'oyasumi! mata ashita ne', 'Good night! See you tomorrow.', 'おやすみ！また{明日|あした}ね']],
       pw: ['boss', 'teacher'] },
     { id: 'matane', s: 'msg', p: ['では、また', 'dewa, mata', 'では、また'], c: ['またね！', 'mata ne!', 'またね！'], en: 'See you!',
@@ -291,5 +291,7 @@
       why: 'げんき is a na-word → だよ. (げんき よ sounds like an old-fashioned lady.)', whyJa: 'げんき は 「な」 の ことば → だよ。（「げんき よ」 は むかし の おくさま みたい。）' }
   ];
 
+  /* only: 'c' = したしい ひと と だけ（💕）、'p' = しごと・おみせ で だけ（🏫）。もう一方 は 同じ文 に そろえる */
+  CARDS.forEach(c => { if (c.only === 'c') { c.p = c.c; c.pw = []; } else if (c.only === 'p') c.c = c.p; });
   window.CJ_DATA = { SCENES, PEOPLE, CARDS, ENDINGS, COMPARE, ENDING_QUIZ };
 })();

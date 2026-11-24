@@ -188,7 +188,7 @@
   }
   function fromId(id) {
     const m = id.split(':');
-    if (m[0] === 'c' && cardById[m[1]]) return whoQuestion(cardById[m[1]], m[2]);
+    if (m[0] === 'c' && cardById[m[1]] && !cardById[m[1]].only) return whoQuestion(cardById[m[1]], m[2]);
     if (m[0] === 'e' && endById[m[1]]) return endQuestion(endById[m[1]]);
     if (m[0] === 'pa' && BS.PARTICLE_Q[+m[1]]) return particleQuestion(+m[1]);
     if (m[0] === 'so' && BS.SOUNDS[+m[1]]) return soundQuestion(+m[1], +m[2] || 0);
@@ -200,7 +200,7 @@
   function mistakeIds() { return Object.keys(CJ.getData().wrong).filter(id => fromId(id)); }
 
   function start() {
-    if (mode === 'who') qs = CJ.shuffle(D.CARDS).slice(0, ROUND).map(c => whoQuestion(c));
+    if (mode === 'who') qs = CJ.shuffle(D.CARDS.filter(c => !c.only)).slice(0, ROUND).map(c => whoQuestion(c));
     else if (mode === 'endings') qs = CJ.shuffle(D.ENDING_QUIZ).slice(0, ROUND).map(endQuestion);
     else if (mode === 'kanji') {
       // おぼえた漢字があれば、半分くらいはそこから出す
