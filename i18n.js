@@ -133,7 +133,7 @@ window.CJ_I18N = {
   'kj.okuri': ['( ) = hiragana that comes after the kanji', '（ ）＝ かんじ の うしろ に つく ひらがな'],
 
   // 読む
-  'rd.title': ['🗣️ Read aloud', '🗣️ こえ に だして よむ'],
+  'rd.title': ['📜 Read aloud', '📜 こえ に だして よむ'],
   'rd.intro': ['Read short conversations out loud. Tap 🎙️ and read the line — the app checks how well it understood you.',
     'みじかい かいわ を こえ に だして よもう。🎙️ を おして よむ と、アプリ が どれくらい ききとれた か チェック します。'],
   'rd.kanji': ['Show kanji (with readings)', 'かんじ で みる（よみかた つき）'],
@@ -403,7 +403,7 @@ window.CJ_I18N = {
   'rec.g.patterns': ['🔁 Patterns', '🔁 かた'],
   'rec.g.basics': ['🧱 Basics & particles', '🧱 きほん・じょし'],
   'rec.g.grammar': ['🧩 Grammar examples', '🧩 ぶんぽう の れいぶん'],
-  'rec.g.read': ['🗣️ Read aloud', '🗣️ こえ に だして よむ'],
+  'rec.g.read': ['📜 Read aloud', '📜 こえ に だして よむ'],
   'rec.g.endings': ['💬 Endings', '💬 ごび'],
   'rec.g.examples': ['📖 Example sentences', '📖 れいぶん'],
   'rec.g.words': ['📝 Words', '📝 たんご'],
@@ -588,3 +588,33 @@ Object.assign(window.CJ_JK, {
   ちょうど:'ちょうど', こたえかた:'答(こた)え方(かた)', なかよし:'仲良(なかよ)し'
 });
 Object.assign(window.CJ_JK, { やさしく:'優(やさ)しく', やわらかくて:'柔(やわ)らかくて', まざってる:'混(ま)ざってる', だんだん:'段々(だんだん)', つき:'付(つ)き' });
+
+/* 🔄 言いかえ 練習（switch.html） */
+Object.assign(window.CJ_I18N, {
+  'sub.switch': ['🔄 Switch it', '🔄 いいかえ'],
+  'home.m.switch': ['Switch it', 'いいかえ'],
+  'sw.title': ['🔄 Switch it', '🔄 いいかえ れんしゅう'],
+  'sw.intro': ['Same meaning, different person. Change the sentence so it fits who you are talking to.', 'いみ は おなじ。あいて に あわせて、ぶん を いいかえよう。'],
+  'sw.dirQ': ['Which way?', 'どっち に いいかえる？'],
+  'sw.dirCP': ['Casual → Polite', 'ふつう → ていねい'],
+  'sw.dirPC': ['Polite → Casual', 'ていねい → ふつう'],
+  'sw.dirCPd': ['For work, shops and new people.', 'しごと・おみせ・はじめて の ひと に。'],
+  'sw.dirPCd': ['For Yoh-chan and close friends — drop the です / ます!', 'ようちゃん や なかよし の ともだち に。「です・ます」 を とって みよう！'],
+  'sw.modeQ': ['How do you answer?', 'どう こたえる？'],
+  'sw.modeSay': ['Say it', 'いう'],
+  'sw.modePick': ['Choose', 'えらぶ'],
+  'sw.start': ['Start ({n} sentences) ▶', 'はじめる（{n} もん）▶'],
+  'sw.quit': ['Quit', 'やめる'],
+  'sw.to': ['You are talking to:', 'はなす あいて：'],
+  'sw.askP': ['How do you say this politely?', 'ていねい に いう と？'],
+  'sw.askC': ['How do you say this casually?', 'ふつう に いう と？'],
+  'sw.show': ['Show the answer', 'こたえ を みる'],
+  'sw.selfQ': ['Did you get it?', 'いえた？'],
+  'sw.gotIt': ['Got it', 'いえた'],
+  'sw.notYet': ['Not yet', 'まだ'],
+  'sw.right': ['Yes! That fits.', 'そう！ぴったり。'],
+  'sw.notQuite': ['Not quite — here is what changes:', 'おしい！ かわる ところ は ここ：'],
+  'sw.review': ['Look again at what changes:', 'かわる ところ を もう いちど：'],
+  'sw.perfect': ['Perfect! 🎉', 'ぜんぶ できた！🎉'],
+  'sw.settings': ['Change settings', 'せってい を かえる']
+});

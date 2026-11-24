@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Switch it – マルちゃんのペースでいいよ</title>
+<meta name="theme-color" content="#e0517a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<header><a class="logo" href="index.html">🌸 マルちゃんのペースでいいよ</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
+
+<main class="container">
+  <div class="subnav">
+    <a href="cards.html" data-i18n="sub.cards">Polite ⇔ Casual</a>
+    <a href="switch.html" class="active" data-i18n="sub.switch">Switch it</a>
+    <a href="pattern.html" data-i18n="sub.patterns">Patterns</a>
+    <a href="grammar.html" data-i18n="sub.grammar">Grammar</a>
+    <a href="basics.html" data-i18n="sub.basics">Basics</a>
+    <a href="endings.html" data-i18n="sub.endings">Endings</a>
+    <a href="guide.html" data-i18n="sub.guide">Tips</a>
+  </div>
+  <div class="card" id="box"></div>
+</main>
+
+<nav>
+  <a href="index.html"><span class="ni">🏠</span><span data-i18n="nav.home">Home</span></a>
+  <a href="practice.html"><span class="ni">🔥</span><span data-i18n="nav.today">Today</span></a>
+  <a href="cards.html" class="active"><span class="ni">📚</span><span data-i18n="nav.learn">Learn</span></a>
+  <a href="kanji.html"><span class="ni">✍️</span><span data-i18n="nav.kanji">Kanji</span></a>
+  <a href="read.html"><span class="ni">📜</span><span data-i18n="nav.read">Read</span></a>
+  <a href="quiz.html"><span class="ni">❓</span><span data-i18n="nav.quiz">Quiz</span></a>
+</nav>
+
+<script src="i18n.js"></script>
+<script src="data.js"></script>
+<script src="grammar-data.js"></script>
+<script src="read-data.js"></script>
+<script src="examples-data.js"></script>
+<script src="kanji-data.js"></script>
+<script src="words-data.js"></script>
+<script src="common.js"></script>
+<script src="bank.js"></script>
+<script src="hints-data.js"></script>
+<script>
+/* 🔄 言いかえ練習：ふつう の 文 を ていねい に（または その 逆）。
+   相手（上司・店員・ようちゃん など）を 見て、言いかえる。声 で 答える か、4つ から えらぶ。
+   答え の あと、変わった ところ（だよ → です など）を 色 で 見せる。
+   記録：CJ.recordPrac('sw:' + 文のkey, ok)（cj_data の prac に 入る。新しい キー は 増やさない） */
+(function () {
+  const D = window.CJ_DATA, B = window.CJ_BANK, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
+  const ROUND = 10;
+  const box = $('box');
+
+  // 練習 に 使う 文：ふつう と ていねい が ちがう もの だけ（片方 だけ の 文 は 使わない）
+  const POOL = B.items.filter(it => !it.only && it.c[0] !== it.p[0] && ['card', 'rp', 'gr', 'rd', 'ex'].includes(it.src));
+  const group = it => it.src === 'gr' ? 'gr:' + it.gid : it.src === 'rd' ? 'rd:' + it.pid : (it.src === 'card' || it.src === 'rp') ? 'c:' + it.key.split(':')[1] : 'ex';
+
+  const pref = k => CJ.getPrefs()[k];
+  let dir = pref('swDir') === 'cp' || pref('swDir') === 'pc' ? pref('swDir') : 'cp';   // cp = ふつう → ていねい
+  let mode = pref('swMode') === 'pick' ? 'pick' : 'say';
+  let st = null;
+
+  // 相手：ていねい に する とき は しごと・おみせ・はじめて の 人、ふつう に する とき は ようちゃん・ともだち
+  function pickPerson(it) {
+    let ids = dir === 'cp' ? ['boss', 'teacher', 'shop', 'new'] : ['yoh', 'friend'];
+    if (dir === 'cp' && it.pw && it.pw.length) ids = it.pw;
+    return ids[Math.floor(Math.random() * ids.length)];
+  }
+
+  // 出題：まちがえた 文 を 先 に、あと は ランダム
+  function buildQueue() {
+    const d = CJ.getData(), weak = [], rest = [];
+    CJ.shuffle(POOL).forEach(it => { const r = d.prac['sw:' + it.key]; (r && r.l === 'ng' ? weak : rest).push(it); });
+    return weak.slice(0, 4).concat(rest).slice(0, ROUND).map(it => ({ it, who: pickPerson(it) }));
+  }
+
+  // 4つ の 選択肢：正解 ／ 言いかえて いない 文（もと の まま）／ 同じ グループ の ほか の 文（同じ ていねいさ）
+  function makeOpts(it) {
+    const from = dir === 'cp' ? 'c' : 'p', to = dir === 'cp' ? 'p' : 'c';
+    const opts = [{ f: it[to], ok: true }, { f: it[from], ok: false }];
+    const seen = new Set([it[to][0], it[from][0]]);
+    // よくある まちがい：「〜だよ」「〜ね」 に そのまま です を つける（げんき だよ です ✗）
+    const m = dir === 'cp' && it.c[0].match(/(?:だ\s?)?[よね]([！!？?〜~]*)$/);
+    if (m) {
+      const tail = s => { const mm = s.match(/([！!？?〜~]*)$/); return [s.slice(0, s.length - mm[1].length), mm[1]]; };
+      const k = tail(it.c[0]), r = tail(it.c[1]), j = tail(it.c[2] || it.c[0]);
+      const f = [k[0] + ' です' + k[1], r[0] + ' desu' + r[1], j[0] + 'です' + j[1]];
+      if (!seen.has(f[0])) { seen.add(f[0]); opts.push({ f, ok: false }); }
+    }
+    const sib = CJ.shuffle(POOL.filter(x => x !== it && group(x) === group(it)));
+    const others = CJ.shuffle(POOL.filter(x => x !== it && x.src === it.src));
+    sib.concat(others).forEach(x => { if (opts.length < 4 && !seen.has(x[to][0])) { seen.add(x[to][0]); opts.push({ f: x[to], ok: false }); } });
+    return CJ.shuffle(opts);
+  }
+
+  /* ---- 変わった ところ を 見つける（文字 ごと の 最長共通部分列）。スペース は くらべない ---- */
+  function diff(a, b) {
+    const A = Array.from(a), Bc = Array.from(b), n = A.length, m = Bc.length;
+    const L = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+    for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--)
+      L[i][j] = (A[i] === Bc[j] && A[i] !== ' ') ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+    const ka = new Array(n).fill(false), kb = new Array(m).fill(false);
+    let i = 0, j = 0;
+    while (i < n && j < m) {
+      if (A[i] === Bc[j] && A[i] !== ' ') { ka[i] = kb[j] = true; i++; j++; }
+      else if (L[i + 1][j] >= L[i][j + 1]) i++; else j++;
+    }
+    const mark = (arr, keep, cls) => arr.map((ch, k) => ch === ' ' ? ' ' : keep[k] ? esc(ch) : '<span class="' + cls + '">' + esc(ch) + '</span>').join('')
+      .replace(/<\/span>( ?)<span class="(sw-del|sw-add)">/g, '$1');   // となり あう 印 は 1つ に まとめる
+    return { a: mark(A, ka, 'sw-del'), b: mark(Bc, kb, 'sw-add') };
+  }
+  function diffHtml(it) {
+    const from = dir === 'cp' ? it.c : it.p, to = dir === 'cp' ? it.p : it.c;
+    const d = diff(from[0], to[0]);
+    const fr = dir === 'cp' ? 'casual' : 'polite', tr = dir === 'cp' ? 'polite' : 'casual';
+    return '<div class="sw-diff">' +
+      '<div><span class="reg ' + fr + '">' + esc(t('reg.' + fr)) + '</span> <span class="ja">' + d.a + '</span></div>' +
+      '<div class="sw-arrow">↓</div>' +
+      '<div><span class="reg ' + tr + '">' + esc(t('reg.' + tr)) + '</span> <span class="ja">' + d.b + '</span></div></div>';
+  }
+
+  /* ---- 画面 ---- */
+  function renderSetup() {
+    st = null;
+    const seg = (name, val, list) => '<div class="seg3" style="grid-template-columns: repeat(' + list.length + ', 1fr);">' + list.map(v =>
+      '<button type="button" class="' + (v[0] === val ? 'active' : '') + '" data-' + name + '="' + v[0] + '">' + v[1] + '<span>' + esc(t(v[2])) + '</span></button>').join('') + '</div>';
+    box.innerHTML = '<h2>' + esc(t('sw.title')) + '</h2><p class="muted">' + esc(t('sw.intro')) + '</p>' +
+      '<div class="sw-label">' + esc(t('sw.dirQ')) + '</div>' +
+      seg('dir', dir, [['cp', '🤝', 'sw.dirCP'], ['pc', '💕', 'sw.dirPC']]) +
+      '<p class="muted" style="font-size:0.8rem; margin:0.3rem 0 0;">' + esc(t(dir === 'cp' ? 'sw.dirCPd' : 'sw.dirPCd')) + '</p>' +
+      '<div class="sw-label">' + esc(t('sw.modeQ')) + '</div>' +
+      seg('mode', mode, [['say', '🗣️', 'sw.modeSay'], ['pick', '👆', 'sw.modePick']]) +
+      '<div style="margin-top:0.6rem;">' + CJ.levelSegHtml() + '</div>' +
+      '<button class="btn" data-a="start" style="margin-top:0.9rem;">' + esc(t('sw.start', { n: ROUND })) + '</button>';
+  }
+
+  function start() {
+    st = { q: buildQueue(), i: 0, res: [], shown: false, pick: -1, opts: null, vres: null };
+    render();
+  }
+
+  function render() {
+    if (!st) return renderSetup();
+    if (st.i >= st.q.length) return renderEnd();
+    const o = st.q[st.i], it = o.it, P = D.PEOPLE[o.who];
+    const from = dir === 'cp' ? it.c : it.p, to = dir === 'cp' ? it.p : it.c, fr = dir === 'cp' ? 'casual' : 'polite';
+    if (mode === 'pick' && !st.opts) st.opts = makeOpts(it);
+    let h = '<div class="sw-top"><span class="muted">' + (st.i + 1) + ' / ' + st.q.length + '</span><button class="tiny-btn" data-a="quit">' + esc(t('sw.quit')) + '</button></div>' +
+      '<div class="progress"><div class="progress-fill" style="width:' + (st.i / st.q.length * 100) + '%"></div></div>' +
+      '<div class="sw-who">' + esc(t('sw.to')) + ' <b>' + P.icon + ' ' + esc(CJ.tx(P, 'label')) + '</b></div>' +
+      '<div class="sw-src"><div><span class="reg ' + fr + '">' + esc(t('reg.' + fr)) + '</span></div>' +
+        '<div class="k ja">' + CJ.jaHtml(from) + '</div><div class="romaji">' + esc(from[1]) + '</div><div class="e">' + esc(it.en) + '</div>' + CJ.sayBtns(from[0]) + '</div>' +
+      '<p class="sw-ask">' + esc(t(dir === 'cp' ? 'sw.askP' : 'sw.askC')) + '</p>';
+
+    if (mode === 'pick') {
+      h += '<div class="options">' + st.opts.map((op, k) => {
+        let cls = 'option-btn';
+        if (st.pick >= 0) { if (op.ok) cls += ' correct'; else if (k === st.pick) cls += ' wrong'; }
+        return '<button class="' + cls + '" data-k="' + k + '"' + (st.pick >= 0 ? ' disabled' : '') + '><span class="k ja">' + CJ.jaHtml(op.f) + '</span><span class="romaji">' + esc(op.f[1]) + '</span></button>';
+      }).join('') + '</div>';
+      if (st.pick >= 0) {
+        const ok = st.opts[st.pick].ok;
+        h += '<div class="feedback ' + (ok ? 'correct' : 'wrong') + '"><b>' + esc(ok ? t('sw.right') : t('sw.notQuite')) + '</b>' + diffHtml(it) +
+          '<div style="margin-top:0.4rem;">' + CJ.sayBtns(to[0]) + '</div>' +
+          '<button class="btn" data-a="next" style="margin-top:0.7rem;">' + esc(t(st.i + 1 < st.q.length ? 'q.next' : 'q.seeScore')) + '</button></div>';
+      }
+    } else if (!st.shown) {
+      h += (CJ.recognitionSupported ? '<button class="btn" data-a="voice" id="vBtn">🎙️ ' + esc(t('vc.answer')) + '</button>' : '') +
+        '<button class="btn btn-secondary" data-a="show" style="margin-top:0.5rem;">' + esc(t('sw.show')) + '</button>' +
+        '<div id="vRes">' + voiceResHtml(st.vres) + '</div>';
+    } else {
+      h += '<div class="sw-ans"><div class="k ja">' + CJ.jaHtml(to) + '</div><div class="romaji">' + esc(to[1]) + '</div>' + CJ.sayBtns(to[0]) + '</div>' +
+        diffHtml(it) + voiceResHtml(st.vres) +
+        (CJ.recognitionSupported ? '<div class="vc-tools"><button class="tiny-btn" data-a="voice" id="vBtn">🎙️ ' + esc(t('vc.again')) + '</button></div>' : '') +
+        '<p class="muted" style="text-align:center; margin:0.7rem 0 0.4rem;">' + esc(t('sw.selfQ')) + '</p>' +
+        '<div class="sw-grade"><button class="btn btn-ok" data-a="ok">⭕ ' + esc(t('sw.gotIt')) + '</button><button class="btn btn-secondary" data-a="ng">🔁 ' + esc(t('sw.notYet')) + '</button></div>';
+    }
+    box.innerHTML = h;
+  }
+
+  function voiceResHtml(v) {
+    if (!v) return '';
+    if (v.err) return '<div class="rd-result show">' + esc(v.err) + '</div>';
+    const ok = v.score >= CJ.PASS_SCORE;
+    return '<div class="rd-result show" style="text-align:center;"><span class="sc ' + (ok ? 'ok' : 'ng') + '">' + esc(t(ok ? 'rd.pass' : 'rd.retry', { s: v.score })) + '</span>' +
+      '<div class="muted">' + esc(t('rd.heard', { t: v.heard })) + '</div>' +
+      (v.marks ? '<div class="vc-marks ja">' + v.marks.map(m => '<span class="' + (m.ok ? 'o' : 'x') + '">' + esc(m.ch) + '<i>' + (m.ok ? '〇' : '×') + '</i></span>').join('') + '</div>' : '') + '</div>';
+  }
+
+  // 声 で 答える：聞き取ったら 答え を 出す（点数 も いっしょ に）
+  function voice() {
+    const o = st.q[st.i], to = dir === 'cp' ? o.it.p : o.it.c, btn = $('vBtn');
+    if (btn) btn.classList.add('on');
+    const r = $('vRes'); if (r) r.innerHTML = '<div class="rd-result show">' + esc(t('rd.listening')) + '</div>';
+    const rec = CJ.listen({
+      onInterim: s => { const r = $('vRes'); if (r) r.innerHTML = '<div class="rd-result show">' + esc(t('rd.listening') + ' ' + s) + '</div>'; },
+      onFinal: alts => { st.vres = CJ.scoreJa([to[0], CJ.plain(to[2])], alts); st.shown = true; render(); },
+      onError: m => { st.vres = { err: m }; render(); },
+      onState: on => { if (!on && btn) btn.classList.remove('on'); }
+    });
+    if (!rec) { st.vres = { err: t('err.recog') }; render(); }
+  }
+
+  function grade(ok) {
+    CJ.abortListen();
+    const o = st.q[st.i];
+    st.res.push({ o, ok });
+    CJ.recordPrac('sw:' + o.it.key, ok);
+    st.i++; st.shown = false; st.pick = -1; st.opts = null; st.vres = null;
+    render();
+    window.scrollTo({ top: 0 });
+  }
+
+  function renderEnd() {
+    const n = st.res.filter(r => r.ok).length, miss = st.res.filter(r => !r.ok);
+    box.innerHTML = '<h2>' + esc(t('sw.title')) + '</h2><div class="score-big">' + n + ' / ' + st.res.length + '</div>' +
+      (miss.length ? '<p class="muted" style="margin-top:0.6rem;">' + esc(t('sw.review')) + '</p>' + miss.map(r => diffHtml(r.o.it)).join('') : '<p style="text-align:center;">' + esc(t('sw.perfect')) + '</p>') +
+      '<button class="btn" data-a="start" style="margin-top:0.9rem;">' + esc(t('q.again')) + '</button>' +
+      '<button class="btn btn-secondary" data-a="setup" style="margin-top:0.5rem;">' + esc(t('sw.settings')) + '</button>';
+  }
+
+  box.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b || b.disabled) return;
+    if (b.dataset.dir) { dir = b.dataset.dir; CJ.setPref('swDir', dir); return renderSetup(); }
+    if (b.dataset.mode) { mode = b.dataset.mode; CJ.setPref('swMode', mode); return renderSetup(); }
+    if (b.dataset.k !== undefined && st && st.pick < 0) {
+      st.pick = +b.dataset.k; render();
+      const to = dir === 'cp' ? st.q[st.i].it.p : st.q[st.i].it.c;
+      CJ.autoSpeak(to[0]);
+      const nb = box.querySelector('[data-a="next"]');
+      if (nb) { const navH = (document.querySelector('nav') || {}).offsetHeight || 60, over = nb.getBoundingClientRect().bottom - (window.innerHeight - navH - 12); if (over > 0) window.scrollBy({ top: over, behavior: 'smooth' }); }
+      return;
+    }
+    const a = b.dataset.a;
+    if (a === 'start') start();
+    else if (a === 'setup') renderSetup();
+    else if (a === 'quit') { CJ.abortListen(); renderSetup(); }
+    else if (a === 'show') { CJ.abortListen(); st.shown = true; render(); CJ.autoSpeak((dir === 'cp' ? st.q[st.i].it.p : st.q[st.i].it.c)[0]); }
+    else if (a === 'voice') voice();
+    else if (a === 'next') grade(st.opts[st.pick].ok);
+    else if (a === 'ok') grade(true);
+    else if (a === 'ng') grade(false);
+  });
+  document.addEventListener('cj:lang', render);
+  document.addEventListener('cj:kanji', render);
+  render();
+})();
+</script>
+</body>
+</html>

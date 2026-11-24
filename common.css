@@ -418,3 +418,20 @@ button.link-chip.on { background: var(--primary); color: #fff; border-color: var
 .bs-table td, .bs-table th { white-space: nowrap; font-size: 0.85rem; }
 .bs-pair { display: flex; align-items: center; justify-content: space-around; gap: 6px; border-top: 1px dashed var(--border); padding: 0.5rem 0; text-align: center; }
 .bs-vs { color: var(--text-muted); }
+
+/* 🔄 言いかえ 練習 */
+.sw-label { font-weight: 700; font-size: 0.85rem; margin: 0.8rem 0 0.3rem; }
+.sw-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+.sw-who { text-align: center; font-size: 0.95rem; margin: 0.2rem 0 0.6rem; }
+.sw-src, .sw-ans { text-align: center; background: #fff7f9; border: 1px solid var(--border); border-radius: 12px; padding: 0.7rem; }
+.sw-src .k, .sw-ans .k { font-size: 1.35rem; font-weight: 700; margin-top: 0.3rem; }
+.sw-src .e { font-size: 0.85rem; color: var(--text-muted); }
+.sw-ask { text-align: center; font-weight: 700; margin: 0.8rem 0 0.6rem; }
+.sw-diff { margin-top: 0.6rem; padding: 0.6rem 0.7rem; background: #fff; border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 1.05rem; }
+.sw-diff .ja { font-weight: 700; }
+.sw-arrow { text-align: center; color: var(--text-muted); font-size: 0.8rem; line-height: 1.2; }
+.sw-del { color: #9ca3af; text-decoration: line-through; }
+.sw-add { color: #1d4ed8; background: #dbeafe; border-radius: 4px; padding: 0 2px; }
+.reg.casual + .ja .sw-add { color: #be185d; background: #fce7f3; }
+.sw-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.sw-grade .btn { margin: 0; }
