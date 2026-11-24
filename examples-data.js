@@ -104,9 +104,6 @@
     ['e90', 'Let\'s go to the new café!', ['あたらしい カフェ に いこう！', 'atarashii kafe ni ikou!', '{新|あたら}しいカフェに{行|い}こう！'], ['あたらしい カフェ に いきましょう', 'atarashii kafe ni ikimashou', '{新|あたら}しいカフェに{行|い}きましょう']]
   ];
   // 5番目 = only（'p' = お店の人 など いつも ていねい、'c' = したしい ひと と だけ）。もう一方は 同じ文 にする
-  /* 💕 したしい ひと と だけ（デート・おでかけ・ふたり の じかん） */
-  const CLOSE = ['e06', 'e31', 'e33', 'e35', 'e42', 'e46', 'e54', 'e64', 'e65', 'e68', 'e70', 'e80'];
-  EXAMPLES.forEach(e => { if (!e[4] && CLOSE.includes(e[0])) e[4] = 'c'; });
   EXAMPLES.forEach(e => { if (e[4] === 'p') e[2] = e[3]; else if (e[4] === 'c') e[3] = e[2]; });
   window.CJ_EXAMPLES = { EXAMPLES };
 })();
