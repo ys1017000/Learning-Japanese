@@ -443,3 +443,26 @@ button.link-chip.on { background: var(--primary); color: #fff; border-color: var
 .subnav-label { display: block; font-size: 0.72rem; font-weight: 800; color: var(--text-muted); margin: 0 0 3px 2px; }
 .subnav-wrap .subnav { margin-bottom: 0; flex-wrap: wrap; overflow: visible; }
 .subnav-wrap .subnav a { flex: 0 0 auto; }
+
+/* ☰ メニュー（画面下 の バー の かわり） */
+body { padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+.head-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.menu-toggle { flex: 0 0 auto; width: 38px; height: 38px; border: 1px solid var(--border); background: #fff; border-radius: 10px; display: inline-flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; cursor: pointer; padding: 0; }
+.menu-toggle span { display: block; width: 18px; height: 2px; background: var(--primary); border-radius: 2px; }
+.drawer { position: fixed; inset: 0; z-index: 300; pointer-events: none; }
+.drawer-bg { position: absolute; inset: 0; background: rgba(0,0,0,0.35); opacity: 0; transition: opacity 0.2s; }
+.drawer-panel { position: absolute; top: 0; bottom: 0; left: 0; width: min(80vw, 300px); background: var(--card-bg); box-shadow: 2px 0 16px rgba(0,0,0,0.15); transform: translateX(-102%); transition: transform 0.22s ease; overflow-y: auto; padding: calc(0.8rem + env(safe-area-inset-top, 0px)) 0.8rem calc(1.2rem + env(safe-area-inset-bottom, 0px)); }
+body.drawer-open .drawer { pointer-events: auto; }
+body.drawer-open .drawer-bg { opacity: 1; }
+body.drawer-open .drawer-panel { transform: translateX(0); }
+body.drawer-open { overflow: hidden; }
+.drawer-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+.drawer-head .logo { font-size: 0.9rem; }
+.drawer-x { border: none; background: transparent; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); padding: 4px 8px; }
+.drawer-sec { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); margin: 0.8rem 0 0.2rem 0.4rem; }
+.drawer-gap { height: 0.5rem; border-top: 1px solid var(--border); margin-top: 0.5rem; }
+.drawer-gap:first-of-type { border-top: none; margin-top: 0; }
+.drawer-link { display: flex; align-items: center; gap: 10px; padding: 0.6rem 0.6rem; border-radius: 10px; text-decoration: none; color: var(--text); font-weight: 700; font-size: 0.95rem; }
+.drawer-link .di { font-size: 1.2rem; width: 1.6rem; text-align: center; }
+.drawer-link.active { background: var(--primary-soft); color: var(--primary); }
+.drawer-link br { display: none; }

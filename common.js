@@ -4,7 +4,7 @@
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
-  const APP_VERSION = 'v47';
+  const APP_VERSION = 'v48';
   const DATA_VERSION = 4;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily) / v4: ようちゃんへの質問(asks)・都道府県(pref)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
   const BACKUP_VERSION = 5;           // v5：型 の 記録（patterns）を 追加。v1〜v4 の バックアップ も 読み込める
@@ -103,6 +103,40 @@
     wrap.appendChild(b);
     if (badge) wrap.appendChild(badge);
     head.appendChild(wrap);
+  }
+
+  /* ---------- ☰ メニュー（左上）。画面下 の バー の かわり ----------
+     タップ で 左 から 開く。今 の ページ は 色 つき。ようちゃん用 は data-dev（かくし モード の とき だけ） */
+  const MENU = [
+    [null, [['index.html', '🏠', 'nav.home'], ['practice.html', '🔥', 'home.m.today']]],
+    ['sub.gLearn', [['guide.html', '💡', 'home.m.guide'], ['basics.html', '🧱', 'home.m.basics'], ['grammar.html', '🧩', 'home.m.grammar'], ['endings.html', '💬', 'nav.endings'], ['map.html', '🗾', 'home.m.map']]],
+    ['sub.gPractice', [['cards.html', '🃏', 'home.m.cards'], ['switch.html', '🔄', 'home.m.switch'], ['pattern.html', '🔁', 'home.m.patterns'], ['read.html', '📜', 'home.m.read'], ['kanji.html', '✍️', 'home.m.kanji'], ['words.html', '📝', 'home.m.words'], ['quiz.html', '❓', 'home.m.quiz']]],
+    [null, [['help.html', '📘', 'home.help'], ['ask.html', '💌', 'home.m.ask'], ['record.html', '🎙️', 'rec.link', 1]]]
+  ];
+  function addMenu() {
+    const head = document.querySelector('header');
+    if (!head || document.getElementById('menuBtn')) return;
+    const here = (location.pathname.split('/').pop() || 'index.html');
+    const btn = document.createElement('button');
+    btn.id = 'menuBtn'; btn.className = 'menu-toggle'; btn.type = 'button'; btn.setAttribute('aria-label', 'Menu'); btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = '<span></span><span></span><span></span>';
+    const logo = head.querySelector('.logo');
+    const left = document.createElement('span'); left.className = 'head-left';
+    head.insertBefore(left, head.firstChild); left.appendChild(btn); if (logo) left.appendChild(logo);
+    const drawer = document.createElement('div');
+    drawer.id = 'drawer'; drawer.className = 'drawer';
+    drawer.innerHTML = '<div class="drawer-bg" data-close="1"></div><aside class="drawer-panel" role="navigation">' +
+      '<div class="drawer-head"><span class="logo">🌸 マルちゃんのペースでいいよ</span><button type="button" class="drawer-x" data-close="1" aria-label="Close">✕</button></div>' +
+      MENU.map(g => (g[0] ? '<div class="drawer-sec" data-i18n="' + g[0] + '"></div>' : '<div class="drawer-gap"></div>') +
+        g[1].map(m => '<a href="' + m[0] + '" class="drawer-link' + (m[0] === here ? ' active' : '') + '"' + (m[3] ? ' data-dev' : '') + '><span class="di">' + m[1] + '</span><span data-i18n="' + m[2] + '"></span></a>').join('')).join('') +
+      '</aside>';
+    document.body.appendChild(drawer);
+    const open = on => { document.body.classList.toggle('drawer-open', on); btn.setAttribute('aria-expanded', on ? 'true' : 'false'); };
+    btn.addEventListener('click', () => open(!document.body.classList.contains('drawer-open')));
+    drawer.addEventListener('click', e => { if (e.target.closest('[data-close]')) open(false); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') open(false); });
+    // ふるい ページ に のこって いる 画面下 の バー は けす
+    document.querySelectorAll('body > nav').forEach(n => n.remove());
   }
 
   /* ---------- 学習データ ----------
@@ -759,5 +793,5 @@
 
   // common.js は各ページの <body> の最後で読むので、この時点でヘッダーなどはもうある。
   // ページ本体の <script> より前に言葉を入れておく（表示のちらつき防止）
-  addLangButton(); applyPrefs(); applyI18n(); updateStreakBadge(); syncKanjiToggles();
+  addMenu(); addLangButton(); applyPrefs(); applyI18n(); applyDev(); updateStreakBadge(); syncKanjiToggles();
 })();
