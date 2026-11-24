@@ -24,7 +24,7 @@ window.CJ_I18N = {
   'home.intro': ['Speak natural Japanese — with Yoh-chan and friends, at work and in shops. Words, phrases, grammar, kanji and real conversations, a little every day. 🌸',
     'しぜん な にほんご を はなそう — ようちゃん や ともだち と、しごと や おみせ で。ことば、フレーズ、ぶんぽう、かんじ、かいわ を、まいにち すこし ずつ。🌸'],
   'home.help': ['How to use this app', 'アプリ の つかいかた'],
-  'home.m.cards': ['Polite ⇔ Casual', 'ていねい ⇔ ふつう'],
+  'home.m.cards': ['Polite ⇔ Casual cards', 'ていねい ⇔ ふつう カード'],
   'home.m.endings': ['Endings<br>よ・ね・かな', 'ごび<br>よ・ね・かな'],
   'home.m.kanji': ['Kanji', 'かんじ'],
   'home.m.read': ['Read aloud', 'こえ に だして よむ'],
@@ -187,7 +187,7 @@ window.CJ_I18N = {
   // v3: ナビ・サブナビ
   'nav.today': ['Today', 'きょう'],
   'nav.learn': ['Learn', 'まなぶ'],
-  'sub.cards': ['🃏 Polite ⇔ Casual', '🃏 ていねい ⇔ ふつう'],
+  'sub.cards': ['🃏 Polite ⇔ Casual cards', '🃏 ていねい ⇔ ふつう カード'],
   'sub.endings': ['💬 Endings', '💬 ごび'],
   'sub.grammar': ['🧩 Grammar', '🧩 ぶんぽう'],
   'home.m.today': ['Today\'s practice', 'きょう の れんしゅう'],
@@ -617,4 +617,11 @@ Object.assign(window.CJ_I18N, {
   'sw.review': ['Look again at what changes:', 'かわる ところ を もう いちど：'],
   'sw.perfect': ['Perfect! 🎉', 'ぜんぶ できた！🎉'],
   'sw.settings': ['Change settings', 'せってい を かえる']
+});
+/* ホーム と 学ぶ の メニュー を「まなぶ（説明）」と「れんしゅう」に 分ける */
+Object.assign(window.CJ_I18N, {
+  'home.secLearn': ['📖 Learn — read and understand', '📖 まなぶ — よんで わかる'],
+  'home.secPractice': ['✏️ Practice — try it yourself', '✏️ れんしゅう — じぶん で やって みる'],
+  'sub.gLearn': ['📖 Learn', '📖 まなぶ'],
+  'sub.gPractice': ['✏️ Practice', '✏️ れんしゅう']
 });

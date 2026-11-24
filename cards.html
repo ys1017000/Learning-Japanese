@@ -14,14 +14,18 @@
 <header><a class="logo" href="index.html">🌸 マルちゃんのペースでいいよ</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
 
 <main class="container">
-  <div class="subnav">
-    <a href="cards.html" class="active" data-i18n="sub.cards">Polite ⇔ Casual</a>
-    <a href="switch.html" data-i18n="sub.switch">Switch it</a>
-    <a href="pattern.html" data-i18n="sub.patterns">Patterns</a>
-    <a href="grammar.html" data-i18n="sub.grammar">Grammar</a>
-    <a href="basics.html" data-i18n="sub.basics">Basics</a>
-    <a href="endings.html" data-i18n="sub.endings">Endings</a>
-    <a href="guide.html" data-i18n="sub.guide">Tips</a>
+  <div class="subnav-wrap">
+    <div class="subnav-row"><span class="subnav-label" data-i18n="sub.gLearn">Learn</span><div class="subnav">
+      <a href="guide.html" data-i18n="sub.guide">Tips</a>
+      <a href="basics.html" data-i18n="sub.basics">Basics</a>
+      <a href="grammar.html" data-i18n="sub.grammar">Grammar</a>
+      <a href="endings.html" data-i18n="sub.endings">Endings</a>
+    </div></div>
+    <div class="subnav-row"><span class="subnav-label" data-i18n="sub.gPractice">Practice</span><div class="subnav">
+      <a href="cards.html" class="active" data-i18n="sub.cards">Polite ⇔ Casual</a>
+      <a href="switch.html" data-i18n="sub.switch">Switch it</a>
+      <a href="pattern.html" data-i18n="sub.patterns">Patterns</a>
+    </div></div>
   </div>
   <select class="pick" id="filterSel" aria-label="Category"></select>
   <div class="tool-row">

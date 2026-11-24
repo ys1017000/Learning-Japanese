@@ -435,3 +435,11 @@ button.link-chip.on { background: var(--primary); color: #fff; border-color: var
 .reg.casual + .ja .sw-add { color: #be185d; background: #fce7f3; }
 .sw-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
 .sw-grade .btn { margin: 0; }
+
+/* メニュー を「まなぶ」と「れんしゅう」に 分ける */
+.menu-sec { font-size: 0.95rem; margin: 0.4rem 0 0.45rem; color: var(--text); }
+.subnav-wrap { margin-bottom: 0.9rem; }
+.subnav-row + .subnav-row { margin-top: 8px; }
+.subnav-label { display: block; font-size: 0.72rem; font-weight: 800; color: var(--text-muted); margin: 0 0 3px 2px; }
+.subnav-wrap .subnav { margin-bottom: 0; flex-wrap: wrap; overflow: visible; }
+.subnav-wrap .subnav a { flex: 0 0 auto; }
