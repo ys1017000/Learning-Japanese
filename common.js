@@ -4,7 +4,7 @@
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
-  const APP_VERSION = 'v48';
+  const APP_VERSION = 'v49';
   const DATA_VERSION = 4;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily) / v4: ようちゃんへの質問(asks)・都道府県(pref)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
   const BACKUP_VERSION = 5;           // v5：型 の 記録（patterns）を 追加。v1〜v4 の バックアップ も 読み込める
@@ -111,7 +111,7 @@
     [null, [['index.html', '🏠', 'nav.home'], ['practice.html', '🔥', 'home.m.today']]],
     ['sub.gLearn', [['guide.html', '💡', 'home.m.guide'], ['basics.html', '🧱', 'home.m.basics'], ['grammar.html', '🧩', 'home.m.grammar'], ['endings.html', '💬', 'nav.endings'], ['map.html', '🗾', 'home.m.map']]],
     ['sub.gPractice', [['cards.html', '🃏', 'home.m.cards'], ['switch.html', '🔄', 'home.m.switch'], ['pattern.html', '🔁', 'home.m.patterns'], ['read.html', '📜', 'home.m.read'], ['kanji.html', '✍️', 'home.m.kanji'], ['words.html', '📝', 'home.m.words'], ['quiz.html', '❓', 'home.m.quiz']]],
-    [null, [['help.html', '📘', 'home.help'], ['ask.html', '💌', 'home.m.ask'], ['record.html', '🎙️', 'rec.link', 1]]]
+    [null, [['settings.html', '⚙️', 'menu.settings'], ['help.html', '📘', 'home.help'], ['ask.html', '💌', 'home.m.ask'], ['record.html', '🎙️', 'rec.link', 1]]]
   ];
   function addMenu() {
     const head = document.querySelector('header');

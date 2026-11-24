@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Settings – マルちゃんのペースでいいよ</title>
+<meta name="theme-color" content="#e0517a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="マルちゃんのペース">
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<header><a class="logo" href="index.html">🌸 マルちゃんのペースでいいよ</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
+
+<main class="container">
+  <div class="card">
+    <h2 data-i18n="set.title"></h2>
+    <div class="setting-row"><span data-i18n="set.lang"></span><span class="seg" id="langSeg"><button data-lang="en">English</button><button data-lang="ja">ひらがな</button><button data-lang="jk">漢字(かんじ)</button></span></div>
+    <div class="setting-row"><span data-i18n="set.theme"></span><span class="seg" id="themeSeg"><button data-theme="pink" data-i18n="theme.pink"></button><button data-theme="matcha" data-i18n="theme.matcha"></button><button data-theme="sky" data-i18n="theme.sky"></button></span></div>
+    <div class="setting-row"><span data-i18n="set.secs"></span><span class="seg" id="secsSeg"><button data-secs="3"></button><button data-secs="5"></button><button data-secs="8"></button></span></div>
+    <div class="setting-row"><label for="optRomaji" data-i18n="set.romaji"></label><input type="checkbox" id="optRomaji"></div>
+    <div class="setting-row"><label for="optAuto" data-i18n="set.auto"></label><input type="checkbox" id="optAuto"></div>
+    <div class="setting-row"><span data-i18n="set.rate"></span><span class="seg" id="rateSeg"><button data-rate="0.75" data-i18n="rate.slow"></button><button data-rate="0.9" data-i18n="rate.normal"></button><button data-rate="1.05" data-i18n="rate.fast"></button></span></div>
+    <div class="setting-row"><span data-i18n="set.voice"></span><select id="voiceSel" style="max-width:60%; font-size:16px; padding:4px; border:1px solid var(--border); border-radius:8px;"></select></div>
+    <div class="setting-row"><span data-i18n="set.vmode"></span><span class="seg" id="vmodeSeg"><button data-vm="natural" data-i18n="vmode.natural"></button><button data-vm="kana" data-i18n="vmode.kana"></button></span></div>
+    <p class="muted" style="font-size:0.78rem;" data-i18n="set.vmodeHelp"></p>
+    <div class="setting-row"><span data-i18n="set.vsrc"></span><span class="seg" id="vsrcSeg"><button data-vs="yoh" data-i18n="vsrc.yoh"></button><button data-vs="tts" data-i18n="vsrc.tts"></button></span></div>
+    <p class="muted" style="font-size:0.78rem;" data-i18n="set.vsrcHelp"></p>
+    <div class="setting-row"><span data-i18n="set.test"></span><span><button class="tiny-btn" id="testYoh">🔊 <span data-i18n="vsrc.yohShort"></span></button> <button class="tiny-btn" id="testVoice">🔊 <span data-i18n="vsrc.ttsShort"></span></button></span></div>
+    <div class="notice" style="font-size:0.8rem;" data-i18n="set.voiceHelp"></div>
+    <div data-dev style="display:none;"><a class="btn btn-secondary" href="record.html" style="margin-top:0.6rem;" data-i18n="rec.link"></a>
+    <p class="muted" style="font-size:0.78rem; margin-top:0.3rem;" data-i18n="rec.linkDesc"></p></div>
+    <div class="notice" id="voiceNotice" style="display:none;"></div>
+    <p class="muted" style="margin-top:0.6rem;" data-i18n="set.spaces"></p>
+    <p class="muted" id="verText" style="margin-top:0.4rem; font-size:0.75rem; text-align:right;"></p>
+  </div>
+
+  <div class="card" data-dev style="display:none;">
+    <h2 data-i18n="bk.title"></h2>
+    <p class="muted" data-i18n="bk.desc"></p>
+    <div class="btn-row">
+      <button class="btn" id="exportBtn" data-i18n="bk.down"></button>
+      <button class="btn btn-secondary" id="importBtn" data-i18n="bk.load"></button>
+    </div>
+    <div class="radio-row">
+      <label><input type="radio" name="importMode" value="merge" checked> <span data-i18n="bk.merge"></span></label>
+      <label><input type="radio" name="importMode" value="replace"> <span data-i18n="bk.replace"></span></label>
+    </div>
+    <input type="file" id="importFile" accept="application/json,.json" style="display:none;">
+    <div class="status-msg" id="importStatus"></div>
+  </div>
+</main>
+
+<script src="i18n.js"></script>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+/* ⚙️ せってい（ホーム から 移した）。キー・保存 の 形 は 前 と 同じ（cj_prefs） */
+(function () {
+  const $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
+
+  function renderSettings() {
+    const p = CJ.getPrefs();
+    $('optRomaji').checked = !!p.romaji;
+    $('optAuto').checked = p.autoSpeak !== false;
+    document.querySelectorAll('#rateSeg button').forEach(b => b.classList.toggle('active', Math.abs(Number(b.dataset.rate) - Number(p.rate)) < 0.01));
+    const lc = CJ.lang() === 'en' ? 'en' : CJ.jaStyle() === 'kanji' ? 'jk' : 'ja';
+    document.querySelectorAll('#langSeg button').forEach(b => b.classList.toggle('active', b.dataset.lang === lc));
+    document.querySelectorAll('#themeSeg button').forEach(b => b.classList.toggle('active', b.dataset.theme === (p.theme || 'pink')));
+    document.querySelectorAll('#vsrcSeg button').forEach(b => b.classList.toggle('active', b.dataset.vs === (p.voiceSrc || 'yoh')));
+    document.querySelectorAll('#vmodeSeg button').forEach(b => b.classList.toggle('active', b.dataset.vm === (p.voiceMode || 'natural')));
+    renderVoices();
+    document.querySelectorAll('#secsSeg button').forEach(b => { b.textContent = t('secs', { n: b.dataset.secs }); b.classList.toggle('active', Number(b.dataset.secs) === CJ.drillSecs()); });
+  }
+  $('themeSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { CJ.setPref('theme', b.dataset.theme); renderSettings(); } });
+  $('secsSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { CJ.setPref('drillSecs', Number(b.dataset.secs)); renderSettings(); } });
+
+  $('langSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) CJ.setLang(b.dataset.lang); });
+  $('optRomaji').addEventListener('change', e => CJ.setPref('romaji', e.target.checked));
+  $('optAuto').addEventListener('change', e => CJ.setPref('autoSpeak', e.target.checked));
+  $('rateSeg').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    CJ.setPref('rate', Number(b.dataset.rate)); renderSettings();
+    CJ.speak('こんにちは');
+  });
+
+  let voiceChecked = false;
+  function checkVoice() {
+    voiceChecked = true;
+    const n = $('voiceNotice');
+    if (!('speechSynthesis' in window)) { n.style.display = ''; n.textContent = t('voice.noTts'); return; }
+    if (!CJ.hasJaVoice()) { n.style.display = ''; n.innerHTML = t('voice.none'); }
+    else n.style.display = 'none';
+  }
+  $('testVoice').addEventListener('click', () => { CJ.ttsSpeak('いま どこ？'); setTimeout(checkVoice, 500); });
+  // 声のえらびかた（端末に入っている日本語の声）
+  function renderVoices() {
+    const list = CJ.jaVoices(), want = CJ.getPrefs().voiceName;
+    $('voiceSel').innerHTML = '<option value="">' + esc(t('set.voiceAuto')) + (list[0] ? '：' + esc(list[0].name) : '') + '</option>' +
+      list.map(v => '<option value="' + esc(v.name) + '"' + (v.name === want ? ' selected' : '') + '>' + esc(v.name) + '</option>').join('');
+  }
+  if ('speechSynthesis' in window) window.speechSynthesis.addEventListener('voiceschanged', renderVoices);
+  $('voiceSel').addEventListener('change', e => { CJ.setPref('voiceName', e.target.value); CJ.ttsSpeak('いま どこ？'); });
+  $('vmodeSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; CJ.setPref('voiceMode', b.dataset.vm); renderSettings(); CJ.ttsSpeak('いま どこ？'); });
+  // ようちゃん の声 ／ 機械の声 の切り替え と、聞きくらべ
+  $('vsrcSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; CJ.setPref('voiceSrc', b.dataset.vs); renderSettings(); CJ.markVoiceButtons(); });
+  $('testYoh').addEventListener('click', () => { const was = CJ.getPrefs().voiceSrc; CJ.setPref('voiceSrc', 'yoh'); if (!CJ.hasVoice('いま どこ？')) CJ.toast(t('vsrc.noYoh')); else CJ.speak('いま どこ？'); CJ.setPref('voiceSrc', was); });
+  // version を 5回 タップ → ようちゃん モード（録音・バックアップ を表示）
+  let verTaps = 0, verTimer = 0;
+  $('verText').addEventListener('click', () => {
+    verTaps++; clearTimeout(verTimer); verTimer = setTimeout(() => { verTaps = 0; }, 1500);
+    if (verTaps >= 5) { verTaps = 0; CJ.setDev(!CJ.isDev()); CJ.toast(t(CJ.isDev() ? 'dev.on' : 'dev.off')); }
+  });
+
+  $('exportBtn').addEventListener('click', () => { CJ.downloadBackup(); CJ.toast(t('bk.done')); });
+  $('importBtn').addEventListener('click', () => $('importFile').click());
+  $('importFile').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    const mode = document.querySelector('input[name="importMode"]:checked').value;
+    const st = $('importStatus');
+    if (mode === 'replace' && !confirm(t('bk.confirm'))) { e.target.value = ''; return; }
+    const r = new FileReader();
+    r.onload = () => {
+      try { const d = CJ.importBackup(String(r.result), mode); st.className = 'status-msg ok'; st.textContent = t('bk.loaded', { c: d.learned.length, k: d.kanji.length }); }
+      catch (err) { st.className = 'status-msg error'; st.textContent = err.message; }
+      e.target.value = '';
+    };
+    r.readAsText(f);
+  });
+
+  function renderAll() { $('verText').textContent = 'version ' + CJ.APP_VERSION; renderSettings(); if (voiceChecked) checkVoice(); }
+  document.addEventListener('cj:lang', renderAll);
+  renderAll();
+  setTimeout(checkVoice, 800);
+})();
+</script>
+</body>
+</html>

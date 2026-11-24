@@ -625,3 +625,6 @@ Object.assign(window.CJ_I18N, {
   'sub.gLearn': ['📖 Learn', '📖 まなぶ'],
   'sub.gPractice': ['✏️ Practice', '✏️ れんしゅう']
 });
+Object.assign(window.CJ_I18N, {
+  'menu.settings': ['Settings', 'せってい']
+});
