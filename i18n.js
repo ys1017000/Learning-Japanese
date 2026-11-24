@@ -86,7 +86,7 @@ window.CJ_I18N = {
   'who.casual': ['for Yoh-chan, friends', 'ようちゃん・ともだち に'],
   'cards.showPolite': ['Show polite ↓', 'ていねい を みる ↓'],
   'cards.showCasual': ['Show casual ↓', 'ふつう を みる ↓'],
-  'cards.howAnswer': ['💬 How to answer (casual)', '💬 こたえかた（ふつう）'],
+  'cards.howAnswer': ['💬 How to answer', '💬 こたえかた'],
   'cards.know': ['✓ I know this', '✓ おぼえた'],
   'cards.unknow': ['↩︎ Not learned yet', '↩︎ まだ おぼえて ない'],
   'cards.learnedMark': ['✓ learned', '✓ おぼえた'],

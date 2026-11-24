@@ -4,7 +4,7 @@
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
-  const APP_VERSION = 'v43';
+  const APP_VERSION = 'v44';
   const DATA_VERSION = 4;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily) / v4: ようちゃんへの質問(asks)・都道府県(pref)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
   const BACKUP_VERSION = 5;           // v5：型 の 記録（patterns）を 追加。v1〜v4 の バックアップ も 読み込める
@@ -278,7 +278,7 @@
     kjMap = {};
     const D = window.CJ_DATA, G = window.CJ_GRAMMAR, R = window.CJ_READ, E = window.CJ_EXAMPLES, W = window.CJ_WORDS, K = window.CJ_KANJI, P = window.CJ_PREF;
     if (D) {
-      D.CARDS.forEach(c => { addKj(c.c[0], c.c[2]); addKj(c.p[0], c.p[2]); (c.r || []).forEach(r => addKj(r[0], r[3])); });
+      D.CARDS.forEach(c => { addKj(c.c[0], c.c[2]); addKj(c.p[0], c.p[2]); (c.r || []).forEach(r => { addKj(r[0], r[3]); if (r[4]) addKj(r[4][0], r[4][2]); }); });
       D.ENDINGS.forEach(e => e.ex.forEach(x => addKj(x[0], x[5])));
       D.COMPARE.forEach(c => c.rows.forEach(r => addKj(r[0], r[4])));
     }

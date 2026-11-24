@@ -66,7 +66,7 @@
      { kana: 表示のひらがな（🔊 と同じ文字）, kj: 漢字の書き方, en } を グループ ごとに */
   const GROUPS = { cards: [], sounds: [], patterns: [], basics: [], grammar: [], read: [], endings: [], examples: [], words: [], kanji: [], map: [] };
   const add = (g, kana, kj, en) => { if (kana) GROUPS[g].push({ kana, kj: kj || kana, en: en || '' }); };
-  D.CARDS.forEach(c => { add('cards', c.c[0], c.c[2], c.en); add('cards', c.p[0], c.p[2], c.en); (c.r || []).forEach(r => add('cards', r[0], r[3], r[2])); });
+  D.CARDS.forEach(c => { add('cards', c.c[0], c.c[2], c.en); add('cards', c.p[0], c.p[2], c.en); (c.r || []).forEach(r => { add('cards', r[0], r[3], r[2]); if (r[4]) add('cards', r[4][0], r[4][2], r[2]); }); });
   G.forEach(g => g.ex.forEach(e => { add('grammar', e[1], e[5], e[0]); add('grammar', e[3], e[6], e[0]); }));
   R.forEach(p => p.lines.forEach(l => { add('read', l[1][0], l[1][2], l[0]); add('read', l[2][0], l[2][2], l[0]); }));
   // 👂 聞き分け（っ・のばす おと）：クイズ で ながれる ことば そのまま

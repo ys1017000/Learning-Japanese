@@ -52,12 +52,12 @@
       ['Good luck tomorrow, too.', ['あした も がんばって ね', 'ashita mo ganbatte ne', '{明日|あした}も{頑張|がんば}ってね'], ['あした も がんばって ください', 'ashita mo ganbatte kudasai', '{明日|あした}も{頑張|がんば}ってください']],
       ['Don\'t push yourself too hard.', ['むり しないで ね', 'muri shinaide ne', '{無理|むり}しないでね'], ['むり しないで ください ね', 'muri shinaide kudasai ne', '{無理|むり}しないでくださいね']],
       ['Good night~', ['おやすみ〜', 'oyasumi~', 'おやすみ〜'], ['おやすみ なさい', 'oyasumi nasai', 'おやすみなさい']]] },
-    { id: 'intro', only: 'p', icon: '🤝', title: 'Introducing yourself', titleJa: 'じこしょうかい', lines: [
-      ['Nice to meet you. I\'m Maru.', ['はじめまして！ マル だよ', 'hajimemashite! maru da yo', 'はじめまして！マルだよ'], ['はじめまして、 マル です', 'hajimemashite, maru desu', 'はじめまして、マルです']],
+    { id: 'intro', icon: '🤝', title: 'Introducing yourself', titleJa: 'じこしょうかい', lines: [
+      ['Nice to meet you. I\'m Maru.', ['はじめまして！ マル だよ', 'hajimemashite! maru da yo', 'はじめまして！マルだよ'], ['はじめまして、 マル です', 'hajimemashite, maru desu', 'はじめまして、マルです'], 'p'],
       ['I\'m from Germany.', ['ドイツ から きた よ', 'doitsu kara kita yo', 'ドイツから{来|き}たよ'], ['ドイツ から きました', 'doitsu kara kimashita', 'ドイツから{来|き}ました']],
       ['I want to be an English teacher in Japan.', ['にほん で えいご の せんせい に なりたい んだ', 'nihon de eigo no sensei ni naritai n da', '{日本|にほん}で{英語|えいご}の{先生|せんせい}になりたいんだ'], ['にほん で えいご の きょうし に なりたい です', 'nihon de eigo no kyoushi ni naritai desu', '{日本|にほん}で{英語|えいご}の{教師|きょうし}になりたいです']],
       ['I love nature and camping.', ['しぜん と キャンプ が だいすき', 'shizen to kyanpu ga daisuki', '{自然|しぜん}とキャンプが{大好|だいす}き'], ['しぜん と キャンプ が だいすき です', 'shizen to kyanpu ga daisuki desu', '{自然|しぜん}とキャンプが{大好|だいす}きです']],
-      ['Nice to meet you! (Let\'s get along.)', ['よろしく ね！', 'yoroshiku ne!', 'よろしくね！'], ['よろしく おねがい します', 'yoroshiku onegai shimasu', 'よろしくお{願|ねが}いします']]] }
+      ['Nice to meet you! (Let\'s get along.)', ['よろしく ね！', 'yoroshiku ne!', 'よろしくね！'], ['よろしく おねがい します', 'yoroshiku onegai shimasu', 'よろしくお{願|ねが}いします'], 'p']] }
   ];
   /* 場面によっては、どちらか一方しか使わない（only）。
      only: 'p' = いつも ていねい（じこしょうかい など）、'c' = したしい ひと と だけ（手をつなぐ など）。

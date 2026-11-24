@@ -118,8 +118,11 @@
       const note = CJ.tx(c, 'note');
       if (note) html += '<div class="note">💡 ' + esc(note) + '</div>';
       if (c.r && c.r.length) {
-        html += '<div class="replies"><div class="t">' + esc(t('cards.howAnswer')) + '</div>' + c.r.map(r =>
-          '<div class="reply-row"><div><div class="k ja">' + CJ.jaHtml([r[0], r[1], r[3]]) + '</div><div class="romaji">' + esc(r[1]) + '</div><div class="e">' + esc(r[2]) + '</div></div>' + CJ.sayBtns(r[0]) + '</div>').join('') + '</div>';
+        html += '<div class="replies"><div class="t">' + esc(t('cards.howAnswer')) + '</div>' + c.r.map(r => {
+          // r[4] = ていねい な こたえ。ある とき は ふつう と ていねい を 2行 で
+          const row = (f, reg, en) => '<div class="reply-row"><div><div class="k ja">' + (reg ? '<span class="reg ' + reg + '">' + esc(t('reg.' + reg)) + '</span> ' : '') + CJ.jaHtml(f) + '</div><div class="romaji">' + esc(f[1]) + '</div>' + (en ? '<div class="e">' + esc(en) + '</div>' : '') + '</div>' + CJ.sayBtns(f[0]) + '</div>';
+          return r[4] ? row([r[0], r[1], r[3]], 'casual', '') + row(r[4], 'polite', r[2]) : row([r[0], r[1], r[3]], '', r[2]);
+        }).join('') + '</div>';
       }
       // この文の漢字・単語へのリンク、ネイティブの使い方、ようちゃんに質問
       const it = B.byKey['card:' + c.id];

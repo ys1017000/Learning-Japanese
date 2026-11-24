@@ -7,8 +7,11 @@
   const E = window.CJ_EXAMPLES ? window.CJ_EXAMPLES.EXAMPLES : [], K = window.CJ_KANJI ? window.CJ_KANJI.KANJI : [], W = window.CJ_WORDS ? window.CJ_WORDS.WORDS : [];
   const items = [];
   D.CARDS.forEach(c => items.push({ key: 'card:' + c.id, src: 'card', en: c.en, c: c.c, p: c.p, tag: '', pw: c.pw, only: c.only }));
-  // カードの「こたえかた」（ふつう だけ の文。ていねい も同じものを入れておく）
-  D.CARDS.forEach(c => (c.r || []).forEach((r, i) => { const f = [r[0], r[1], r[3]]; items.push({ key: 'rp:' + c.id + ':' + i, src: 'rp', en: r[2], c: f, p: f, tag: '' }); }));
+  // カードの「こたえかた」。r[4] = ていねい な こたえ（あれば タップ で切り替え）。ない もの は カード と 同じ 場面（💕/🏫）
+  D.CARDS.forEach(c => (c.r || []).forEach((r, i) => {
+    const f = [r[0], r[1], r[3]], pf = r[4] || f, only = r[4] ? c.only : (c.only || 'c');
+    items.push({ key: 'rp:' + c.id + ':' + i, src: 'rp', en: r[2], c: only === 'p' ? pf : f, p: only === 'c' ? f : pf, tag: '', only });
+  }));
   G.forEach(g => g.ex.forEach((e, i) => items.push({ key: 'gr:' + g.id + ':' + i, src: 'gr', en: e[0], c: [e[1], e[2], e[5]], p: [e[3], e[4], e[6]], tag: g.tag, gid: g.id, only: e[7] })));
   R.forEach(p => p.lines.forEach((l, i) => items.push({ key: 'rd:' + p.id + ':' + i, src: 'rd', en: l[0], c: l[1], p: l[2], tag: '', pid: p.id, only: l[3] })));
   E.forEach(e => items.push({ key: 'ex:' + e[0], src: 'ex', en: e[1], c: e[2], p: e[3], tag: '', only: e[4] }));
