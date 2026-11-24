@@ -175,10 +175,10 @@
         '<button class="tiny-btn" data-say="' + esc(f[0]) + '" data-slow="1">🐢 ' + esc(t('vc.slow')) + '</button></div>' +
         '<div class="muted" style="text-align:center;">' + esc(t('u.listen')) + '</div>';
     } else {
-      // 読む：かな ／ 漢字 ＋ よみ ／ 漢字 だけ の 3段階（答え の あと は よみ つき）
-      const lv = ['kana', 'ruby', 'kanji'].includes(CJ.getPrefs().readLevel) ? CJ.getPrefs().readLevel : 'ruby';
-      const jaShow = picked ? CJ.ruby(f[2]) : lv === 'kana' ? esc(f[0]) : lv === 'kanji' ? esc(CJ.plain(f[2])) : CJ.ruby(f[2]);
-      h += '<div class="seg3 seg3-sm">' + ['kana', 'ruby', 'kanji'].map(v => '<button class="' + (v === lv ? 'active' : '') + '" data-rl="' + v + '"><span>' + esc(t('rl.' + v)) + '</span></button>').join('') + '</div>' +
+      // 読む・聞く：ひらがな ／ 漢字＋ふりがな ／ 漢字だけ（設定 は どのページ とも 共通）。答え の あと、漢字だけ の とき は ふりがな を 出す
+      const lv = CJ.jaLevel();
+      const jaShow = lv === 'kana' ? esc(f[0]) : (lv === 'kanji' && !picked) ? esc(CJ.plain(f[2])) : CJ.ruby(f[2]);
+      h += CJ.levelSegHtml() +
         '<div class="u-ja ja">' + jaShow + '</div>' +
         (picked ? '<div class="romaji" style="text-align:center;">' + esc(f[1]) + '</div><div style="text-align:center;">' + CJ.sayBtns(f[0]) + '</div>' : '<div class="muted" style="text-align:center;">' + esc(t('u.read')) + '</div>');
     }
@@ -187,7 +187,6 @@
         opts.map((z, k) => '<button class="option-btn" data-mpick="' + k + '">' + esc(z.en) + '</button>').join('') + '</div>';
     } else {
       h += '<div class="feedback ' + (picked.ok ? 'correct' : 'wrong') + '" style="display:block;"><b>' + esc(picked.ok ? t('u.ok') : t('u.ng')) + '</b> ' + esc(x.en) +
-        (listen ? '<div class="u-ja ja" style="font-size:1.3rem;">' + CJ.jaHtml(f) + '</div><div class="romaji">' + esc(f[1]) + '</div><div>' + CJ.sayBtns(f[0]) + '</div>' : '') +
         hintHtml(x) + '<button class="btn" data-a="mnext" style="margin-top:0.6rem;">' + esc(t('q.next')) + '</button></div>';
     }
     box.innerHTML = h;
@@ -253,7 +252,7 @@
   }
   // 型のヒント：「［ A ］ が たべたい な」
   function ptHint(p) {
-    const f = CJ.showKanji() ? CJ.ruby(p.c[2]) : esc(p.c[0]);
+    const f = CJ.showKanji() ? CJ.rubyL(p.c[2]) : esc(p.c[0]);
     return f.split('{X}').join('<span class="pt-slot">［ A ］</span>').split('{Y}').join('<span class="pt-slot">［ B ］</span>');
   }
   function reveal() {
@@ -335,8 +334,6 @@
   }
 
   $('drill').addEventListener('click', e => {
-    const rl = e.target.closest('[data-rl]');
-    if (rl && st) { CJ.setPref('readLevel', rl.dataset.rl); renderDrill(); return; }
     const mp = e.target.closest('[data-mpick]');
     if (mp && st && st.mpick == null) { st.mpick = Number(mp.dataset.mpick); renderDrill(); return; }
     if (e.target.closest('[data-say], a, label')) return;
@@ -369,7 +366,12 @@
     else if (a === 'next') { const miss = st.res.filter(r => !r.ok).map(r => { delete r.o.opts; return r.o; }); st.round++; st.queue = CJ.shuffle(miss); st.i = 0; st.res = []; st.phase = 'card'; renderDrill(); window.scrollTo({ top: 0 }); }
     else if (a === 'end') { st.phase = 'review'; renderDrill(); }
     else if (a === 'again') { st.round = 1; st.queue = CJ.shuffle(st.items); st.i = 0; st.res = []; st.hist = []; st.phase = 'card'; st.slot = null; renderDrill(); window.scrollTo({ top: 0 }); }
-    else if (a === 'quit' || a === 'back') { resetVoice(); st = null; history.replaceState(null, '', 'practice.html'); renderMenu(); }
+    else if (a === 'quit' || a === 'back') {
+      resetVoice(); st = null;
+      const back = qs.get('back');   // 文法 など から 来た とき は そこ へ もどる
+      if (back && /^[a-z]+\.html/.test(back)) { location.href = back; return; }
+      history.replaceState(null, '', 'practice.html'); renderMenu();
+    }
   });
   $('slots').addEventListener('click', e => {
     const b = e.target.closest('[data-slot]'); if (!b) return;
@@ -396,6 +398,7 @@
     const keys = [], regs = [];
     gr.ex.forEach((e, i) => { keys.push('gr:' + gr.id + ':' + i); regs.push('c'); });
     startDrill('🧩 ' + gr.tag, keys, regs, null);
+    const fq = qs.get('f'); if (fq && CJ.FOCUS_ICON[fq]) { st.focus = fq; renderDrill(); }   // 文法 から：話す・聞く・読む
   } else renderMenu();
 })();
 </script>

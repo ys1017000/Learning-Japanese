@@ -397,3 +397,11 @@ button.link-chip.on { background: var(--primary); color: #fff; border-color: var
 .seg3 button.active { background: #fff; color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
 .seg3-sm { margin: 0.3rem 0 0.4rem; }
 .seg3-sm button { padding: 0.35rem 0.2rem; }
+.seg3-a { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 0.5rem 0.2rem; border-radius: 11px; background: #fff; text-decoration: none; color: var(--primary); font-size: 1.1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.seg3-a span { font-size: 0.78rem; font-weight: 700; }
+.pt-set { margin-top: 0.4rem; }
+.pt-set summary { cursor: pointer; font-weight: 700; padding: 0.4rem 0; list-style: none; }
+.pt-set summary::-webkit-details-marker { display: none; }
+.pt-set summary::after { content: ' ▾'; color: var(--text-muted); }
+.pt-set[open] summary::after { content: ' ▴'; }
+.pt-set summary .muted { font-weight: 400; font-size: 0.82rem; }

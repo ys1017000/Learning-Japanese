@@ -51,7 +51,8 @@
 (function () {
   const G = window.CJ_GRAMMAR.GRAMMAR, B = window.CJ_BANK, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
   const flipped = {};   // 'gid:i' → true ならていねいを表示（最初は ふつう）
-  let openIds = new Set([new URLSearchParams(location.search).get('g') || G[0].id]);
+  const startG = new URLSearchParams(location.search).get('g');
+  let openIds = new Set([startG || G[0].id]);
 
   // タップで ふつう ⇔ ていねい が切り替わるカード（共通の形）。下に、この文の漢字・単語へのリンク
   function flipCard(id) {
@@ -71,7 +72,9 @@
         '<div style="font-weight:700; margin:0.8rem 0 0.2rem; font-size:0.85rem;">' + esc(t('gr.examples')) + '</div>' +
         '<div class="tap-hint">' + esc(t('tap.hint')) + '</div>' +
         g.ex.map((e, i) => flipCard(g.id + ':' + i)).join('') +
-        '<a class="btn" href="practice.html?g=' + g.id + '" style="margin-top:0.6rem;">' + esc(t('gr.practice')) + '</a>' +
+        // 練習 の やり方 を えらぶ（話す・聞く・読む）。やめたら この 文法 に もどる
+        '<div style="font-weight:700; margin:0.8rem 0 0.3rem; font-size:0.85rem;">' + esc(t('gr.practice')) + '</div>' +
+        '<div class="seg3">' + ['speak', 'listen', 'read'].map(m => '<a href="practice.html?g=' + g.id + '&f=' + m + '&back=' + encodeURIComponent('grammar.html?g=' + g.id) + '" class="seg3-a">' + CJ.FOCUS_ICON[m] + '<span>' + esc(t('focus.' + m)) + '</span></a>').join('') + '</div>' +
       '</div></details>').join('');
   }
 
@@ -88,6 +91,7 @@
   document.addEventListener('cj:lang', render);
   document.addEventListener('cj:kanji', render);
   render();
+  if (startG) { const el = document.querySelector('[data-g="' + startG + '"]'); if (el) setTimeout(() => el.scrollIntoView({ block: 'start' }), 50); }   // 練習 から もどった とき
 })();
 </script>
 </body>

@@ -4,7 +4,7 @@
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
-  const APP_VERSION = 'v37';
+  const APP_VERSION = 'v38';
   const DATA_VERSION = 4;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily) / v4: ようちゃんへの質問(asks)・都道府県(pref)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
   const BACKUP_VERSION = 5;           // v5：型 の 記録（patterns）を 追加。v1〜v4 の バックアップ も 読み込める
@@ -49,7 +49,7 @@
     // HTML の タグ の 中 は さわらない。ことば は スペース と 句読点 で 区切る
     return String(str).split(/(<[^>]*>)/).map(part => {
       if (part.startsWith('<')) return part;
-      const s = part.split(/([ 、。！？「」（）・：…—])/).map(w => JK[w] || w).join('');
+      const s = part.split(/([ 、。！？「」（）・：…—〜→←＋/]|[0-9０-９]+)/).map(w => JK[w] || w).join('');
       // 日本語 どうし の あいだ の スペース を 消す（英語・数字 の まわり は のこす）
       return s.replace(/([぀-ヿ一-鿿々ー、。！？「」（）・〜)])[ ]+(?=[぀-ヿ一-鿿々ー、。！？「」（）・〜])/g, '$1');
     }).join('');
@@ -59,8 +59,8 @@
   function t(key, vars) {
     const row = (window.CJ_I18N || {})[key];
     let s = row ? (row[lang() === 'ja' ? 1 : 0] || row[0]) : key;
-    if (lang() === 'ja') s = jaText(s);
     if (vars) Object.keys(vars).forEach(k => { s = s.split('{' + k + '}').join(vars[k]); });
+    if (lang() === 'ja') s = jaText(s);
     return s;
   }
   // データの項目：日本語表示のときは 〜Ja があればそれを使う
@@ -524,15 +524,34 @@
   function reading(s) { return String(s || '').replace(/\{([^|}]+)\|([^}]+)\}/g, '$2'); }
   function plain(s) { return String(s || '').replace(/\{([^|}]+)\|([^}]+)\}/g, '$1'); }
   // 「かんじ で みる」：どのページでも同じ設定（readKanji）。オンなら漢字＋ふりがな、オフならひらがな
-  function showKanji() { return !!getPrefs().readKanji; }
-  function jaHtml(f) { return showKanji() && f && f[2] ? ruby(f[2]) : esc(f ? f[0] : ''); }
-  // data-kanji-toggle のチェックボックスを全部そろえて、切り替えたら cj:kanji を出す
-  function syncKanjiToggles() { document.querySelectorAll('[data-kanji-toggle]').forEach(el => { el.checked = showKanji(); }); }
-  document.addEventListener('change', e => {
-    if (!e.target.matches || !e.target.matches('[data-kanji-toggle]')) return;
-    setPref('readKanji', e.target.checked); syncKanjiToggles();
+  /* 日本語 の 見せ方 を 3段階 で（どのページ でも 同じ 設定 jaLevel）：
+     'kana' ひらがな ／ 'ruby' 漢字 ＋ ふりがな ／ 'kanji' 漢字 だけ。前 の readKanji（オン・オフ）も 読む */
+  function jaLevel() { const l = getPrefs().jaLevel; if (['kana', 'ruby', 'kanji'].includes(l)) return l; return getPrefs().readKanji ? 'ruby' : 'kana'; }
+  function showKanji() { return jaLevel() !== 'kana'; }
+  function rubyL(s) { return jaLevel() === 'kanji' ? esc(plain(s)) : ruby(s); }     // 「漢字だけ」 なら ふりがな なし
+  function jaHtml(f) { if (!f) return ''; const l = jaLevel(); return l === 'kana' || !f[2] ? esc(f[0]) : l === 'kanji' ? esc(plain(f[2])) : ruby(f[2]); }
+  function levelSegHtml() {
+    const l = jaLevel();
+    return '<div class="seg3 seg3-sm jl-seg">' + ['kana', 'ruby', 'kanji'].map(v => '<button type="button" class="' + (v === l ? 'active' : '') + '" data-jl="' + v + '"><span>' + esc(t('jl.' + v)) + '</span></button>').join('') + '</div>';
+  }
+  // 前 の チェックボックス（data-kanji-toggle）を 3段階 の 切り替え に おきかえる
+  function upgradeToggles(root) {
+    (root || document).querySelectorAll('[data-kanji-toggle]').forEach(inp => {
+      const lab = inp.closest('label') || inp;
+      const d = document.createElement('div'); d.innerHTML = levelSegHtml();
+      lab.replaceWith(d.firstChild);
+    });
+  }
+  function syncLevelSegs() { const l = jaLevel(); document.querySelectorAll('.jl-seg [data-jl]').forEach(b => b.classList.toggle('active', b.dataset.jl === l)); }
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('[data-jl]'); if (!b) return;
+    e.preventDefault(); e.stopPropagation();
+    setPref('jaLevel', b.dataset.jl); setPref('readKanji', b.dataset.jl !== 'kana'); syncLevelSegs();
     document.dispatchEvent(new CustomEvent('cj:kanji'));
-  });
+  }, true);
+  function syncKanjiToggles() { upgradeToggles(); syncLevelSegs(); }
+  if (window.MutationObserver) new MutationObserver(() => { if (document.querySelector('[data-kanji-toggle]')) upgradeToggles(); }).observe(document.documentElement, { childList: true, subtree: true });
+  document.addEventListener('DOMContentLoaded', () => upgradeToggles());
 
   /* ---------- アプリの外で、ネイティブの使い方をさがす ---------- */
   // YouTube（動画検索）・YouGlish（その言葉を話している動画の場面にとぶ）・Instagram（ハッシュタグ）
@@ -722,6 +741,7 @@
     return h;
   }
   window.CJ = {
+    jaLevel, rubyL, levelSegHtml,
     focusOf, setFocus, focusChips, FOCUS_ICON,
     jaText, jaStyle,
     getPtRec, recordPattern, isWeakPattern,

@@ -12,13 +12,13 @@
 
   /* ---------- 型 の 表示 ---------- */
   const kj = () => CJ.showKanji();
-  const jp = s => kj() ? CJ.ruby(s) : esc(String(s).replace(/\{([^|}]+)\|([^}]+)\}/g, '$2'));
+  const jp = s => kj() ? CJ.rubyL(s) : esc(String(s).replace(/\{([^|}]+)\|([^}]+)\}/g, '$2'));
   function frameHtml(p) {   // 「［　　］ ＋ てもいい？」
     return (p.pre ? '<span class="pt-frm">' + jp(p.pre) + '</span>' : '') + '<span class="pt-blank">　　</span><span class="pt-frm">' + jp(p.post) + '</span>';
   }
   function answerHtml(p, i) {   // 答え：入れ替え 部分 を 色つき
     const sl = p.slots[i];
-    const slot = kj() ? CJ.ruby(sl[1]) : esc(sl[2]);
+    const slot = kj() ? CJ.rubyL(sl[1]) : esc(sl[2]);
     return (p.pre ? jp(p.pre) + ' ' : '') + '<span class="pt-ans-slot">' + slot + '</span>' + (p.join === '' ? '' : ' ') + jp(p.post);
   }
 
@@ -35,11 +35,14 @@
       (daily ? '<div class="past-head">🌙 ' + esc(L('Tonight: patterns', 'よる：かた の れんしゅう')) + '</div>' : '') +
       '<div class="card"><h2>🔁 ' + esc(L('Patterns — say it in a row', 'かた — つづけて いう')) + '</h2>' +
         '<p class="muted">' + esc(L('A pattern (chunk) stays the same — only the part in ［ ］ changes. See the English and say it in Japanese, one after another.', 'かた は そのまま、［ ］ の ところ だけ かわります。えいご を みて、にほんご で つぎつぎ いって みよう。')) + '</p>' +
+        // 設定 は タップ で 折りたたみ（開いて いる か は 端末 に 記憶）
+        '<details class="pt-set"' + (pref('ptSetOpen', false) ? ' open' : '') + '><summary>⚙️ ' + esc(L('Settings', 'せってい')) + ' <span class="muted">' + (mode === 'card' ? '🃏 ' + esc(L('Cards', 'カード')) : '⏱ ' + esc(L('Tempo', 'テンポ'))) + ' · ' + secs + 's · ' + cnt + '</span></summary>' +
         '<div class="setting-row"><span>' + esc(L('Mode', 'モード')) + '</span>' + seg('ptMode', [['card', '🃏 ' + L('Cards', 'カード')], ['tempo', '⏱ ' + L('Tempo', 'テンポ')]], mode) + '</div>' +
         '<p class="muted" style="font-size:0.78rem;">' + esc(mode === 'card' ? L('Cards: answer, check, and mark ⭕/❌ yourself. You can answer by voice.', 'カード：こたえて、たしかめて、⭕／❌ を じぶん で。こえ でも こたえられます。') : L('Tempo: the answer comes by itself after the timer. Keep saying it in rhythm!', 'テンポ：じかん が くる と こたえ が でて、じどう で つぎ へ。リズム よく いおう！')) + '</p>' +
         '<div class="setting-row"><span>' + esc(L('Seconds', 'びょう')) + '</span>' + seg('ptSecs', [[4, '4s'], [3, '3s'], [2, '2s']], secs) + '</div>' +
         '<div class="setting-row"><span>' + esc(L('Sentences per pattern', '1つ の かた で')) + '</span>' + seg('ptCount', [[3, '3'], [5, '5']], cnt) + '</div>' +
-        '<div style="margin-top:0.6rem;"><label class="kj-toggle"><input type="checkbox" data-kanji-toggle' + (kj() ? ' checked' : '') + '> ' + esc(t('rd.kanji')) + '</label></div>' +
+        '<div style="margin-top:0.6rem;">' + CJ.levelSegHtml() + '</div>' +
+        '</details>' +
       '</div>' +
       '<div class="chip-row" style="margin:0.4rem 0;">' + [['all', L('All', 'ぜんぶ')]].concat(PT.GROUPS.map(x => [x.id, CJ.tx(x, 'label')])).map(x => '<button class="chip' + (g === x[0] ? ' active' : '') + '" data-group="' + x[0] + '">' + esc(x[1]) + '</button>').join('') + '</div>' +
       '<div class="btn-row" style="margin-bottom:0.6rem;">' +
@@ -54,6 +57,7 @@
         '</button>';
       }).join('');
   }
+  $('setup').addEventListener('toggle', e => { if (e.target.matches && e.target.matches('.pt-set')) CJ.setPref('ptSetOpen', e.target.open); }, true);
   $('setup').addEventListener('click', e => {
     const s = e.target.closest('[data-set]');
     if (s) { const v = s.dataset.v; CJ.setPref(s.dataset.set, /^\d+$/.test(v) ? Number(v) : v); renderSetup(); return; }
