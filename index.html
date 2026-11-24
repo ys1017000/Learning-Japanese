@@ -62,7 +62,7 @@
 
   <div class="card">
     <h2 data-i18n="set.title"></h2>
-    <div class="setting-row"><span data-i18n="set.lang"></span><span class="seg" id="langSeg"><button data-lang="en">English</button><button data-lang="ja">にほんご</button></span></div>
+    <div class="setting-row"><span data-i18n="set.lang"></span><span class="seg" id="langSeg"><button data-lang="en">English</button><button data-lang="ja">ひらがな</button><button data-lang="jk">漢字(かんじ)</button></span></div>
     <div class="setting-row"><span data-i18n="set.theme"></span><span class="seg" id="themeSeg"><button data-theme="pink" data-i18n="theme.pink"></button><button data-theme="matcha" data-i18n="theme.matcha"></button><button data-theme="sky" data-i18n="theme.sky"></button></span></div>
     <div class="setting-row"><span data-i18n="set.secs"></span><span class="seg" id="secsSeg"><button data-secs="3"></button><button data-secs="5"></button><button data-secs="8"></button></span></div>
     <div class="setting-row"><label for="optRomaji" data-i18n="set.romaji"></label><input type="checkbox" id="optRomaji"></div>
@@ -152,7 +152,8 @@
     $('optRomaji').checked = !!p.romaji;
     $('optAuto').checked = p.autoSpeak !== false;
     document.querySelectorAll('#rateSeg button').forEach(b => b.classList.toggle('active', Math.abs(Number(b.dataset.rate) - Number(p.rate)) < 0.01));
-    document.querySelectorAll('#langSeg button').forEach(b => b.classList.toggle('active', b.dataset.lang === CJ.lang()));
+    const lc = CJ.lang() === 'en' ? 'en' : CJ.jaStyle() === 'kanji' ? 'jk' : 'ja';
+    document.querySelectorAll('#langSeg button').forEach(b => b.classList.toggle('active', b.dataset.lang === lc));
     document.querySelectorAll('#themeSeg button').forEach(b => b.classList.toggle('active', b.dataset.theme === (p.theme || 'pink')));
     document.querySelectorAll('#vsrcSeg button').forEach(b => b.classList.toggle('active', b.dataset.vs === (p.voiceSrc || 'yoh')));
     document.querySelectorAll('#vmodeSeg button').forEach(b => b.classList.toggle('active', b.dataset.vm === (p.voiceMode || 'natural')));

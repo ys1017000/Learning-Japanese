@@ -4,7 +4,7 @@
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
-  const APP_VERSION = 'v34';
+  const APP_VERSION = 'v35';
   const DATA_VERSION = 4;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily) / v4: ようちゃんへの質問(asks)・都道府県(pref)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
   const BACKUP_VERSION = 5;           // v5：型 の 記録（patterns）を 追加。v1〜v4 の バックアップ も 読み込める
@@ -42,17 +42,31 @@
 
   /* ---------- 画面の言語（英語 / 日本語） ---------- */
   function lang() { return getPrefs().lang === 'ja' ? 'ja' : 'en'; }
+  // 日本語 の 書き方：'kana'（ぜんぶ ひらがな）／ 'kanji'（今日(きょう)の練習(れんしゅう) の ように 漢字 ＋ 読み）
+  const jaStyle = () => getPrefs().jaStyle === 'kanji' ? 'kanji' : 'kana';
+  function kanjify(str) {
+    const JK = window.CJ_JK || {};
+    // HTML の タグ の 中 は さわらない。ことば は スペース と 句読点 で 区切る
+    return String(str).split(/(<[^>]*>)/).map(part => {
+      if (part.startsWith('<')) return part;
+      const s = part.split(/([ 、。！？「」（）・：…—])/).map(w => JK[w] || w).join('');
+      // 日本語 どうし の あいだ の スペース を 消す（英語・数字 の まわり は のこす）
+      return s.replace(/([぀-ヿ一-鿿々ー、。！？「」（）・〜)])[ ]+(?=[぀-ヿ一-鿿々ー、。！？「」（）・〜])/g, '$1');
+    }).join('');
+  }
+  function jaText(s) { return lang() === 'ja' && jaStyle() === 'kanji' ? kanjify(s) : s; }
   // 画面の言葉。vars の {名前} を置き換える（値はそのまま入るので、必要なら呼ぶ側で esc する）
   function t(key, vars) {
     const row = (window.CJ_I18N || {})[key];
     let s = row ? (row[lang() === 'ja' ? 1 : 0] || row[0]) : key;
+    if (lang() === 'ja') s = jaText(s);
     if (vars) Object.keys(vars).forEach(k => { s = s.split('{' + k + '}').join(vars[k]); });
     return s;
   }
   // データの項目：日本語表示のときは 〜Ja があればそれを使う
   function tx(obj, field) {
     if (!obj) return '';
-    if (lang() === 'ja' && obj[field + 'Ja']) return obj[field + 'Ja'];
+    if (lang() === 'ja' && obj[field + 'Ja']) return jaText(obj[field + 'Ja']);
     return obj[field] || '';
   }
   // data-i18n="キー" の要素に言葉を入れる（辞書は自分で書いた内容なので HTML として入れる）
@@ -62,11 +76,14 @@
     root.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.dataset.i18n); });
     root.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
     const b = document.getElementById('langBtn');
-    if (b) { b.textContent = t('lang.toggle'); b.setAttribute('aria-label', t('lang.toggleLabel')); }
+    if (b) { b.textContent = lang() === 'en' ? '🌐 あ' : jaStyle() === 'kana' ? '🌐 漢' : '🌐 EN'; b.setAttribute('aria-label', t('lang.toggleLabel')); }
     root.querySelectorAll('[data-say]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.slow === '1' ? 'say.slow' : 'say.play')); });
   }
+  // l：'en' ／ 'ja'（ひらがな）／ 'jk'（漢字(よみ)）
   function setLang(l) {
-    setPref('lang', l === 'ja' ? 'ja' : 'en');
+    if (l === 'jk') { setPref('jaStyle', 'kanji'); setPref('lang', 'ja'); }
+    else if (l === 'ja') { setPref('jaStyle', 'kana'); setPref('lang', 'ja'); }
+    else setPref('lang', 'en');
     applyI18n(); updateStreakBadge();
     document.dispatchEvent(new CustomEvent('cj:lang'));   // 各ページはこれを受けて、動きのある部分を描き直す
   }
@@ -78,7 +95,7 @@
     wrap.className = 'head-right';
     const b = document.createElement('button');
     b.id = 'langBtn'; b.className = 'lang-btn'; b.type = 'button';
-    b.addEventListener('click', () => setLang(lang() === 'ja' ? 'en' : 'ja'));
+    b.addEventListener('click', () => setLang(lang() === 'en' ? 'ja' : jaStyle() === 'kana' ? 'jk' : 'en'));   // EN → あ → 漢 → EN
     const badge = document.getElementById('streakBadge');
     wrap.appendChild(b);
     if (badge) wrap.appendChild(badge);
@@ -682,6 +699,7 @@
     return h;
   }
   window.CJ = {
+    jaText, jaStyle,
     getPtRec, recordPattern, isWeakPattern,
     rtHtml,
     isDev, setDev, applyDev, ttsSpeak,

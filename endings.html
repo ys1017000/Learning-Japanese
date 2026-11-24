@@ -63,13 +63,13 @@
         '<div class="end-head"><span class="end-mark ja">' + esc(e.mark) + '</span><span class="romaji">' + esc(e.romaji) + '</span><span class="end-title">' + esc(CJ.tx(e, 'title')) + '</span></div>' +
         '<p class="end-meaning">' + esc(CJ.tx(e, 'meaning')) + '</p>' +
         e.ex.map(x => '<div class="ex-row"><div><div class="k ja">' + CJ.jaHtml([x[0], x[1], x[5]]) + '</div><div class="romaji">' + esc(x[1]) + '</div>' +
-          '<div class="e">' + esc(x[2]) + '</div><div class="n">' + esc(ja() && x[4] ? x[4] : x[3]) + '</div></div>' + CJ.sayBtns(x[0]) + '</div>').join('') +
+          '<div class="e">' + esc(x[2]) + '</div><div class="n">' + esc(ja() && x[4] ? CJ.jaText(x[4]) : x[3]) + '</div></div>' + CJ.sayBtns(x[0]) + '</div>').join('') +
         (e.tip ? '<div class="tip">💡 ' + esc(CJ.tx(e, 'tip')) + '</div>' : '') +
       '</div>').join('');
 
     $('cmpBox').innerHTML = D.COMPARE.map(c =>
       '<p style="font-weight:700; margin:0.6rem 0 0.2rem;" class="ja">' + esc(c.base) + '</p><table class="cmp-table">' +
-      c.rows.map(r => '<tr><td class="k ja">' + CJ.jaHtml([r[0], r[1], r[4]]) + '<div class="romaji" style="font-weight:normal; font-size:0.8rem;">' + esc(r[1]) + '</div></td><td class="muted">' + esc(ja() && r[3] ? r[3] : r[2]) + '</td><td style="text-align:right;">' + CJ.sayBtns(r[0]) + '</td></tr>').join('') +
+      c.rows.map(r => '<tr><td class="k ja">' + CJ.jaHtml([r[0], r[1], r[4]]) + '<div class="romaji" style="font-weight:normal; font-size:0.8rem;">' + esc(r[1]) + '</div></td><td class="muted">' + esc(ja() && r[3] ? CJ.jaText(r[3]) : r[2]) + '</td><td style="text-align:right;">' + CJ.sayBtns(r[0]) + '</td></tr>').join('') +
       '</table>').join('');
   }
   document.addEventListener('cj:lang', render);

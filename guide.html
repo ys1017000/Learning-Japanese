@@ -49,7 +49,7 @@
 (function () {
   const B = window.CJ_BANK, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
   const ja = () => CJ.lang() === 'ja';
-  const L = (en, jp) => ja() ? jp : en;   // このページの説明（英語／ひらがな）
+  const L = (en, jp) => ja() ? CJ.jaText(jp) : en;   // このページの説明（英語／ひらがな）
   const flipped = {};
 
   // ていねい → ふつう で かわるところ
@@ -113,7 +113,7 @@
         L('<b>No "let\'s say du" moment.</b> In Japanese, nobody says "let\'s talk casually now". People slowly switch as they get closer. Easy rule: <b>when they talk casually to you, you can too.</b>', '<b>「du で はなそう」 と いう しゅんかん が ない。</b> にほんご では 「ふつう で はなそう」 と あまり いいません。したしく なる と だんだん かわります。かんたん な ルール：<b>あいて が ふつう に なったら、あなた も ふつう で OK。</b>'),
         L('<b>Mixing is normal.</b> Even in polite talk, people often say short casual reactions: えー、すごい！ そうなんだ！', '<b>まぜる の は ふつう。</b> ていねい な かいわ でも、みじかい リアクション は ふつう に なる こと が おおい：えー、すごい！ そうなんだ！'),
         L('<b>Same age doesn\'t mean casual.</b> At work and in shops, people stay polite even with people their own age.', '<b>おなじ とし でも ふつう とは かぎらない。</b> しょくば や おみせ では、おなじ とし でも ていねい。'),
-        L('<b>With your partner, always casual.</b> Polite Japanese to a partner sounds distant — or like a joke. So with Yoh-chan: casual all the way! 😊', '<b>こいびと には いつも ふつう。</b> こいびと に ていねい だと、きょり が ある ように きこえる（か、じょうだん）。だから ようちゃん には ずっと ふつう で！ 😊')
+        L('<b>With people close to you, casual.</b> With Yoh-chan and good friends, polite Japanese can sound a bit distant — or like a joke. So with Yoh-chan: casual is just right! 😊', '<b>なかよし の ひと には ふつう。</b> ようちゃん や なかよし の ともだち に ていねい だと、すこし きょり が ある ように きこえる（か、じょうだん）。だから ようちゃん には ふつう が ちょうど いい よ！ 😊')
       ].map(x => '<li>' + x + '</li>').join('') + '</ul>');
     html += '<div class="card gd-sec"><h3>' + esc(t('gd.examples')) + '</h3><div class="tap-hint">' + esc(t('tap.hint')) + '</div>' +
       EXAMPLE_KEYS.map(k => B.byKey[k]).filter(Boolean).map(it => CJ.flipHtml(it.key, it, !!flipped[it.key])).join('') + '</div>';

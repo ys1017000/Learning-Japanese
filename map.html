@@ -81,7 +81,7 @@
       '<div style="text-align:center;"><span class="romaji">' + esc(p.en) + '</span> ' + CJ.sayBtns(nameKana(p)) + '</div>' +
       '<div class="kj-read" style="margin-top:0.6rem;"><span class="lbl">' + esc(t('map.region')) + '</span><span class="v ja">' + CJ.ruby(R.kj) + ' <span class="muted" style="font-weight:400;">' + esc(R.en) + '</span></span>' +
       '<span class="lbl">' + esc(t('map.capital')) + '</span><span class="v ja">' + CJ.ruby(p.cap) + '</span></div>' +
-      '<div class="kj-box img">⭐ ' + esc(t('map.famous')) + '：' + esc(CJ.lang() === 'ja' ? p.famJa : p.fam) + '</div>' +
+      '<div class="kj-box img">⭐ ' + esc(t('map.famous')) + '：' + esc(CJ.lang() === 'ja' ? CJ.jaText(p.famJa) : p.fam) + '</div>' +
       CJ.extLinks([nameKana(p), p.en, p.kj]) +
       '<div style="text-align:right;">' + CJ.askLink('都道府県 ' + CJ.plain(p.kj)) + '</div>' +
       '<button class="btn ' + (learned ? 'btn-secondary' : 'btn-ok') + '" data-act="learn" style="margin-top:0.5rem;">' + esc(t(learned ? 'map.unknow' : 'map.know')) + '</button>';
@@ -102,7 +102,7 @@
     if (quiz.answered) {
       const ok = quiz.answered === p.id, x = byId[quiz.answered];
       html += '<div class="feedback ' + (ok ? 'correct' : 'wrong') + '">' + (ok ? t('map.right', { p: nameRuby(p) }) : t('map.wrong', { x: nameRuby(x), p: nameRuby(p) })) +
-        '<div class="muted" style="margin-top:0.3rem;">⭐ ' + esc(CJ.lang() === 'ja' ? p.famJa : p.fam) + '</div>' +
+        '<div class="muted" style="margin-top:0.3rem;">⭐ ' + esc(CJ.lang() === 'ja' ? CJ.jaText(p.famJa) : p.fam) + '</div>' +
         '<button class="btn" data-act="next" style="margin-top:0.6rem;">' + esc(t('q.next')) + '</button></div>';
     } else html += '<p class="muted" style="text-align:center;">' + esc(t('map.tapHint')) + '</p>';
     bar.innerHTML = html;

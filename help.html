@@ -54,7 +54,7 @@
    ことば は このページ の 中 に 英語／ひらがな で 書く（L(英語, ひらがな)） */
 (function () {
   const $ = id => document.getElementById(id), t = CJ.t;
-  const L = (en, jp) => CJ.lang() === 'ja' ? jp : en;
+  const L = (en, jp) => CJ.lang() === 'ja' ? CJ.jaText(jp) : en;
   const P = '<span class="reg polite">' , C = '<span class="reg casual">';
 
   const STEPS = [

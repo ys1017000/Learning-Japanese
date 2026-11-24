@@ -150,7 +150,10 @@
       id: 'w:' + w.id,
       opts: CJ.shuffle([{ t: [w.en, ''], ok: true }].concat(wrong.map(y => ({ t: [y.en, ''] })))),
       answer: w.kana,
-      head: () => '<div class="q-text">' + esc(t('q.wMeaning')) + '</div><div class="q-word ja">' + CJ.ruby(w.kj) + '</div>',
+      // ふりがな は オン・オフ できる（オフ だと 漢字 だけ。答え の あと に 読み が 出る）
+      head: () => { const furi = !!CJ.getPrefs().quizFuri;
+        return '<div class="q-text">' + esc(t('q.wMeaning')) + '</div><div class="q-word ja">' + (furi ? CJ.ruby(w.kj) : esc(K.plain(w.kj))) + '</div>' +
+          '<div style="text-align:center;"><label class="kj-toggle"><input type="checkbox" data-furi' + (furi ? ' checked' : '') + '> ' + esc(t('q.furi')) + '</label></div>'; },
       why: () => '<div class="ja" style="font-size:1.3rem; font-weight:700;">' + CJ.ruby(w.kj) + '</div>' + esc(w.r) + ' = ' + esc(w.en) +
         '<div style="margin-top:0.4rem;"><a href="words.html?w=' + encodeURIComponent(w.id) + '">📝 ' + esc(w.id) + ' →</a></div>'
     };
@@ -197,6 +200,7 @@
       esc(t('mode.' + m, { n })) + '</button>').join('');
   }
 
+  document.addEventListener('change', e => { if (e.target.matches('[data-furi]')) { CJ.setPref('quizFuri', e.target.checked); render(); } });
   function render() {
     renderModes();
     const box = $('qBox');

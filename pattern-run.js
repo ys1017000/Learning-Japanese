@@ -5,7 +5,7 @@
    ・記録 は CJ.recordPattern（localStorage 'cj_pt'、バックアップ にも 入る） */
 (function () {
   const PT = window.CJ_PATTERNS, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
-  const L = (en, ja) => CJ.lang() === 'ja' ? ja : en;
+  const L = (en, ja) => CJ.lang() === 'ja' ? CJ.jaText(ja) : en;
   const qs = new URLSearchParams(location.search);
   const daily = qs.get('daily');                       // 「きょう」の よる から 来た とき：終わったら その日 に 記録
   const pref = (k, d) => { const v = CJ.getPrefs()[k]; return v == null ? d : v; };
