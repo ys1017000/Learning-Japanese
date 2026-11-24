@@ -4,7 +4,7 @@
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
-  const APP_VERSION = 'v36';
+  const APP_VERSION = 'v37';
   const DATA_VERSION = 4;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily) / v4: ようちゃんへの質問(asks)・都道府県(pref)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
   const BACKUP_VERSION = 5;           // v5：型 の 記録（patterns）を 追加。v1〜v4 の バックアップ も 読み込める
@@ -603,11 +603,13 @@
     Object.keys(f).sort().slice(0, -30).forEach(k => delete f[k]);   // 30日分 だけ のこす
     setPref('focus', f);
   }
+  // ひる の やり方 を 1つ えらぶ（3つ ぜんぶ やる もの では ない ので、1列 の 切り替え に する）
   function focusChips(date) {
     const cur = focusOf(date);
-    return '<div class="focus-row"><span class="muted">' + esc(t('focus.title')) + '</span>' + ['speak', 'listen', 'read'].map(m =>
-      '<button class="chip' + (m === cur ? ' active' : '') + '" data-focus="' + m + '">' + FOCUS_ICON[m] + ' ' + esc(t('focus.' + m)) + '</button>').join('') + '</div>';
+    return '<div class="focus-box"><div class="focus-lbl">☀️ ' + esc(t('focus.title')) + '</div><div class="seg3">' + ['speak', 'listen', 'read'].map(m =>
+      '<button class="' + (m === cur ? 'active' : '') + '" data-focus="' + m + '">' + FOCUS_ICON[m] + '<span>' + esc(t('focus.' + m)) + '</span></button>').join('') + '</div></div>';
   }
+
 
   /* ---------- 🔁 型 の 記録 ----------
      { 型ID: { ok, mid, ng（⭕△❌ の 回数）, l（最後 の 結果 'ok'|'mid'|'ng'）, d（日付）, said, total（カード で 言えた 数 ／ ぜんぶ） } } */

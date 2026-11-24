@@ -175,8 +175,11 @@
         '<button class="tiny-btn" data-say="' + esc(f[0]) + '" data-slow="1">🐢 ' + esc(t('vc.slow')) + '</button></div>' +
         '<div class="muted" style="text-align:center;">' + esc(t('u.listen')) + '</div>';
     } else {
-      h += '<div style="text-align:center;"><label class="kj-toggle"><input type="checkbox" data-kanji-toggle' + (CJ.showKanji() ? ' checked' : '') + '> ' + esc(t('rd.kanji')) + '</label></div>' +
-        '<div class="u-ja ja">' + CJ.jaHtml(f) + '</div>' +
+      // 読む：かな ／ 漢字 ＋ よみ ／ 漢字 だけ の 3段階（答え の あと は よみ つき）
+      const lv = ['kana', 'ruby', 'kanji'].includes(CJ.getPrefs().readLevel) ? CJ.getPrefs().readLevel : 'ruby';
+      const jaShow = picked ? CJ.ruby(f[2]) : lv === 'kana' ? esc(f[0]) : lv === 'kanji' ? esc(CJ.plain(f[2])) : CJ.ruby(f[2]);
+      h += '<div class="seg3 seg3-sm">' + ['kana', 'ruby', 'kanji'].map(v => '<button class="' + (v === lv ? 'active' : '') + '" data-rl="' + v + '"><span>' + esc(t('rl.' + v)) + '</span></button>').join('') + '</div>' +
+        '<div class="u-ja ja">' + jaShow + '</div>' +
         (picked ? '<div class="romaji" style="text-align:center;">' + esc(f[1]) + '</div><div style="text-align:center;">' + CJ.sayBtns(f[0]) + '</div>' : '<div class="muted" style="text-align:center;">' + esc(t('u.read')) + '</div>');
     }
     if (!picked) {
@@ -332,6 +335,8 @@
   }
 
   $('drill').addEventListener('click', e => {
+    const rl = e.target.closest('[data-rl]');
+    if (rl && st) { CJ.setPref('readLevel', rl.dataset.rl); renderDrill(); return; }
     const mp = e.target.closest('[data-mpick]');
     if (mp && st && st.mpick == null) { st.mpick = Number(mp.dataset.mpick); renderDrill(); return; }
     if (e.target.closest('[data-say], a, label')) return;

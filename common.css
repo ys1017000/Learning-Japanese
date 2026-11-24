@@ -387,3 +387,13 @@ button.link-chip.on { background: var(--primary); color: #fff; border-color: var
 .u-listen { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 0.6rem 0; }
 .u-play { width: 88px; height: 88px; border-radius: 50%; border: none; background: var(--primary); color: #fff; font-size: 2.4rem; cursor: pointer; box-shadow: 0 6px 16px rgba(224,81,122,0.3); }
 .u-ja { text-align: center; font-size: 1.6rem; font-weight: 800; margin: 0.5rem 0 0.2rem; }
+
+/* ひる の やり方（1列 の 3つ切り替え）と 読む の 3段階 */
+.focus-box { margin: 0.4rem 0 0.6rem; }
+.focus-lbl { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.3rem; }
+.seg3 { display: grid; grid-template-columns: repeat(3, 1fr); background: #f3f4f6; border-radius: 14px; padding: 3px; gap: 3px; }
+.seg3 button { border: none; background: transparent; border-radius: 11px; padding: 0.5rem 0.2rem; font-family: inherit; font-size: 1.1rem; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1px; color: var(--text-muted); }
+.seg3 button span { font-size: 0.78rem; font-weight: 700; }
+.seg3 button.active { background: #fff; color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+.seg3-sm { margin: 0.3rem 0 0.4rem; }
+.seg3-sm button { padding: 0.35rem 0.2rem; }
