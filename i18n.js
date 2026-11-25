@@ -637,3 +637,20 @@ Object.assign(window.CJ_I18N, {
   'sk.keep': ['Do a little today to keep it going!', 'きょう も ちょっと だけ やって、つづけよう！'],
   'sk.start': ['Start today — just one practice is enough.', 'きょう から はじめよう。1かい だけ で OK。']
 });
+/* 🎋 おみくじ・📰 まめちしき・🎯 ミッション・🧊 おやすみ チケット */
+Object.assign(window.CJ_I18N, {
+  'omi.title': ['🎋 Today\'s omikuji', '🎋 きょう の おみくじ'],
+  'omi.desc': ['A Japanese fortune slip — one per day. Inside: your luck, a lucky phrase, and a little story about Japan.', 'にほん の うらない。1にち 1かい。うん と ラッキー な ことば と、にほん の まめちしき が はいってるよ。'],
+  'omi.draw': ['Draw', 'ひく'],
+  'omi.lucky': ['🍀 Lucky phrase', '🍀 ラッキー な ことば'],
+  'tv.title': ['📰 Japan fun fact', '📰 にほん の まめちしき'],
+  'tv.more': ['See more:', 'もっと みる：'],
+  'ms.title': ['🎯 Today\'s mission', '🎯 きょう の ミッション'],
+  'ms.did': ['I did it!', 'できた！'],
+  'ms.other': ['Another one', 'ほか の'],
+  'ms.note': ['Try it in real life — outside the app. It counts for your streak too!', 'アプリ の そと で やって みよう。れんぞく きろく にも はいるよ！'],
+  'ms.done': ['Mission complete! See you tomorrow.', 'ミッション クリア！ また あした。'],
+  'ms.yay': ['🎉 Great job!', '🎉 すごい！'],
+  'sk.restReady': ['🧊 Rest ticket: ready — miss 1 day this week and your streak stays.', '🧊 おやすみ チケット：この しゅう 1にち やすんでも きろく は きれないよ。'],
+  'sk.restUsed': ['🧊 Rest ticket used this week ({d}). A new one comes on Monday.', '🧊 この しゅう の チケット は つかったよ（{d}）。げつようび に また もらえる。']
+});

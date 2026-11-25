@@ -4,7 +4,7 @@
 
   const KEY_DATA = 'cj_data';         // 学習データ（バックアップ対象）
   const KEY_PREFS = 'cj_prefs';       // 設定（端末ごと・バックアップ対象外）
-  const APP_VERSION = 'v50';
+  const APP_VERSION = 'v51';
   const DATA_VERSION = 4;             // v2: 漢字(kanji)・音読(read) / v3: 練習カード(prac)・日替わり(daily) / v4: ようちゃんへの質問(asks)・都道府県(pref)。古い形もそのまま読める
   const BACKUP_APP_ID = 'casual-japanese-backup';
   const BACKUP_VERSION = 5;           // v5：型 の 記録（patterns）を 追加。v1〜v4 の バックアップ も 読み込める
@@ -260,13 +260,28 @@
   function markStudied() { const d = getData(); touchToday(d); saveData(d); updateStreakBadge(); }
 
   // 連続日数（今日まだなら昨日までの連続を数える）
-  function calcStreak(history) {
+  /* 🔥 れんぞく きろく ＋ 🧊 おやすみ チケット：1しゅうかん（月〜日）に 1日 だけ、やすんでも きろく が きれない。
+     ほぞん は しない（history だけ から 毎回 計算 する ので、バックアップ の 形 は 変わらない）。
+     2日 つづけて やすむ と きれる。やすみ の 日 は 日数 には 数えない */
+  function weekKey(d) { const x = new Date(d); x.setHours(12, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return dateKey(x); }
+  function streakInfo(history) {
     const d = new Date(); d.setHours(12, 0, 0, 0);
-    if (!history[dateKey(d)]) d.setDate(d.getDate() - 1);
-    let n = 0;
-    while (history[dateKey(d)]) { n++; d.setDate(d.getDate() - 1); }
-    return n;
+    if (!history[dateKey(d)]) d.setDate(d.getDate() - 1);   // きょう は まだ これから
+    let n = 0; const rest = [], used = new Set();
+    for (;;) {
+      const k = dateKey(d);
+      if (history[k]) { n++; d.setDate(d.getDate() - 1); continue; }
+      const prev = new Date(d); prev.setDate(prev.getDate() - 1);
+      const wk = weekKey(d);
+      if (history[dateKey(prev)] && !used.has(wk)) { used.add(wk); rest.push(k); d.setDate(d.getDate() - 1); continue; }
+      break;
+    }
+    if (!n) rest.length = 0;
+    return { n, rest };
   }
+  function calcStreak(history) { return streakInfo(history).n; }
+  // この しゅう の チケット：つかった 日（なければ null）
+  function restUsedThisWeek(history) { const wk = weekKey(new Date()); return streakInfo(history).rest.find(k => weekKey(new Date(k + 'T12:00:00')) === wk) || null; }
   function updateStreakBadge() {
     const el = document.getElementById('streakBadge');
     if (!el) return;
@@ -785,7 +800,7 @@
     rtHtml,
     isDev, setDev, applyDev, ttsSpeak,
     esc, dateKey, shuffle, getData, saveData, isLearned, toggleLearned, isKanjiLearned, toggleKanji, recordQuiz, recordRead, markStudied,
-    calcStreak, updateStreakBadge, getPrefs, setPref, applyPrefs, drillSecs, lang, t, tx, applyI18n, setLang, recordPrac, saveDailySlot,
+    calcStreak, streakInfo, restUsedThisWeek, weekKey, updateStreakBadge, getPrefs, setPref, applyPrefs, drillSecs, lang, t, tx, applyI18n, setLang, recordPrac, saveDailySlot,
     speak, stopSpeak, autoSpeak, voiceId, voiceUrl, hasVoice, saveLocalVoice, deleteLocalVoice, localVoiceRecords, siteVoiceIds, voicesReady, markVoiceButtons, VOICE_DIR, hasJaVoice, jaVoices, utterText, speechText, recognitionSupported, listen, abortListen, normJa, scoreJa, PASS_SCORE, recSupported, startRec, stopRec, isRecording, playUrl,
     sayBtns, regTop, toast, downloadBackup, importBackup, ruby, reading, plain, showKanji, jaHtml, syncKanjiToggles, extLinks, askLink, flipHtml,
     addAsk, updateAsk, ASK_TYPES, togglePref, toggleWord, APP_VERSION
