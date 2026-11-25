@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Holidays – マルちゃんのペースでいいよ</title>
+<meta name="theme-color" content="#e0517a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<header><a class="logo" href="index.html">🌸 マルちゃんのペースでいいよ</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
+
+<main class="container">
+  <div class="card" id="topBox"></div>
+  <div id="list"></div>
+  <div class="card" id="seasonBox"></div>
+</main>
+
+<script src="i18n.js"></script>
+<script src="data.js"></script>
+<script src="holidays-data.js"></script>
+<script src="common.js"></script>
+<script>
+/* 🎌 日本 の 祝日。その 年 の 日付 を 計算（ハッピーマンデー・春分秋分・振替休日・国民の休日）して 月 ごと に ならべる */
+(function () {
+  const H = window.CJ_HOLIDAYS, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
+  const thisYear = new Date().getFullYear();
+  let year = thisYear;
+
+  const ymd = (y, m, d) => new Date(y, m - 1, d, 12);
+  const key = dt => CJ.dateKey(dt);
+  function nthMonday(y, m, n) { const first = ymd(y, m, 1), off = (8 - first.getDay()) % 7; return ymd(y, m, 1 + off + (n - 1) * 7); }
+  // 春分・秋分 の 日（1980〜2099 年 で つかわれる 計算式）
+  function equinox(y, kind) {
+    const base = kind === 'spring' ? 20.8431 : 23.2488;
+    return ymd(y, kind === 'spring' ? 3 : 9, Math.floor(base + 0.242194 * (y - 1980) - Math.floor((y - 1980) / 4)));
+  }
+  const FURIKAE = { id: 'furikae', icon: '🔁', ja: ['ふりかえきゅうじつ', 'furikae kyuujitsu', '{振替休日|ふりかえきゅうじつ}'], en: 'Substitute holiday',
+    what: 'When a holiday falls on a Sunday, the next weekday becomes a day off instead.', whatJa: 'しゅくじつ が にちようび と かさなった とき、つぎ の ひ が かわり に やすみ に なります。' };
+  const KOKUMIN = { id: 'kokumin', icon: '🧩', ja: ['こくみんのきゅうじつ', 'kokumin no kyuujitsu', '{国民|こくみん}の{休日|きゅうじつ}'], en: 'Citizens\' holiday',
+    what: 'A normal day stuck between two holidays becomes a holiday too.', whatJa: 'しゅくじつ と しゅくじつ に はさまれた ひ も、やすみ に なります。' };
+
+  function holidaysOf(y) {
+    const list = H.HOLIDAYS.map(h => ({ h, dt: h.d ? ymd(y, h.d[0], h.d[1]) : h.mon ? nthMonday(y, h.mon[0], h.mon[1]) : equinox(y, h.eq) }));
+    const set = new Set(list.map(x => key(x.dt)));
+    // 国民 の 休日：前 と 後 が 祝日 で、日曜 では ない 日
+    list.slice().forEach(x => {
+      const mid = new Date(x.dt); mid.setDate(mid.getDate() + 1);
+      const next = new Date(mid); next.setDate(next.getDate() + 1);
+      if (!set.has(key(mid)) && set.has(key(next)) && mid.getDay() !== 0) { list.push({ h: KOKUMIN, dt: mid }); set.add(key(mid)); }
+    });
+    // 振替休日：日曜 の 祝日 の あと、さいしょ の 祝日 で ない 日
+    list.slice().forEach(x => {
+      if (x.dt.getDay() !== 0) return;
+      const d = new Date(x.dt);
+      do { d.setDate(d.getDate() + 1); } while (set.has(key(d)));
+      list.push({ h: FURIKAE, dt: new Date(d) }); set.add(key(d));
+    });
+    return list.sort((a, b) => a.dt - b.dt);
+  }
+
+  // 日付 の 表示：英語 は "Nov 23 (Mon)"、日本語 は 11がつ 23にち（げつ）／ 漢字 は 11月23日（月）
+  const MON = 'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split(' ');
+  function fmt(dt) {
+    const m = dt.getMonth() + 1, d = dt.getDate(), w = dt.getDay();
+    if (CJ.lang() !== 'ja') return MON[m - 1] + ' ' + d + ' (' + 'Sun Mon Tue Wed Thu Fri Sat'.split(' ')[w] + ')';
+    if (CJ.jaStyle() === 'kanji') return m + '月' + d + '日（' + '日月火水木金土'[w] + '）';
+    return m + 'がつ ' + d + 'にち（' + 'にち げつ か すい もく きん ど'.split(' ')[w] + '）';
+  }
+  function monthName(m) { return CJ.lang() !== 'ja' ? ['January','February','March','April','May','June','July','August','September','October','November','December'][m - 1] : CJ.jaStyle() === 'kanji' ? m + '月' : m + 'がつ'; }
+
+  function links(h) {
+    if (!h.q) return '';
+    const a = (href, label) => '<a class="ext-link" href="' + esc(href) + '" target="_blank" rel="noopener">' + label + '</a>';
+    return '<div class="omi-sub">' + esc(t('tv.more')) + '</div><span class="ext-links">' +
+      a('https://www.youtube.com/results?search_query=' + encodeURIComponent(h.q), '▶ YouTube') +
+      a('https://www.google.com/search?q=' + encodeURIComponent(h.q), '🔎 Google') +
+      a('https://www.instagram.com/explore/tags/' + encodeURIComponent(h.tag) + '/', '# Instagram') + '</span>';
+  }
+
+  function render() {
+    const today = new Date(); today.setHours(12, 0, 0, 0);
+    // つぎ の 祝日（ことし と らいねん から）
+    const all = holidaysOf(thisYear).concat(holidaysOf(thisYear + 1));
+    const next = all.find(x => x.dt >= today);
+    const days = next ? Math.round((next.dt - today) / 86400000) : 0;
+    $('topBox').innerHTML = '<h2>' + esc(t('hol.title')) + '</h2><p class="muted">' + esc(t('hol.intro')) + '</p>' +
+      (next ? '<div class="hol-next"><div class="omi-sub">' + esc(t('hol.next')) + '</div>' +
+        '<div class="hol-next-name">' + next.h.icon + ' <span class="ja">' + CJ.jaHtml(next.h.ja) + '</span></div>' +
+        '<div class="muted">' + esc(next.h.en) + ' · ' + esc(fmt(next.dt)) + '</div>' +
+        '<div class="hol-count">' + esc(days === 0 ? t('hol.today') : t(days === 1 ? 'hol.in1' : 'hol.inN', { n: days })) + '</div></div>' : '') +
+      '<div class="seg3" style="grid-template-columns:1fr 1fr; margin-top:0.8rem;">' + [thisYear, thisYear + 1].map(y =>
+        '<button type="button" class="' + (y === year ? 'active' : '') + '" data-year="' + y + '">' + esc(CJ.lang() === 'ja' ? y + (CJ.jaStyle() === 'kanji' ? '年' : 'ねん') : String(y)) + '</button>').join('') + '</div>' +
+      '<div style="margin-top:0.6rem;">' + CJ.levelSegHtml() + '</div>';
+
+    const list = holidaysOf(year);
+    let h = '', curM = 0;
+    list.forEach(x => {
+      const m = x.dt.getMonth() + 1, past = x.dt < today, isNext = next && x.dt.getTime() === next.dt.getTime();
+      if (m !== curM) { h += (curM ? '</div>' : '') + '<div class="hol-month"><div class="hol-mname">' + esc(monthName(m)) + '</div>'; curM = m; }
+      const o = x.h;
+      h += '<details class="gr hol' + (past ? ' past' : '') + (isNext ? ' next' : '') + '"><summary>' +
+        '<span class="hol-date">' + esc(fmt(x.dt)) + '</span><span class="hol-ic">' + o.icon + '</span>' +
+        '<span class="hol-name"><b class="ja">' + CJ.jaHtml(o.ja) + '</b><span class="muted">' + esc(o.en) + '</span></span></summary>' +
+        '<div class="hol-body"><div class="romaji">' + esc(o.ja[1]) + '</div>' + CJ.sayBtns(o.ja[0]) +
+        '<p>' + esc(CJ.tx(o, 'what')) + '</p>' + (o.how ? '<p>💡 ' + esc(CJ.tx(o, 'how')) + '</p>' : '') + links(o) + '</div></details>';
+    });
+    $('list').innerHTML = h + (curM ? '</div>' : '');
+
+    $('seasonBox').innerHTML = '<h2>' + esc(t('hol.seasons')) + '</h2>' + H.SEASONS.map(s =>
+      '<div class="hol-season"><div>' + s.icon + ' <b class="ja">' + CJ.jaHtml(s.ja) + '</b> ' + CJ.sayBtns(s.ja[0]) + '</div><div class="muted">' + esc(s.en) + '</div><p>' + esc(CJ.tx(s, 'text')) + '</p></div>').join('') +
+      '<h2 style="margin-top:1rem;">' + esc(t('hol.words')) + '</h2>' +
+      [['しゅくじつ', 'shukujitsu', '{祝日|しゅくじつ}', 'national holiday'], ['れんきゅう', 'renkyuu', '{連休|れんきゅう}', 'long weekend / days off in a row'], ['やすみ', 'yasumi', '{休|やす}み', 'day off'], ['ふりかえきゅうじつ', 'furikae kyuujitsu', '{振替休日|ふりかえきゅうじつ}', 'substitute holiday']]
+        .map(w => '<div class="hol-word"><span class="ja"><b>' + CJ.jaHtml(w) + '</b></span> <span class="romaji">' + esc(w[1]) + '</span> — ' + esc(w[3]) + ' ' + CJ.sayBtns(w[0]) + '</div>').join('');
+  }
+
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-year]'); if (b) { year = Number(b.dataset.year); render(); }
+  });
+  document.addEventListener('cj:lang', render);
+  document.addEventListener('cj:kanji', render);
+  render();
+})();
+</script>
+</body>
+</html>

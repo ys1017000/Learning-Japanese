@@ -64,6 +64,8 @@
   const D = window.CJ_DATA, K = window.CJ_KANJI, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
 
   // 🔥 れんぞく きろく：日数 と、この 1週間 の ○●。🧊 = おやすみ チケット で まもった 日
+  // 曜日：漢字 モード は 日 月 火…（「か」 など は 辞書 で かえられない ので ここ で）
+  const wdName = i => (CJ.lang() === 'ja' && CJ.jaStyle() === 'kanji' ? '日|月|火|水|木|金|土' : t('sk.wd')).split('|')[i];
   function renderStreak() {
     const d = CJ.getData(), info = CJ.streakInfo(d.history), n = info.n, today = CJ.dateKey();
     $('skNum').textContent = n;
@@ -72,11 +74,11 @@
     for (let i = 6; i >= 0; i--) { const x = new Date(); x.setHours(12, 0, 0, 0); x.setDate(x.getDate() - i); days.push(x); }
     $('skWeek').innerHTML = days.map(x => {
       const k = CJ.dateKey(x), on = !!d.history[k], rest = info.rest.includes(k);
-      return '<span class="sk-day' + (on ? ' on' : rest ? ' rest' : '') + (k === today ? ' today' : '') + '"><i>' + (on ? '🔥' : rest ? '🧊' : '・') + '</i>' + esc(t('sk.wd').split('|')[x.getDay()]) + '</span>';
+      return '<span class="sk-day' + (on ? ' on' : rest ? ' rest' : '') + (k === today ? ' today' : '') + '"><i>' + (on ? '🔥' : rest ? '🧊' : '・') + '</i>' + esc(wdName(x.getDay())) + '</span>';
     }).join('');
     $('skMsg').textContent = t(d.history[today] ? 'sk.doneToday' : n ? 'sk.keep' : 'sk.start');
     const used = CJ.restUsedThisWeek(d.history);
-    $('skRest').innerHTML = used ? esc(t('sk.restUsed', { d: t('sk.wd').split('|')[new Date(used + 'T12:00:00').getDay()] })) : esc(t('sk.restReady'));
+    $('skRest').innerHTML = used ? esc(t('sk.restUsed', { d: wdName(new Date(used + 'T12:00:00').getDay()) })) : esc(t('sk.restReady'));
     $('skRest').classList.toggle('used', !!used);
   }
 
@@ -114,7 +116,7 @@
         '<p class="omi-msg">' + esc(CJ.tx(fo, 'msg')) + '</p>' +
         '<div class="omi-sub">' + esc(t('omi.lucky')) + '</div>' + jaLine(lc.c) + '<div class="e">' + esc(lc.en) + '</div>' + CJ.sayBtns(lc.c[0]) + '</div>' +
       '<div class="tv-box"><div class="omi-sub">' + esc(t('tv.title')) + '</div>' +
-        '<div class="tv-head">' + tv.icon + ' <b>' + esc(CJ.tx(tv, 'title')) + '</b></div>' + jaLine(tv.ja) + CJ.sayBtns(tv.ja[0]) +
+        '<div class="tv-head">' + tv.icon + (CJ.lang() === 'en' ? ' <b>' + esc(tv.title) + '</b>' : '') + '</div>' + jaLine(tv.ja) + CJ.sayBtns(tv.ja[0]) +
         '<p class="tv-text">' + esc(CJ.tx(tv, 'text')) + '</p>' +
         '<div class="omi-sub">' + esc(t('tv.more')) + '</div><span class="ext-links">' +
           a('https://www.youtube.com/results?search_query=' + encodeURIComponent(tv.q), '▶ YouTube') +

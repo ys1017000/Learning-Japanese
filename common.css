@@ -507,3 +507,22 @@ body.drawer-open { overflow: hidden; }
 .ms-btns .btn { margin: 0; }
 .ms-note { font-size: 0.78rem; margin: 0.5rem 0 0; }
 .ms-done { margin-top: 0.7rem; text-align: center; font-weight: 800; color: #15803d; background: #dcfce7; border-radius: 10px; padding: 0.5rem; }
+
+/* 🎌 しゅくじつ */
+.hol-next { margin-top: 0.6rem; text-align: center; background: #fff7f9; border: 1px solid var(--border); border-radius: 12px; padding: 0.7rem; }
+.hol-next-name { font-size: 1.25rem; font-weight: 800; }
+.hol-count { margin-top: 0.3rem; font-weight: 800; color: var(--primary); }
+.hol-month { margin-bottom: 0.4rem; }
+.hol-mname { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); margin: 0.6rem 0 0.3rem 0.3rem; }
+details.hol > summary { padding: 0.7rem 0.8rem; gap: 8px; }
+.hol-date { flex: 0 0 auto; font-size: 0.78rem; font-weight: 700; color: var(--primary); min-width: 5.6em; }
+.hol-ic { font-size: 1.3rem; }
+.hol-name { display: flex; flex-direction: column; min-width: 0; }
+.hol-name .muted { font-size: 0.78rem; }
+details.hol.past { opacity: 0.6; }
+details.hol.next { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft); }
+.hol-body { padding: 0.6rem 0.9rem 0.9rem; font-size: 0.9rem; }
+.hol-body p { margin: 0.5rem 0 0; }
+.hol-season { padding: 0.5rem 0; border-bottom: 1px dashed var(--border); }
+.hol-season p { margin: 0.3rem 0 0; font-size: 0.88rem; }
+.hol-word { padding: 0.35rem 0; font-size: 0.9rem; }
