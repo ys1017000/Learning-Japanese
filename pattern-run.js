@@ -116,7 +116,7 @@
     clearInterval(tickTimer); CJ.abortListen();
     R.shown = true; render();
     const s = PT.sentence(R.p, R.queue[R.i]);
-    CJ.speak(s.kana);
+    CJ.autoSpeak(s.kana);   // せってい の「こたえ を じどう で よみあげる」に したがう
     if (R.mode === 'tempo') {   // 読み上げ の 長さ に 合わせて 自動 で 次へ
       const wait = Math.max(2200, s.kana.length * 170 + 1200);
       nextTimer = setTimeout(() => { if (R && !R.paused) mark(true); }, wait);

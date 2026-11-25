@@ -40,7 +40,7 @@ window.CJ_I18N = {
   'set.title': ['⚙️ Settings', '⚙️ せってい'],
   'set.lang': ['Screen language', 'がめん の ことば'],
   'set.romaji': ['Show romaji (genki, oishii…)', 'ローマじ を だす（genki, oishii…）'],
-  'set.auto': ['Read the answer aloud automatically', 'こたえ を じどう で よみあげる'],
+  'set.auto': ['🔊 Read the answer aloud automatically (off = tap 🔊 to hear it)', '🔊 こたえ を じどう で よみあげる（オフ の とき は 🔊 を タップ）'],
   'set.rate': ['Voice speed', 'こえ の はやさ'],
   'rate.slow': ['Slow', 'ゆっくり'],
   'rate.normal': ['Normal', 'ふつう'],

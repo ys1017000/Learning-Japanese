@@ -105,7 +105,7 @@
       quiz.answered = b.dataset.p;
       const target = quiz.order[quiz.i];
       if (quiz.answered === target) quiz.score++;
-      CJ.speak(nameKana(byId[target]));
+      CJ.autoSpeak(nameKana(byId[target]));
       CJ.markStudied();
       render();
       return;
