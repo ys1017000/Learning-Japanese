@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Events – マルちゃんのペースでいいよ</title>
+<meta name="theme-color" content="#e0517a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<header><a class="logo" href="index.html">🌸 マルちゃんのペースでいいよ</a><span class="streak-badge" id="streakBadge">🔥 0 days</span></header>
+
+<main class="container">
+  <div class="card" id="topBox"></div>
+  <div id="list"></div>
+</main>
+
+<script src="i18n.js"></script>
+<script src="data.js"></script>
+<script src="events-data.js"></script>
+<script src="common.js"></script>
+<script>
+/* 🎉 日本 の 行事・イベント。日付 は ことし で 計算（第◯日曜日 など）。期間 の もの は「いま」 を 表示 */
+(function () {
+  const E = window.CJ_EVENTS, $ = id => document.getElementById(id), esc = CJ.esc, t = CJ.t;
+  const ymd = (y, m, d) => new Date(y, m - 1, d, 12);
+  function nthSunday(y, m, n) { const first = ymd(y, m, 1), off = (7 - first.getDay()) % 7; return ymd(y, m, 1 + off + (n - 1) * 7); }
+  function datesOf(ev, y) {
+    const st = ev.sun ? nthSunday(y, ev.sun[0], ev.sun[1]) : ymd(y, ev.d[0], ev.d[1]);
+    let en = ev.to ? ymd(y, ev.to[0], ev.to[1]) : st;
+    if (en < st) en = ymd(y + 1, ev.to[0], ev.to[1]);   // 年 を またぐ（イルミネーション など）
+    return { st, en };
+  }
+  const MON = 'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split(' ');
+  const kanji = () => CJ.lang() === 'ja' && CJ.jaStyle() === 'kanji';
+  function md(dt, withWd) {
+    const m = dt.getMonth() + 1, d = dt.getDate(), w = dt.getDay();
+    if (CJ.lang() !== 'ja') return MON[m - 1] + ' ' + d + (withWd ? ' (' + 'Sun Mon Tue Wed Thu Fri Sat'.split(' ')[w] + ')' : '');
+    if (kanji()) return m + '月' + d + '日' + (withWd ? '（' + '日月火水木金土'[w] + '）' : '');
+    return m + 'がつ ' + d + 'にち' + (withWd ? '（' + 'にち げつ か すい もく きん ど'.split(' ')[w] + '）' : '');
+  }
+  function when(ev, x) {
+    if (ev.when) return CJ.lang() === 'ja' ? CJ.jaText(ev.when[1]) : ev.when[0];   // だいたい の 時期 は ことば で
+    const one = x.st.getTime() === x.en.getTime();
+    const s = one ? md(x.st, true) : md(x.st) + ' – ' + md(x.en);
+    return ev.about ? (CJ.lang() === 'ja' ? s + (kanji() ? ' 頃' : ' ごろ') : 'around ' + s) : s;
+  }
+  function monthName(m) { return CJ.lang() !== 'ja' ? ['January','February','March','April','May','June','July','August','September','October','November','December'][m - 1] : kanji() ? m + '月' : m + 'がつ'; }
+  function links(h) {
+    const a = (href, label) => '<a class="ext-link" href="' + esc(href) + '" target="_blank" rel="noopener">' + label + '</a>';
+    return '<div class="omi-sub">' + esc(t('tv.more')) + '</div><span class="ext-links">' +
+      a('https://www.youtube.com/results?search_query=' + encodeURIComponent(h.q), '▶ YouTube') +
+      a('https://www.google.com/search?q=' + encodeURIComponent(h.q), '🔎 Google') +
+      a('https://www.instagram.com/explore/tags/' + encodeURIComponent(h.tag) + '/', '# Instagram') + '</span>';
+  }
+
+  function render() {
+    const today = new Date(); today.setHours(12, 0, 0, 0);
+    const y = today.getFullYear();
+    const rows = E.EVENTS.map(ev => {
+      // 去年 から つづいて いる 期間（1〜2月 の イルミネーション など）も 見る
+      const prev = datesOf(ev, y - 1), cur = datesOf(ev, y);
+      const x = (prev.en >= today && prev.st <= today) ? prev : cur;
+      return { ev, x, now: x.st <= today && today <= x.en };
+    });
+    const nowList = rows.filter(r => r.now);
+    const upcoming = E.EVENTS.map(ev => { const c = datesOf(ev, y); return { ev, x: c.st > today ? c : datesOf(ev, y + 1) }; })
+      .filter(r => !rows.find(q => q.ev === r.ev && q.now)).sort((a, b) => a.x.st - b.x.st);
+    const nx = upcoming[0], days = Math.round((nx.x.st - today) / 86400000);
+
+    $('topBox').innerHTML = '<h2>' + esc(t('ev.title')) + '</h2><p class="muted">' + esc(t('ev.intro')) + '</p>' +
+      (nowList.length ? '<div class="hol-next ev-now"><div class="omi-sub">' + esc(t('ev.now')) + '</div>' +
+        nowList.map(r => '<div class="hol-next-name">' + r.ev.icon + ' <span class="ja">' + CJ.jaHtml(r.ev.ja) + '</span></div>').join('') + '</div>' : '') +
+      '<div class="hol-next"><div class="omi-sub">' + esc(t('ev.next')) + '</div>' +
+        '<div class="hol-next-name">' + nx.ev.icon + ' <span class="ja">' + CJ.jaHtml(nx.ev.ja) + '</span></div>' +
+        '<div class="muted">' + esc(nx.ev.en) + ' · ' + esc(when(nx.ev, nx.x)) + '</div>' +
+        '<div class="hol-count">' + esc(t(days === 1 ? 'hol.in1' : 'hol.inN', { n: days })) + '</div></div>' +
+      '<div style="margin-top:0.6rem;">' + CJ.levelSegHtml() + '</div>';
+
+    // 月 ごと（ことし の 日付、1月 から）
+    const list = E.EVENTS.map(ev => ({ ev, x: datesOf(ev, y) })).sort((a, b) => a.x.st - b.x.st);
+    let h = '', curM = 0;
+    list.forEach(r => {
+      const m = r.x.st.getMonth() + 1, o = r.ev, isNow = rows.find(q => q.ev === o).now;
+      if (m !== curM) { h += (curM ? '</div>' : '') + '<div class="hol-month"><div class="hol-mname">' + esc(monthName(m)) + '</div>'; curM = m; }
+      h += '<details class="gr hol' + (isNow ? ' next' : '') + '"><summary>' +
+        '<span class="hol-ic">' + o.icon + '</span>' +
+        '<span class="hol-name"><b class="ja">' + CJ.jaHtml(o.ja) + '</b><span class="muted">' + esc(o.en) + '</span>' +
+        '<span class="hol-date">' + esc(when(o, r.x)) + (isNow ? ' · ' + esc(t('ev.nowTag')) : '') + '</span></span></summary>' +
+        '<div class="hol-body"><div class="romaji">' + esc(o.ja[1]) + '</div>' + CJ.sayBtns(o.ja[0]) +
+        '<p>' + esc(CJ.tx(o, 'what')) + '</p><p>💡 ' + esc(CJ.tx(o, 'how')) + '</p>' +
+        (o.say ? '<div class="ev-say"><div class="omi-sub">' + esc(t('ev.say')) + '</div><div class="k ja">' + CJ.jaHtml(o.say) + '</div><div class="romaji">' + esc(o.say[1]) + '</div><div class="e">' + esc(o.say[3]) + '</div>' + CJ.sayBtns(o.say[0]) + '</div>' : '') +
+        links(o) + '</div></details>';
+    });
+    $('list').innerHTML = h + (curM ? '</div>' : '');
+  }
+  document.addEventListener('cj:lang', render);
+  document.addEventListener('cj:kanji', render);
+  render();
+})();
+</script>
+</body>
+</html>
