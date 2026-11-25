@@ -61,22 +61,50 @@
     return weak.slice(0, 4).concat(rest).slice(0, ROUND).map(it => ({ it, who: pickPerson(it) }));
   }
 
-  // 4つ の 選択肢：正解 ／ 言いかえて いない 文（もと の まま）／ 同じ グループ の ほか の 文（同じ ていねいさ）
-  function makeOpts(it) {
-    const from = dir === 'cp' ? 'c' : 'p', to = dir === 'cp' ? 'p' : 'c';
-    const opts = [{ f: it[to], ok: true }, { f: it[from], ok: false }];
-    const seen = new Set([it[to][0], it[from][0]]);
-    // よくある まちがい：「〜だよ」「〜ね」 に そのまま です を つける（げんき だよ です ✗）
-    const m = dir === 'cp' && it.c[0].match(/(?:だ\s?)?[よね]([！!？?〜~]*)$/);
-    if (m) {
-      const tail = s => { const mm = s.match(/([！!？?〜~]*)$/); return [s.slice(0, s.length - mm[1].length), mm[1]]; };
-      const k = tail(it.c[0]), r = tail(it.c[1]), j = tail(it.c[2] || it.c[0]);
-      const f = [k[0] + ' です' + k[1], r[0] + ' desu' + r[1], j[0] + 'です' + j[1]];
-      if (!seen.has(f[0])) { seen.add(f[0]); opts.push({ f, ok: false }); }
+  /* 選択肢：正解 と、意味 は 同じ で「ていねいさ が まちがって いる」もの だけ（ほか の 文 は 入れない）。
+     ・もと の まま（言いかえて いない）
+     ・「〜だよ／〜ね」 に です を つけた もの（げんき だよ です ✗）／「〜だ」 に です（むりょう だ です ✗）
+     ・ていねい の です を だ に した もの（ていねい に する とき）／ていねい に よ を つけた だけ（ふつう に する とき）
+     作れない とき は 選択肢 が 2〜3つ に なる */
+  const tailOf = s => { const m = String(s).match(/([！!？?〜~。]*)$/); return [s.slice(0, s.length - m[1].length), m[1]]; };
+  // ひらがな・ローマ字・漢字 の 3つ を 同じ ルール で かえる。rule = [ひらがな用, ローマ字用, 漢字用] の [さがす, おきかえ]
+  function morph(f, rules) {
+    const out = [], src = [f[0], f[1], f[2] || f[0]];
+    for (let k = 0; k < 3; k++) {
+      const [core, p] = tailOf(src[k]), [re, rep] = rules[k];
+      if (!re.test(core)) return null;
+      out.push(core.replace(re, rep) + p);
     }
-    const sib = CJ.shuffle(POOL.filter(x => x !== it && group(x) === group(it)));
-    const others = CJ.shuffle(POOL.filter(x => x !== it && x.src === it.src));
-    sib.concat(others).forEach(x => { if (opts.length < 4 && !seen.has(x[to][0])) { seen.add(x[to][0]); opts.push({ f: x[to], ok: false }); } });
+    return out;
+  }
+  const PART_DESU = [[/(よ|ね)$/, '$1 です'], [/(yo|ne)$/, '$1 desu'], [/(よ|ね)$/, '$1です']];
+  const DA_DESU = [[/だ\s?(よ|ね)$/, 'だ です'], [/da (yo|ne)$/, 'da desu'], [/だ(よ|ね)$/, 'だです']];
+  const DESU_DA = [[/([^い\s])\s?です(\s?[よね])?$/, '$1 だ$2'], [/([^i]) desu( (yo|ne))?$/, '$1 da$2'], [/([^い])です([よね])?$/, '$1だ$2']];
+  const ADD_YO = [[/(です|ます|ました|でした)$/, '$1 よ'], [/(desu|masu|mashita|deshita)$/, '$1 yo'], [/(です|ます|ました|でした)$/, '$1よ']];
+  const ADD_NE = [[/(です|ます|ました|でした)$/, '$1 ね'], [/(desu|masu|mashita|deshita)$/, '$1 ne'], [/(です|ます|ました|でした)$/, '$1ね']];
+  const DESUKA_DAKA = [[/です\s?か$/, 'だ か'], [/desu ka$/, 'da ka'], [/ですか$/, 'だか']];
+  // ふつう の 動詞（いく・いこう・たべた・だった）に そのまま です（いこう です ✗）。「〜かった です」 は 正しい ので のぞく
+  function plainDesu(f) {
+    const k = tailOf(f[0])[0];
+    if (!/([うくすつぬむるぐぶ]|た)$/.test(k) || /(かった|そう)$/.test(k)) return null;   // 〜かった です・〜そう です は 正しい
+    return morph(f, [[/$/, ' です'], [/$/, ' desu'], [/$/, 'です']]);
+  }
+  // ふつう の 文 に だ を つける（いたい だ ✗・すき だ は ていねい では ない）
+  function addDa(f) {
+    const k = tailOf(f[0])[0];
+    if (/([うくすつぬむるぐぶたよねかだなわん？?]|ない)$/.test(k)) return null;
+    return morph(f, [[/$/, ' だ'], [/$/, ' da'], [/$/, 'だ']]);
+  }
+  // ていねい の 「〜です か」 から です だけ とる（すき か？ ✗ ぶっきらぼう）
+  const DESUKA_KA = [[/\s?です\s?か$/, ' か'], [/ desu ka$/, ' ka'], [/ですか$/, 'か']];
+  function makeOpts(it) {
+    const S = dir === 'cp' ? it.c : it.p, T = dir === 'cp' ? it.p : it.c;
+    const norm = s => String(s).replace(/[\s、。！？!?〜~]/g, '');
+    const opts = [{ f: T, ok: true }], seen = new Set([norm(T[0])]);
+    const cands = [S].concat(CJ.shuffle(dir === 'cp'
+      ? [morph(S, DA_DESU), morph(S, PART_DESU), plainDesu(S), addDa(S), morph(T, DESU_DA), morph(T, DESUKA_KA)]
+      : [morph(S, ADD_YO), morph(S, ADD_NE), morph(S, DESUKA_DAKA), morph(T, DA_DESU), morph(T, PART_DESU), plainDesu(T)]));
+    cands.forEach(f => { if (f && opts.length < 4 && !seen.has(norm(f[0]))) { seen.add(norm(f[0])); opts.push({ f, ok: false }); } });
     return CJ.shuffle(opts);
   }
 
