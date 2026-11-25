@@ -29,10 +29,6 @@
     <div class="slot-row" id="homeSlots"></div>
   </div>
 
-  <div class="card omi-card" id="omiCard"></div>
-
-  <div class="card ms-card" id="msCard"></div>
-
   <div class="card">
     <h2 data-i18n="home.progress"></h2>
     <div class="stats-grid two">
@@ -45,10 +41,6 @@
     <a class="btn" id="mistakeBtn" href="quiz.html?mode=mistakes" style="display:none; margin-top:1rem; background:#be123c;"></a>
   </div>
 
-  <div class="card tip-card">
-    <h2 data-i18n="home.tip"></h2>
-    <div id="tipBox"></div>
-  </div>
 
 </main>
 
@@ -57,7 +49,6 @@
 <script src="data.js"></script>
 <script src="kanji-data.js"></script>
 <script src="words-data.js"></script>
-<script src="daily-data.js"></script>
 <script src="common.js"></script>
 <script>
 (function () {
@@ -82,78 +73,6 @@
     $('skRest').classList.toggle('used', !!used);
   }
 
-  /* ---- 毎日 かわる もの は 日付 から きめる（同じ日 は 何回 ひらいても 同じ） ---- */
-  const DY = window.CJ_DAILY;
-  function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
-  function load(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { return null; } }
-  function save(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) {} }
-  const jaLine = f => '<div class="k ja">' + CJ.jaHtml(f) + '</div><div class="romaji">' + esc(f[1]) + '</div>';
-
-  // 🎋 おみくじ ＋ 📰 まめちしき（cj_omi = { d: ひいた 日 }）
-  function todayTrivia(day) {
-    const m = new Date().getMonth() + 1;
-    const season = DY.TRIVIA.filter(x => x.m && x.m.includes(m)), always = DY.TRIVIA.filter(x => !x.m);
-    const h = hash('tv' + day);
-    // 3日 に 2日 は きせつ の もの（あれば）
-    const pool = season.length && h % 3 !== 0 ? season : always;
-    return pool[Math.floor(h / 3) % pool.length];
-  }
-  function renderOmikuji() {
-    const day = CJ.dateKey(), drawn = (load('cj_omi') || {}).d === day;
-    if (!drawn) {
-      $('omiCard').innerHTML = '<h2>' + esc(t('omi.title')) + '</h2><p class="muted">' + esc(t('omi.desc')) + '</p>' +
-        '<button class="btn omi-draw" id="omiDraw">🎋 ' + esc(t('omi.draw')) + '</button>';
-      return;
-    }
-    const tot = DY.FORTUNES.reduce((a, f) => a + f.w, 0);
-    let r = hash('fo' + day) % tot, fo = DY.FORTUNES[0];
-    for (const f of DY.FORTUNES) { if (r < f.w) { fo = f; break; } r -= f.w; }
-    const cards = window.CJ_DATA.CARDS.filter(c => c.only !== 'p'), lc = cards[hash('lp' + day) % cards.length];
-    const tv = todayTrivia(day);
-    const a = (href, label) => '<a class="ext-link" href="' + esc(href) + '" target="_blank" rel="noopener">' + label + '</a>';
-    $('omiCard').innerHTML = '<h2>' + esc(t('omi.title')) + '</h2>' +
-      '<div class="omi-paper"><div class="omi-fortune ja">' + CJ.jaHtml(fo.ja) + '</div><div class="romaji">' + esc(fo.ja[1]) + ' — ' + esc(fo.en) + '</div>' +
-        '<p class="omi-msg">' + esc(CJ.tx(fo, 'msg')) + '</p>' +
-        '<div class="omi-sub">' + esc(t('omi.lucky')) + '</div>' + jaLine(lc.c) + '<div class="e">' + esc(lc.en) + '</div>' + CJ.sayBtns(lc.c[0]) + '</div>' +
-      '<div class="tv-box"><div class="omi-sub">' + esc(t('tv.title')) + '</div>' +
-        '<div class="tv-head">' + tv.icon + (CJ.lang() === 'en' ? ' <b>' + esc(tv.title) + '</b>' : '') + '</div>' + jaLine(tv.ja) + CJ.sayBtns(tv.ja[0]) +
-        '<p class="tv-text">' + esc(CJ.tx(tv, 'text')) + '</p>' +
-        '<div class="omi-sub">' + esc(t('tv.more')) + '</div><span class="ext-links">' +
-          a('https://www.youtube.com/results?search_query=' + encodeURIComponent(tv.q), '▶ YouTube') +
-          a('https://www.google.com/search?q=' + encodeURIComponent(tv.q), '🔎 Google') +
-          a('https://news.google.com/search?q=' + encodeURIComponent(tv.q), '📰 News') +
-          a('https://www.instagram.com/explore/tags/' + encodeURIComponent(tv.tag) + '/', '# Instagram') +
-        '</span></div>';
-  }
-
-  // 🎯 きょう の ミッション（cj_ms = { d: 日付, s: とばした 回数, done: true/false }）
-  function msState() { const day = CJ.dateKey(), v = load('cj_ms'); return v && v.d === day ? v : { d: day, s: 0, done: false }; }
-  function renderMission() {
-    const v = msState(), list = DY.MISSIONS;
-    const ms = list[(hash('ms' + v.d) + v.s * 7) % list.length];
-    $('msCard').innerHTML = '<h2>' + esc(t('ms.title')) + '</h2>' +
-      '<p class="ms-text">' + esc(CJ.tx(ms, 'en')) + '</p>' +
-      (ms.ja ? '<div class="ms-phrase">' + jaLine(ms.ja) + CJ.sayBtns(ms.ja[0]) + '</div>' : '') +
-      (v.done ? '<div class="ms-done">🎉 ' + esc(t('ms.done')) + '</div>' :
-        '<div class="ms-btns"><button class="btn" id="msDo">✓ ' + esc(t('ms.did')) + '</button>' +
-        (v.s < 2 ? '<button class="btn btn-secondary" id="msSkip">↻ ' + esc(t('ms.other')) + '</button>' : '') + '</div>' +
-        '<p class="muted ms-note">' + esc(t('ms.note')) + '</p>');
-  }
-  document.addEventListener('click', e => {
-    if (e.target.closest('#omiDraw')) {
-      save('cj_omi', { d: CJ.dateKey() });
-      $('omiCard').classList.add('omi-shake');
-      setTimeout(() => { $('omiCard').classList.remove('omi-shake'); renderOmikuji(); }, 600);
-    } else if (e.target.closest('#msDo')) {
-      const v = msState(); v.done = true; save('cj_ms', v);
-      CJ.markStudied();   // ミッション も「きょう やった」に 入る
-      renderMission(); renderStreak(); renderToday();
-      CJ.toast(t('ms.yay'));
-    } else if (e.target.closest('#msSkip')) {
-      const v = msState(); v.s++; save('cj_ms', v); renderMission();
-    }
-  });
-
   function renderStats() {
     const d = CJ.getData();
     const ids = new Set(D.CARDS.map(c => c.id)), ks = new Set(K.KANJI.map(k => k.k));
@@ -168,17 +87,7 @@
     $('mistakeBtn').textContent = t('home.mistakes', { n: nWrong });
   }
 
-  // 今日のヒント：日付で決まるカードを1枚
-  function renderTip() {
-    const withNote = D.CARDS.filter(c => c.note);
-    const n = Math.floor(new Date(CJ.dateKey() + 'T00:00:00').getTime() / 86400000);
-    const c = withNote[n % withNote.length];
-    $('tipBox').innerHTML =
-      (c.only !== 'c' ? '<div><span class="reg polite">' + t('reg.polite') + '</span> <b class="ja">' + esc(c.p[0]) + '</b> ' + CJ.sayBtns(c.p[0]) + '</div>' : '') +
-      (c.only !== 'p' ? '<div><span class="reg casual">' + t('reg.casual') + '</span> <b class="ja">' + esc(c.c[0]) + '</b> ' + CJ.sayBtns(c.c[0]) + '</div>' : '') +
-      '<div class="romaji">' + esc(c.c[1]) + '</div>' +
-      '<div class="muted" style="margin-top:0.3rem;">“' + esc(c.en) + '” — ' + esc(CJ.tx(c, 'note')) + '</div>';
-  }
+
 
   // きょう の れんしゅう（ひる／よる）の状況
   function renderToday() {
@@ -190,7 +99,7 @@
         '<div class="nm">' + esc(t('slot.' + sl)) + (sl === 'lunch' ? ' ' + CJ.FOCUS_ICON[CJ.focusOf(CJ.dateKey())] : '') + '</div><div class="st" style="margin-bottom:0;">' + esc(done ? t('slot.done', { s: x.s[0], t: x.s[1] }) : t('slot.start')) + '</div></a>';
     }).join('');
   }
-  function renderAll() { renderStreak(); renderToday(); renderOmikuji(); renderMission(); renderStats(); renderTip(); }
+  function renderAll() { renderStreak(); renderToday(); renderStats(); }
   document.addEventListener('cj:lang', renderAll);
   renderAll();
 })();
